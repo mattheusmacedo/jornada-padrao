@@ -1,5 +1,8 @@
 import { Compass, Calendar, MapPin, User, Plus } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { motion as fmotion } from 'framer-motion'
+import { pressButton, pressTransition } from '../motion/variants'
+import { motion as motionTokens } from '../motion/tokens'
 
 type NavKey = 'explorar' | 'eventos' | 'mapa' | 'perfil'
 
@@ -8,6 +11,14 @@ const ROUTE_BY_KEY: Record<NavKey, string> = {
   eventos: '/eventos',
   mapa: '/mapa',
   perfil: '/',
+}
+
+const PINK = '#E8176B'
+const GREY = '#B6B6B6'
+
+const colorTransition = {
+  duration: motionTokens.duration.reveal / 1000,
+  ease: motionTokens.easing.out,
 }
 
 function keyForPath(path: string): NavKey {
@@ -31,29 +42,38 @@ export default function BottomNav() {
 
   return (
     <nav className="absolute bottom-0 inset-x-0 h-[88px] bg-white">
-      <button
+      <fmotion.button
         type="button"
         aria-label="Criar"
+        whileTap={pressButton}
+        transition={pressTransition}
         className="absolute left-1/2 -translate-x-1/2 -top-[22px] w-[56px] h-[56px] rounded-full bg-[var(--color-pink-normal)] text-white flex items-center justify-center shadow-[0_6px_14px_rgba(232,23,107,0.4)]"
       >
         <Plus size={28} strokeWidth={2.5} />
-      </button>
+      </fmotion.button>
 
-      <div className="grid grid-cols-4 h-[68px] pt-3">
+      <div className="grid grid-cols-4 h-[68px] pt-1">
         {items.map(({ key, label, Icon, enabled }, idx) => {
           const isActive = key === active
-          const color = isActive ? 'var(--color-pink-normal)' : 'var(--color-grey-normal)'
           const padCls = idx === 1 ? 'pr-7' : idx === 2 ? 'pl-7' : ''
           return (
-            <button
+            <fmotion.button
               key={key}
               type="button"
               onClick={() => enabled && navigate(ROUTE_BY_KEY[key])}
-              className={`flex flex-col items-center gap-1 ${padCls}`}
+              whileTap={pressButton}
+              transition={pressTransition}
+              className={`flex flex-col items-center justify-center gap-1 h-10 w-full ${padCls}`}
             >
-              <Icon size={22} strokeWidth={2} color={color} />
-              <span className="text-[11.7px]" style={{ color }}>{label}</span>
-            </button>
+              <fmotion.span
+                animate={{ color: isActive ? PINK : GREY }}
+                transition={colorTransition}
+                className="flex flex-col items-center gap-1"
+              >
+                <Icon size={22} strokeWidth={2} color="currentColor" />
+                <span className="text-[11.7px]">{label}</span>
+              </fmotion.span>
+            </fmotion.button>
           )
         })}
       </div>

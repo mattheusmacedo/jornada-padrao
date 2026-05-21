@@ -30,3 +30,24 @@ export const colors = {
 } as const
 
 export type Colors = typeof colors
+
+export const motion = {
+  duration: {
+    tap: 150,        // tap feedback — button press, icon press, favorite toggle
+    reveal: 200,     // 180-220ms band — popup, selected card emphasis, card lift/ring
+    container: 300,  // bottom sheet snap, modal enter/exit, page transitions
+    hero: 800,       // 700-850ms band — Lottie illustration heroes (reserved for Phase 9)
+  },
+  easing: {
+    out: [0, 0, 0.2, 1] as [number, number, number, number],
+    spring: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  },
+  press: {
+    button: 0.96,
+    cardStandard: 0.985,
+    cardSelected: 0.99,
+    listItem: 0.985,
+  },
+  touchTargetMin: 40,
+} as const
+

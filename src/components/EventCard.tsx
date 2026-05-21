@@ -1,4 +1,10 @@
 import { Ticket } from 'lucide-react'
+import { motion as fmotion } from 'framer-motion'
+import {
+  listItemVariants,
+  pressCardStandard,
+  pressTransition,
+} from '../motion/variants'
 
 type CommonProps = {
   image: string
@@ -27,9 +33,12 @@ function Badge({ count }: { count: number }) {
 
 function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick }: CommonProps) {
   return (
-    <button
+    <fmotion.button
       type="button"
       onClick={onClick}
+      variants={listItemVariants}
+      whileTap={pressCardStandard}
+      transition={pressTransition}
       className="w-full text-left bg-[var(--color-grey-light)] rounded-2xl px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)]"
     >
       <img
@@ -48,16 +57,18 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
           <span>{venue} • {location}</span>
         </p>
       </div>
-    </button>
+    </fmotion.button>
   )
 }
 
-// Fullbleed: image fills the card behind text. Height driven by content + Figma padding.
 function FullbleedCard({ image, title, date, venue, location, onClick }: CommonProps) {
   return (
-    <button
+    <fmotion.button
       type="button"
       onClick={onClick}
+      variants={listItemVariants}
+      whileTap={pressCardStandard}
+      transition={pressTransition}
       className="relative w-full text-left rounded-2xl overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)]"
     >
       <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover z-0" />
@@ -78,6 +89,6 @@ function FullbleedCard({ image, title, date, venue, location, onClick }: CommonP
           <span>{venue} • {location}</span>
         </p>
       </div>
-    </button>
+    </fmotion.button>
   )
 }

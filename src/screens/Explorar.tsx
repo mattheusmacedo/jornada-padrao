@@ -1,8 +1,10 @@
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import PhoneFrame from '../components/PhoneFrame'
+import { motion as fmotion } from 'framer-motion'
 import BottomNav from '../components/BottomNav'
 import EventCard from '../components/EventCard'
+import { PageTransition } from '../motion/transitions'
+import { listVariants, pressButton, pressTransition } from '../motion/variants'
 import raye from '../assets/explorar/raye.png'
 import badBunny from '../assets/explorar/bad-bunny.png'
 import titas from '../assets/explorar/titas.png'
@@ -15,33 +17,48 @@ import lauraPasini from '../assets/explorar/laura-pasini.png'
 function Header() {
   const navigate = useNavigate()
   return (
-    <header className="relative flex items-center justify-between px-6 pt-6">
-      <button type="button" aria-label="Voltar" onClick={() => navigate(-1)} className="text-[var(--color-grey-darker)]">
+    <header className="relative flex items-center justify-between px-[18px] pt-[18px]">
+      <fmotion.button
+        type="button"
+        aria-label="Voltar"
+        onClick={() => navigate(-1)}
+        whileTap={pressButton}
+        transition={pressTransition}
+        className="h-10 w-10 flex items-center justify-center text-[var(--color-grey-darker)]"
+      >
         <ArrowLeft size={22} strokeWidth={2} />
-      </button>
+      </fmotion.button>
       <h1 className="absolute left-[56px] top-[24px] text-[var(--color-grey-darker)] text-[23.6px] font-medium leading-none">Explorar</h1>
-      <button type="button" aria-label="Mais opções" className="text-[var(--color-grey-darker)]">
+      <fmotion.button
+        type="button"
+        aria-label="Mais opções"
+        whileTap={pressButton}
+        transition={pressTransition}
+        className="h-10 w-10 flex items-center justify-center text-[var(--color-grey-darker)]"
+      >
         <MoreVertical size={22} strokeWidth={2} />
-      </button>
+      </fmotion.button>
     </header>
   )
 }
 
 function SearchBar() {
   return (
-    <div className="mt-7 px-[23px] flex items-center gap-3">
+    <div className="mt-5 px-[23px] flex items-center gap-3">
       <div className="flex-1 flex items-center gap-3">
         <Search size={24} className="text-[var(--color-pink-normal)]" strokeWidth={2} />
         <div className="w-px h-[26px] bg-[var(--color-grey-light-active)]" />
         <span className="text-black/30 text-[18px] font-light">Pesquisar...</span>
       </div>
-      <button
+      <fmotion.button
         type="button"
+        whileTap={pressButton}
+        transition={pressTransition}
         className="bg-[var(--color-pink-normal)] text-[var(--color-pink-light-hover)] rounded-full px-[12px] py-[6px] flex items-center gap-[6px] text-[11.8px]"
       >
         <SlidersHorizontal size={14} strokeWidth={2} />
         Filtros
-      </button>
+      </fmotion.button>
     </div>
   )
 }
@@ -60,17 +77,22 @@ const events = [
 export default function Explorar() {
   const navigate = useNavigate()
   return (
-    <PhoneFrame>
+    <PageTransition>
       <div className="min-h-[800px] bg-white pb-24">
         <Header />
         <SearchBar />
-        <div className="mt-5 px-[23px] pb-[140px] flex flex-col gap-[14px]">
+        <fmotion.div
+          variants={listVariants}
+          initial="initial"
+          animate="animate"
+          className="mt-5 px-[23px] pb-[140px] flex flex-col gap-[14px]"
+        >
           {events.map((e, i) => (
             <EventCard key={i} variant="fullbleed" {...e} onClick={() => navigate('/evento')} />
           ))}
-        </div>
+        </fmotion.div>
       </div>
       <BottomNav />
-    </PhoneFrame>
+    </PageTransition>
   )
 }

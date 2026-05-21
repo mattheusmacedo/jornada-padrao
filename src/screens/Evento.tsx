@@ -1,6 +1,13 @@
 import { ArrowLeft, Bookmark, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import PhoneFrame from '../components/PhoneFrame'
+import { motion as fmotion } from 'framer-motion'
+import { PageTransition } from '../motion/transitions'
+import {
+  pressButton,
+  pressTransition,
+  revealVariants,
+  revealTransition,
+} from '../motion/variants'
 import hero from '../assets/evento/hero-raye.png'
 import avatar1 from '../assets/evento/avatar-1.png'
 import avatar2 from '../assets/evento/avatar-2.png'
@@ -14,18 +21,27 @@ function HeroImage() {
       <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-x-0 top-0 h-[92px] bg-gradient-to-b from-black/60 to-transparent" />
 
-      <div className="relative flex items-center justify-between px-6 pt-6">
-        <button type="button" aria-label="Voltar" onClick={() => navigate(-1)} className="text-white">
+      <div className="relative flex items-center justify-between px-[18px] pt-[18px]">
+        <fmotion.button
+          type="button"
+          aria-label="Voltar"
+          onClick={() => navigate(-1)}
+          whileTap={pressButton}
+          transition={pressTransition}
+          className="h-10 w-10 flex items-center justify-center text-white"
+        >
           <ArrowLeft size={22} strokeWidth={2} />
-        </button>
-        <h1 className="absolute left-[56px] top-[22px] text-white text-[20px] font-medium leading-none">Detalhes do evento</h1>
-        <button
+        </fmotion.button>
+        <h1 className="absolute left-[56px] top-[24px] text-white text-[20px] font-medium leading-none">Detalhes do evento</h1>
+        <fmotion.button
           type="button"
           aria-label="Salvar"
-          className="w-[36px] h-[36px] rounded-full bg-[var(--color-orange-light)] flex items-center justify-center"
+          whileTap={pressButton}
+          transition={pressTransition}
+          className="h-10 w-10 rounded-full bg-[var(--color-orange-light)] flex items-center justify-center"
         >
           <Bookmark size={18} strokeWidth={2} className="text-[var(--color-orange-normal)]" fill="currentColor" />
-        </button>
+        </fmotion.button>
       </div>
     </div>
   )
@@ -33,20 +49,28 @@ function HeroImage() {
 
 function FansPill() {
   return (
-    <div className="mx-auto -mt-[30px] w-[328px] h-[60px] bg-white rounded-[15px] shadow-[0_19.7px_9.8px_rgba(90,90,90,0.1)] flex items-center px-[14px] gap-[13.5px] relative z-10">
+    <fmotion.div
+      variants={revealVariants}
+      initial="initial"
+      animate="animate"
+      transition={revealTransition}
+      className="mx-auto -mt-[30px] w-[328px] h-[60px] bg-white rounded-[15px] shadow-[0_19.7px_9.8px_rgba(90,90,90,0.1)] flex items-center px-[14px] gap-[13.5px] relative z-10"
+    >
       <div className="flex">
         <img src={avatar1} alt="" className="w-[34px] h-[34px] rounded-full ring-2 ring-white" />
         <img src={avatar2} alt="" className="w-[34px] h-[34px] rounded-full ring-2 ring-white -ml-[12px]" />
         <img src={avatar3} alt="" className="w-[34px] h-[34px] rounded-full ring-2 ring-white -ml-[12px]" />
       </div>
       <span className="text-[var(--color-pink-normal)] text-[14.8px] font-medium">+800 fãs</span>
-      <button
+      <fmotion.button
         type="button"
+        whileTap={pressButton}
+        transition={pressTransition}
         className="ml-auto bg-[var(--color-pink-normal)] text-[var(--color-grey-light)] text-[11.8px] rounded-[10px] px-[13px] py-[9px]"
       >
         Convidar amigos
-      </button>
-    </div>
+      </fmotion.button>
+    </fmotion.div>
   )
 }
 
@@ -112,12 +136,14 @@ function InfoRows() {
         title="Ticketmaster"
         subtitle="Organizador"
         trailing={
-          <button
+          <fmotion.button
             type="button"
+            whileTap={pressButton}
+            transition={pressTransition}
             className="bg-[var(--color-pink-light-hover)] text-[var(--color-pink-normal)] text-[11.8px] rounded-[7px] px-[14px] py-[6px]"
           >
             Seguir
-          </button>
+          </fmotion.button>
         }
       />
     </div>
@@ -130,7 +156,14 @@ function AboutBlock() {
       <h3 className="text-[var(--color-grey-darker)] text-[17.7px] font-medium">Sobre o evento</h3>
       <p className="mt-3 text-[15.8px] leading-[27px] text-[var(--color-grey-darker)]">
         Raye, artista britânica de 28 anos, fã de bossa nova, principalmente de João Gilberto, desembarca no Brasil este mês para uma apresentação única.{' '}
-        <span className="text-[var(--color-orange-normal)]">Leia mais...</span>
+        <fmotion.button
+          type="button"
+          whileTap={pressButton}
+          transition={pressTransition}
+          className="text-[var(--color-orange-normal)] inline align-baseline"
+        >
+          Leia mais...
+        </fmotion.button>
       </p>
     </div>
   )
@@ -140,23 +173,25 @@ function CTAButton() {
   const navigate = useNavigate()
   return (
     <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
-      <button
+      <fmotion.button
         type="button"
         onClick={() => navigate('/ramificacao')}
+        whileTap={pressButton}
+        transition={pressTransition}
         className="bg-[var(--color-orange-normal)] text-white rounded-[15px] h-[57px] flex items-center justify-center gap-3 px-[31px] tracking-[1px]"
       >
         <span className="text-[15.8px] font-medium uppercase">Adicionar à</span>
         <span className="w-[30px] h-[30px] rounded-full bg-[var(--color-orange-dark)] flex items-center justify-center">
           <ArrowRight size={16} strokeWidth={2.5} className="text-white" />
         </span>
-      </button>
+      </fmotion.button>
     </div>
   )
 }
 
 export default function Evento() {
   return (
-    <PhoneFrame>
+    <PageTransition>
       <div className="relative min-h-[800px] bg-white pb-[120px]">
         <HeroImage />
         <FansPill />
@@ -166,6 +201,6 @@ export default function Evento() {
         <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[120px] bg-gradient-to-t from-white to-transparent" />
         <CTAButton />
       </div>
-    </PhoneFrame>
+    </PageTransition>
   )
 }
