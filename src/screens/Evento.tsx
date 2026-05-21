@@ -21,7 +21,7 @@ function HeroImage() {
       <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-x-0 top-0 h-[92px] bg-gradient-to-b from-black/60 to-transparent" />
 
-      <div className="relative flex items-center justify-between px-[18px] pt-[18px]">
+      <div className="relative flex items-center justify-between px-[18px] pt-[52px]">
         <fmotion.button
           type="button"
           aria-label="Voltar"
@@ -32,7 +32,7 @@ function HeroImage() {
         >
           <ArrowLeft size={22} strokeWidth={2} />
         </fmotion.button>
-        <h1 className="absolute left-[56px] top-[24px] text-white text-[20px] font-medium leading-none">Detalhes do evento</h1>
+        <h1 className="absolute left-[56px] top-[58px] text-white text-[20px] font-medium leading-none">Detalhes do evento</h1>
         <fmotion.button
           type="button"
           aria-label="Salvar"
@@ -172,7 +172,7 @@ function AboutBlock() {
 function CTAButton() {
   const navigate = useNavigate()
   return (
-    <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
+    <div className="sticky bottom-0 inset-x-0 z-10 pt-[40px] pb-[20px] flex justify-center bg-gradient-to-t from-white via-white to-transparent">
       <fmotion.button
         type="button"
         onClick={() => navigate('/ramificacao')}
@@ -192,13 +192,12 @@ function CTAButton() {
 export default function Evento() {
   return (
     <PageTransition>
-      <div className="relative min-h-[800px] bg-white pb-[120px]">
+      <div className="relative bg-white">
         <HeroImage />
         <FansPill />
         <EventTitle />
         <InfoRows />
         <AboutBlock />
-        <div className="pointer-events-none absolute bottom-0 inset-x-0 h-[120px] bg-gradient-to-t from-white to-transparent" />
         <CTAButton />
       </div>
     </PageTransition>

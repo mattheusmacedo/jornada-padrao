@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
-import BottomNav from '../components/BottomNav'
 import EventCard from '../components/EventCard'
 import { PageTransition } from '../motion/transitions'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
@@ -13,7 +12,7 @@ import eventLuan from '../assets/perfil/event-luan-santana.png'
 function Header() {
   const navigate = useNavigate()
   return (
-    <header className="flex items-center justify-between px-[18px] pt-[18px]">
+    <header className="flex items-center justify-between px-[18px] pt-[52px]">
       <fmotion.button
         type="button"
         aria-label="Voltar"
@@ -146,14 +145,13 @@ export default function Perfil() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="min-h-[800px] pb-24">
+      <div className="pb-[100px]">
         <Header />
         <ProfileBlock />
         <ActionButtons />
         <TabBar active={tab} onChange={setTab} />
         <EventList onSelect={() => navigate('/evento')} />
       </div>
-      <BottomNav />
     </PageTransition>
   )
 }

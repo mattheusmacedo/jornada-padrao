@@ -1,7 +1,6 @@
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
-import BottomNav from '../components/BottomNav'
 import EventCard from '../components/EventCard'
 import { PageTransition } from '../motion/transitions'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
@@ -17,7 +16,7 @@ import lauraPasini from '../assets/explorar/laura-pasini.png'
 function Header() {
   const navigate = useNavigate()
   return (
-    <header className="relative flex items-center justify-between px-[18px] pt-[18px]">
+    <header className="relative flex items-center justify-between px-[18px] pt-[52px]">
       <fmotion.button
         type="button"
         aria-label="Voltar"
@@ -28,7 +27,7 @@ function Header() {
       >
         <ArrowLeft size={22} strokeWidth={2} />
       </fmotion.button>
-      <h1 className="absolute left-[56px] top-[24px] text-[var(--color-grey-darker)] text-[23.6px] font-medium leading-none">Explorar</h1>
+      <h1 className="absolute left-[56px] top-[58px] text-[var(--color-grey-darker)] text-[23.6px] font-medium leading-none">Explorar</h1>
       <fmotion.button
         type="button"
         aria-label="Mais opções"
@@ -78,21 +77,20 @@ export default function Explorar() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="min-h-[800px] bg-white pb-24">
+      <div className="bg-white pb-[100px]">
         <Header />
         <SearchBar />
         <fmotion.div
           variants={listVariants}
           initial="initial"
           animate="animate"
-          className="mt-5 px-[23px] pb-[140px] flex flex-col gap-[14px]"
+          className="mt-5 px-[23px] flex flex-col gap-[14px]"
         >
           {events.map((e, i) => (
             <EventCard key={i} variant="fullbleed" {...e} onClick={() => navigate('/evento')} />
           ))}
         </fmotion.div>
       </div>
-      <BottomNav />
     </PageTransition>
   )
 }

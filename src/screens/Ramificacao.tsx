@@ -18,7 +18,7 @@ type Choice = 'salvos' | 'favoritos'
 function Header() {
   const navigate = useNavigate()
   return (
-    <header className="relative flex items-center justify-between px-[18px] pt-[18px]">
+    <header className="relative flex items-center justify-between px-[18px] pt-[52px]">
       <fmotion.button
         type="button"
         aria-label="Voltar"
@@ -29,7 +29,7 @@ function Header() {
       >
         <ArrowLeft size={22} strokeWidth={2} />
       </fmotion.button>
-      <h1 className="absolute left-[56px] top-[24px] text-[var(--color-grey-darker)] text-[23.6px] font-medium leading-none">Adicionar à</h1>
+      <h1 className="absolute left-[56px] top-[58px] text-[var(--color-grey-darker)] text-[23.6px] font-medium leading-none">Adicionar à</h1>
       <fmotion.button
         type="button"
         aria-label="Mais opções"
@@ -92,7 +92,7 @@ export default function Ramificacao() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="relative min-h-[800px] bg-white">
+      <div className="relative h-[800px] bg-white">
         <Header />
         <div className="mt-6 px-[28px] flex flex-col gap-[13.5px]">
           <RadioCard
