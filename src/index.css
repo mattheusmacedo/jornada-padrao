@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-pink-normal: #E8176B;
+  --color-pink-light: #FDE8F0;
+  --color-pink-light-hover: #FCDCE9;
+  --color-pink-light-active: #F8B7D1;
+
+  --color-orange-normal: #FF8800;
+  --color-orange-dark: #BF6600;
+  --color-orange-light: #FFF3E6;
+  --color-orange-light-hover: #FFEDD9;
+  --color-orange-light-active: #FFDAB0;
+
+  --color-grey-light: #F8F8F8;
+  --color-grey-light-active: #E8E8E8;
+  --color-grey-normal: #B6B6B6;
+  --color-grey-dark: #898989;
+  --color-grey-dark-active: #525252;
+  --color-grey-darker: #404040;
+
+  --color-typography-title: #120D26;
+}
+
 html, body, #root {
   margin: 0;
   min-height: 100vh;
