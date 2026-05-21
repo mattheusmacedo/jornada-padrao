@@ -94,7 +94,7 @@ export default function Ramificacao() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="relative h-[800px] bg-white">
+      <div className="relative h-full bg-white">
         <Header />
         <div className="mt-6 px-[28px] flex flex-col gap-[13.5px]">
           <RadioCard
