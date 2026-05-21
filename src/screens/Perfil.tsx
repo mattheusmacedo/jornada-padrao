@@ -145,7 +145,7 @@ export default function Perfil() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="pb-[100px]">
+      <div className="pb-[20px]">
         <Header />
         <ProfileBlock />
         <ActionButtons />

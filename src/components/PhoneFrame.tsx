@@ -9,6 +9,8 @@ type Props = {
   showBottomNav?: boolean
 }
 
+const BOTTOM_NAV_HEIGHT = 88
+
 export default function PhoneFrame({
   children,
   bgColor = 'var(--color-grey-light)',
@@ -21,8 +23,11 @@ export default function PhoneFrame({
         className="relative w-[368px] h-[800px] rounded-[40px] shadow-xl overflow-hidden"
         style={{ background: bgColor }}
       >
-        {/* Scrollable content area — screens render here. Status bar and bottom nav overlay. */}
-        <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+        {/* Scrollable content area — bounded by BottomNav when shown so last items aren't hidden */}
+        <div
+          className="absolute top-0 left-0 right-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+          style={{ bottom: showBottomNav ? BOTTOM_NAV_HEIGHT : 0 }}
+        >
           {children}
         </div>
         <StatusBar style={statusBarStyle} />
