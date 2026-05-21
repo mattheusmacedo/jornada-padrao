@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ArrowLeft, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import PhoneFrame from '../components/PhoneFrame'
-import handPhone from '../assets/ramificacao/hand-phone.png'
 
 type Choice = 'salvos' | 'favoritos'
 
@@ -77,7 +76,8 @@ export default function Ramificacao() {
           />
         </div>
         <div className="mt-[60px] flex justify-center">
-          <img src={handPhone} alt="" className="w-[232px] h-[218px] object-contain" />
+          {/* TODO: replace with Lottie JSON animation (hand holding phone) */}
+          <div className="w-[220px] h-[220px]" />
         </div>
         <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
           <button
