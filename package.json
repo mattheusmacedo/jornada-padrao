@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "sync:motion-spec": "node scripts/sync-motion-spec.mjs",
+    "export:lottie": "node scripts/export-lottie.mjs",
     "dev": "npm run sync:motion-spec && vite",
     "build": "npm run sync:motion-spec && tsc -b && vite build",
     "lint": "eslint .",
