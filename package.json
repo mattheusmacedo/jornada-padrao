@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "sync:motion-spec": "node scripts/sync-motion-spec.mjs",
+    "dev": "npm run sync:motion-spec && vite",
+    "build": "npm run sync:motion-spec && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },

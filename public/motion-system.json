@@ -1,0 +1,232 @@
+{
+  "_comments": {
+    "purpose": "Source-of-truth spec for the app's motion system. Read at runtime by /motion-docs and translatable to Lottie .json files via a future export script.",
+    "lottie_translation": "Each demo's keyframes correspond to a single layer's transform animation at 60fps over duration_ms. Frame number = duration_ms * fps / 1000 * t. Easing names map to standard Lottie bezier control points (in/out arrays).",
+    "composition_note": "All demos render in a 1080x1080 @ 60fps composition with the referenceShape centered. translateX/translateY values in keyframes are in composition pixels — scale them down proportionally when previewing at smaller sizes (player divides by composition.width / preview.width).",
+    "scale_opacity_note": "scale and opacity are scale-invariant — they apply identically at any preview size."
+  },
+  "version": "1.0.0",
+  "composition": { "width": 1080, "height": 1080, "fps": 60 },
+  "referenceShape": { "type": "circle", "radius": 200, "color": "#E8176B" },
+  "background": "#F8F8F8",
+  "tokens": {
+    "durations": { "tap": 150, "reveal": 200, "container": 300, "hero": 800 },
+    "easings": {
+      "out": { "name": "ease-out (visible UI)", "cubicBezier": [0, 0, 0.2, 1] },
+      "spring": { "name": "spring (containers only)", "cubicBezier": [0.22, 1, 0.36, 1] }
+    }
+  },
+  "demos": [
+    {
+      "id": "tap-button",
+      "category": "rule",
+      "title": "Tap feedback — button",
+      "subtitle": "150ms · ease-out · scale 0.96",
+      "description": "Buttons and icon buttons scale to 0.96 on press. Fast, responsive, immediate. Used for any primary or secondary CTA, icon controls, FAB.",
+      "duration_ms": 150,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0,   "scale": 1 },
+        { "t": 0.5, "scale": 0.96 },
+        { "t": 1,   "scale": 1 }
+      ]
+    },
+    {
+      "id": "press-card-standard",
+      "category": "rule",
+      "title": "Press feedback — standard card",
+      "subtitle": "200ms · ease-out · scale 0.985",
+      "description": "Standard cards (event cards, list items) get a much subtler press scale than buttons. Used on Perfil and Explorar event cards, unselected radio cards.",
+      "duration_ms": 200,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0,   "scale": 1 },
+        { "t": 0.5, "scale": 0.985 },
+        { "t": 1,   "scale": 1 }
+      ]
+    },
+    {
+      "id": "press-card-selected",
+      "category": "rule",
+      "title": "Press feedback — selected card",
+      "subtitle": "200ms · ease-out · scale 0.99",
+      "description": "Already-lifted cards (selected state) press even less — they're already raised, so the affordance is reduced. Used for selected radio cards.",
+      "duration_ms": 200,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0,   "scale": 1 },
+        { "t": 0.5, "scale": 0.99 },
+        { "t": 1,   "scale": 1 }
+      ]
+    },
+    {
+      "id": "reveal-popup",
+      "category": "rule",
+      "title": "Reveal — popup/emphasis",
+      "subtitle": "200ms · ease-out · y:32→0, scale 0.98→1, opacity 0→1",
+      "description": "Used for FansPill entry, selected card emphasis, popup/sheet content. Soft entry with slight upward translation.",
+      "duration_ms": 200,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0, "opacity": 0, "translateY": 32, "scale": 0.98 },
+        { "t": 1, "opacity": 1, "translateY": 0,  "scale": 1 }
+      ]
+    },
+    {
+      "id": "container-transition",
+      "category": "rule",
+      "title": "Container transition — page/modal",
+      "subtitle": "300ms · spring curve · x:48→0, opacity 0→1",
+      "description": "Page transitions and modal enter/exit. The spring curve (0.22, 1, 0.36, 1) is the ONLY easing that uses a slight overshoot. Containers only — never on interactive controls.",
+      "duration_ms": 300,
+      "easing": "spring",
+      "keyframes": [
+        { "t": 0, "opacity": 0, "translateX": 48 },
+        { "t": 1, "opacity": 1, "translateX": 0 }
+      ]
+    },
+    {
+      "id": "hero-lottie",
+      "category": "rule",
+      "title": "Hero moment — illustration entry",
+      "subtitle": "800ms · ease-out · scale 0.7→1.05→1, opacity 0→1",
+      "description": "Reserved for Lottie illustrations on Ramificação and Conclusão — the longer duration carries emotional weight, the kind a map flyTo would carry in a map-based app.",
+      "duration_ms": 800,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0,   "opacity": 0, "scale": 0.7 },
+        { "t": 0.6, "opacity": 1, "scale": 1.05 },
+        { "t": 1,   "opacity": 1, "scale": 1 }
+      ]
+    },
+    {
+      "id": "anti-easeinout",
+      "category": "antipattern",
+      "compareWith": "tap-button",
+      "title": "❌ ease-in-out on interactive",
+      "subtitle": "Feels sluggish at start, drags at end",
+      "description": "Symmetric ramp makes taps feel mushy. Always ease-out for visible UI.",
+      "duration_ms": 150,
+      "easing": "out",
+      "playerOverride": { "cubicBezier": [0.42, 0, 0.58, 1], "label": "ease-in-out" },
+      "keyframes": [
+        { "t": 0,   "scale": 1 },
+        { "t": 0.5, "scale": 0.96 },
+        { "t": 1,   "scale": 1 }
+      ]
+    },
+    {
+      "id": "anti-scale-aggressive",
+      "category": "antipattern",
+      "compareWith": "press-card-standard",
+      "title": "❌ scale 0.94 on cards",
+      "subtitle": "Overly aggressive — feels cheap, not premium",
+      "description": "Anything below 0.96 on buttons or 0.97 on cards reads as cheap. Premium = restraint.",
+      "duration_ms": 200,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0,   "scale": 1 },
+        { "t": 0.5, "scale": 0.94 },
+        { "t": 1,   "scale": 1 }
+      ]
+    },
+    {
+      "id": "anti-no-duration",
+      "category": "antipattern",
+      "compareWith": "tap-button",
+      "title": "❌ bare transition-colors (no duration)",
+      "subtitle": "Defaults to 150ms ease-in-out — wrong on both axes",
+      "description": "Tailwind transition-colors without duration uses default ease-in-out 150ms. Always specify both.",
+      "duration_ms": 150,
+      "easing": "out",
+      "playerOverride": { "cubicBezier": [0.42, 0, 0.58, 1], "label": "ease-in-out (default)" },
+      "keyframes": [
+        { "t": 0, "fill": "#B6B6B6" },
+        { "t": 1, "fill": "#E8176B" }
+      ]
+    },
+    {
+      "id": "anti-spring-on-button",
+      "category": "antipattern",
+      "compareWith": "tap-button",
+      "title": "❌ spring curve on interactive control",
+      "subtitle": "Overshoot on a tap reads as wobbly, not responsive",
+      "description": "The spring curve is for containers only. On buttons it makes the press feel bouncy and unstable.",
+      "duration_ms": 150,
+      "easing": "spring",
+      "keyframes": [
+        { "t": 0,   "scale": 1 },
+        { "t": 0.5, "scale": 0.96 },
+        { "t": 1,   "scale": 1 }
+      ]
+    },
+    {
+      "id": "sequence-list-stagger",
+      "category": "sequence",
+      "title": "List stagger — card entrance",
+      "subtitle": "5 cards · 50ms stagger · 100ms delay · each 200ms ease-out",
+      "description": "Event card lists on Perfil and Explorar wave in on mount. Wave, not burst — the stagger creates a deliberate cascade.",
+      "duration_ms": 600,
+      "easing": "out",
+      "sequence": {
+        "childCount": 5,
+        "staggerInterval_ms": 50,
+        "delayChildren_ms": 100
+      },
+      "keyframes": [
+        { "t": 0, "opacity": 0, "translateY": 32 },
+        { "t": 1, "opacity": 1, "translateY": 0 }
+      ]
+    },
+    {
+      "id": "sequence-radio-select",
+      "category": "sequence",
+      "title": "Radio selection — state change",
+      "subtitle": "Background morph 200ms + dot fill 200ms — synchronous",
+      "description": "Selection state on Ramificação. Two things change at once: background color AND inner dot fill. Both 200ms ease-out, both fire synchronously in the handler.",
+      "duration_ms": 200,
+      "easing": "out",
+      "keyframes": [
+        { "t": 0, "scale": 0, "fill": "#FFFFFF" },
+        { "t": 1, "scale": 1, "fill": "#FF8800" }
+      ]
+    },
+    {
+      "id": "sequence-conclusion-hero",
+      "category": "sequence",
+      "title": "Hero conclusion — choreographed",
+      "subtitle": "Illustration 800ms hero + title reveal 200ms (staggered by 400ms)",
+      "description": "Conclusão screen: the Lottie hero plays 800ms; the title text reveals 400ms into the hero, not after. One dominant motion with a supporting layer, not sequential.",
+      "duration_ms": 1200,
+      "easing": "out",
+      "layers": [
+        {
+          "id": "hero",
+          "role": "illustration",
+          "duration_ms": 800,
+          "delay_ms": 0,
+          "keyframes": [
+            { "t": 0,    "opacity": 0, "scale": 0.7 },
+            { "t": 0.75, "opacity": 1, "scale": 1.05 },
+            { "t": 1,    "opacity": 1, "scale": 1 }
+          ]
+        },
+        {
+          "id": "title",
+          "role": "supporting",
+          "duration_ms": 200,
+          "delay_ms": 400,
+          "keyframes": [
+            { "t": 0, "opacity": 0, "translateY": 24, "scale": 0.98 },
+            { "t": 1, "opacity": 1, "translateY": 0,  "scale": 1 }
+          ]
+        }
+      ],
+      "keyframes": [
+        { "t": 0,    "opacity": 0, "scale": 0.7 },
+        { "t": 0.5,  "opacity": 1, "scale": 1.05 },
+        { "t": 0.67, "opacity": 1, "scale": 1 }
+      ]
+    }
+  ]
+}

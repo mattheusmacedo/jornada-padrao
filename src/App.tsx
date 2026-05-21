@@ -6,10 +6,11 @@ import Explorar from './screens/Explorar'
 import Evento from './screens/Evento'
 import Ramificacao from './screens/Ramificacao'
 import Conclusao from './screens/Conclusao'
+import MotionDocs from './screens/MotionDocs'
 
 const ROUTES_WITH_NAV = new Set(['/', '/explorar'])
 
-function AnimatedRoutes() {
+function AnimatedPhoneRoutes() {
   const location = useLocation()
   const path = location.pathname
   const isConclusao = path === '/conclusao'
@@ -41,7 +42,10 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AnimatedRoutes />
+      <Routes>
+        <Route path="/motion-docs" element={<MotionDocs />} />
+        <Route path="/*" element={<AnimatedPhoneRoutes />} />
+      </Routes>
     </BrowserRouter>
   )
 }
