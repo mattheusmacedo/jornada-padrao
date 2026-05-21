@@ -58,7 +58,7 @@ function FullbleedCard({ image, title, date, venue, location, onClick }: CommonP
     <button
       type="button"
       onClick={onClick}
-      className="relative w-full h-[95px] rounded-[44px] overflow-hidden shadow-[0_7.882px_12.315px_rgba(83,89,144,0.07)] text-left"
+      className="relative w-full h-[95px] rounded-full overflow-hidden shadow-[0_7.882px_12.315px_rgba(83,89,144,0.07)] text-left"
     >
       <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent" />
