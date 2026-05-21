@@ -58,24 +58,26 @@ function FullbleedCard({ image, title, date, venue, location, onClick }: CommonP
     <button
       type="button"
       onClick={onClick}
-      className="relative w-full text-left rounded-2xl overflow-hidden px-[17.5px] py-[12.5px] flex flex-col items-start gap-[25px] shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)]"
+      className="relative w-full text-left rounded-2xl overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)]"
     >
-      <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover -z-10" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent -z-10" />
-      <p
-        className="font-extrabold text-[var(--color-orange-light-hover)] text-[17.5px] leading-none"
-        style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
-      >
-        {title}
-      </p>
-      <p
-        className="text-[9.27px] leading-tight text-[var(--color-orange-light-active)]"
-        style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
-      >
-        <span className="font-semibold">{date}</span>
-        <br />
-        <span>{venue} • {location}</span>
-      </p>
+      <img src={image} alt="" className="absolute inset-0 w-full h-full object-cover z-0" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent z-[1]" />
+      <div className="relative z-10 px-[17.5px] py-[12.5px] flex flex-col items-start gap-[25px]">
+        <p
+          className="font-extrabold text-[var(--color-orange-light-hover)] text-[17.5px] leading-none"
+          style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
+        >
+          {title}
+        </p>
+        <p
+          className="text-[9.27px] leading-tight text-[var(--color-orange-light-active)]"
+          style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
+        >
+          <span className="font-semibold">{date}</span>
+          <br />
+          <span>{venue} • {location}</span>
+        </p>
+      </div>
     </button>
   )
 }
