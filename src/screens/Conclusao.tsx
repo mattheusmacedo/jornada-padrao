@@ -13,14 +13,14 @@ export default function Conclusao() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="relative h-full flex flex-col items-center px-6 pt-[100px]">
+      <div className="relative h-full flex flex-col items-center px-6 pt-[56px]">
         <fmotion.button
           type="button"
           aria-label="Fechar"
           onClick={() => navigate('/')}
           whileTap={pressButton}
           transition={pressTransition}
-          className="absolute top-[52px] right-[18px] h-10 w-10 flex items-center justify-center text-white"
+          className="absolute top-[8px] right-[18px] h-10 w-10 flex items-center justify-center text-white"
         >
           <X size={24} strokeWidth={2.5} />
         </fmotion.button>

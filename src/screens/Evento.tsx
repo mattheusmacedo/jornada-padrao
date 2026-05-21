@@ -17,7 +17,7 @@ import ticketmaster from '../assets/evento/ticketmaster.png'
 function HeroImage() {
   const navigate = useNavigate()
   return (
-    <div className="relative h-[300px] w-full shrink-0">
+    <div className="relative h-[300px] w-full shrink-0 -mt-[44px]">
       <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-black/60 to-transparent" />
 

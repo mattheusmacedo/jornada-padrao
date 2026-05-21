@@ -16,7 +16,7 @@ import lauraPasini from '../assets/explorar/laura-pasini.png'
 function Header() {
   const navigate = useNavigate()
   return (
-    <header className="flex items-center gap-3 px-[18px] pt-[52px]">
+    <header className="flex items-center gap-3 px-[18px] pt-[8px]">
       <fmotion.button
         type="button"
         aria-label="Voltar"

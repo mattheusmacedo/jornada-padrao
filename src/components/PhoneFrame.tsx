@@ -9,7 +9,7 @@ type Props = {
   showBottomNav?: boolean
 }
 
-const BOTTOM_NAV_HEIGHT = 88
+const BOTTOM_NAV_HEIGHT = 86
 
 export default function PhoneFrame({
   children,
@@ -23,7 +23,7 @@ export default function PhoneFrame({
       style={{ background: bgColor }}
     >
       <div
-        className="absolute top-0 left-0 right-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+        className="absolute top-0 left-0 right-0 overflow-y-auto overflow-x-hidden scrollbar-hide pt-[44px]"
         style={{ bottom: showBottomNav ? BOTTOM_NAV_HEIGHT : 0 }}
       >
         {children}

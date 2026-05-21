@@ -41,18 +41,18 @@ export default function BottomNav() {
   ]
 
   return (
-    <nav className="absolute bottom-0 inset-x-0 h-[88px] bg-white">
+    <nav className="absolute bottom-0 inset-x-0 h-[86px] bg-white shadow-[0_-2.94px_7.84px_0_rgba(157,178,214,0.13)]">
       <fmotion.button
         type="button"
         aria-label="Criar"
         whileTap={pressButton}
         transition={pressTransition}
-        className="absolute left-1/2 -translate-x-1/2 -top-[22px] w-[56px] h-[56px] rounded-full bg-[var(--color-pink-normal)] text-white flex items-center justify-center shadow-[0_6px_14px_rgba(232,23,107,0.4)]"
+        className="absolute left-1/2 -translate-x-1/2 -top-[22px] w-[56px] h-[56px] rounded-full bg-[var(--color-pink-normal)] text-white flex items-center justify-center shadow-[0_6px_14px_rgba(232,23,107,0.4)] z-10"
       >
         <Plus size={28} strokeWidth={2.5} />
       </fmotion.button>
 
-      <div className="grid grid-cols-4 h-[68px] pt-1">
+      <div className="grid grid-cols-4 h-full">
         {items.map(({ key, label, Icon, enabled }, idx) => {
           const isActive = key === active
           const padCls = idx === 1 ? 'pr-7' : idx === 2 ? 'pl-7' : ''
@@ -63,7 +63,7 @@ export default function BottomNav() {
               onClick={() => enabled && navigate(ROUTE_BY_KEY[key])}
               whileTap={pressButton}
               transition={pressTransition}
-              className={`flex flex-col items-center justify-center gap-1 h-10 w-full ${padCls}`}
+              className={`flex flex-col items-center justify-center gap-1 h-full w-full pb-[10px] ${padCls}`}
             >
               <fmotion.span
                 animate={{ color: isActive ? PINK : GREY }}
@@ -78,7 +78,7 @@ export default function BottomNav() {
         })}
       </div>
 
-      <div className="absolute bottom-[6px] left-1/2 -translate-x-1/2 h-[5px] w-[131px] rounded-full bg-[var(--color-grey-light-active)]" />
+      <div className="absolute bottom-[4px] left-1/2 -translate-x-1/2 h-[5px] w-[131px] rounded-full bg-[var(--color-grey-light-active)]" />
     </nav>
   )
 }
