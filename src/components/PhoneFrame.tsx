@@ -9,7 +9,10 @@ type Props = {
   showBottomNav?: boolean
 }
 
-const BOTTOM_NAV_HEIGHT = 86
+// Nav body is 86px; the FAB lifts ~22px above the body. Reserving the full
+// 108px ensures scrolled content stops at the FAB's top edge so the lifted
+// half of the FAB never has scrolling content visible around it.
+const NAV_RESERVED_HEIGHT = 86 + 22
 
 export default function PhoneFrame({
   children,
@@ -24,7 +27,7 @@ export default function PhoneFrame({
     >
       <div
         className="absolute top-0 left-0 right-0 overflow-y-auto overflow-x-hidden scrollbar-hide pt-[44px]"
-        style={{ bottom: showBottomNav ? BOTTOM_NAV_HEIGHT : 0 }}
+        style={{ bottom: showBottomNav ? NAV_RESERVED_HEIGHT : 0 }}
       >
         {children}
       </div>

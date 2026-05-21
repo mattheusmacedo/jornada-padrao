@@ -15,10 +15,11 @@ function AnimatedPhoneRoutes() {
   const path = location.pathname
   const isConclusao = path === '/conclusao'
   const isEvento = path === '/evento'
+  const isExplorar = path === '/explorar'
 
   const bgColor = isConclusao
     ? 'var(--color-pink-normal)'
-    : isEvento
+    : isEvento || isExplorar
       ? '#FFFFFF'
       : 'var(--color-grey-light)'
   const statusBarStyle: 'dark' | 'light' = isConclusao || isEvento ? 'light' : 'dark'
