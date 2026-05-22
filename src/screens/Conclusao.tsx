@@ -7,15 +7,7 @@ import {
   pressButton,
   pressTransition,
 } from '../motion/variants'
-import { motion as motionTokens } from '../motion/tokens'
 import ConclusaoIllustration from '../components/ConclusaoIllustration'
-
-const titleTransition = {
-  duration: motionTokens.duration.hero / 1000,
-  ease: motionTokens.easing.out,
-  times: [0, 0.6, 1],
-  delay: 0.1,
-}
 
 export default function Conclusao() {
   const navigate = useNavigate()
@@ -43,12 +35,11 @@ export default function Conclusao() {
           <ConclusaoIllustration />
         </fmotion.div>
 
-        {/* Beat 2: title enters in parallel with a 100ms stagger so the eye reads the illustration first */}
+        {/* Beat 2: title enters in parallel with the illustration at t=0 — same heroVariants */}
         <fmotion.h1
           variants={heroVariants}
           initial="initial"
           animate="animate"
-          transition={titleTransition}
           className="mt-[32px] w-[280px] text-center text-white font-bold uppercase text-[22.8px] leading-tight no-underline"
           style={{ letterSpacing: '1.42px', textDecoration: 'none' }}
         >
