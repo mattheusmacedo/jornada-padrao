@@ -45,6 +45,21 @@ export const listItemVariants: Variants = {
   },
 }
 
+// Hero entry — Lottie wrapper reveal. 800ms ease-out with a slight scale overshoot at 60%.
+// Mirrors the hero-lottie demo in motion-system.json.
+export const heroVariants: Variants = {
+  initial: { opacity: 0, scale: 0.7 },
+  animate: {
+    opacity: [0, 1, 1],
+    scale: [0.7, 1.05, 1],
+    transition: {
+      duration: motionTokens.duration.hero / 1000,
+      ease: motionTokens.easing.out,
+      times: [0, 0.6, 1],
+    },
+  },
+}
+
 export const pressButton = { scale: motionTokens.press.button }
 export const pressCardStandard = { scale: motionTokens.press.cardStandard }
 export const pressCardSelected = { scale: motionTokens.press.cardSelected }

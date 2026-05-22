@@ -4,14 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
 import { PageTransition } from '../motion/transitions'
 import {
+  heroVariants,
   pressButton,
   pressCardStandard,
   pressCardSelected,
   pressTransition,
-  revealVariants,
-  revealTransition,
 } from '../motion/variants'
 import { motion as motionTokens } from '../motion/tokens'
+import RamificacaoIllustration from '../components/RamificacaoIllustration'
 
 type Choice = 'salvos' | 'favoritos'
 
@@ -111,14 +111,12 @@ export default function Ramificacao() {
           />
         </div>
         <fmotion.div
-          variants={revealVariants}
+          variants={heroVariants}
           initial="initial"
           animate="animate"
-          transition={revealTransition}
           className="mt-[60px] flex justify-center"
         >
-          {/* TODO: replace with Lottie JSON animation (hand holding phone) */}
-          <div className="w-[220px] h-[220px]" />
+          <RamificacaoIllustration />
         </fmotion.div>
         <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
           <fmotion.button

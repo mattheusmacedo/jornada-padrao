@@ -5,14 +5,17 @@
   "type": "module",
   "scripts": {
     "sync:motion-spec": "node scripts/sync-motion-spec.mjs",
+    "sync:illustrations": "node scripts/sync-illustrations.mjs",
+    "sync:all": "npm run sync:motion-spec && npm run sync:illustrations",
     "export:lottie": "node scripts/export-lottie.mjs",
-    "dev": "npm run sync:motion-spec && vite",
-    "build": "npm run sync:motion-spec && tsc -b && vite build",
+    "dev": "npm run sync:all && vite",
+    "build": "npm run sync:all && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "framer-motion": "^12.39.0",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
