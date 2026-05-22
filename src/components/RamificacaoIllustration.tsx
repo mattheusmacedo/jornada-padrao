@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import Lottie, { type LottieRefCurrentProps } from 'lottie-react'
+import { useEffect, useState } from 'react'
+import { useLottie } from 'lottie-react'
 
 // No markers in the source file (609 frames @ 60fps ≈ 10.15s). Strategy B:
 // play the full clip once, then loop the last 25% (frames 456 → 609, ~2.5s)
@@ -10,9 +10,25 @@ const IDLE_END_FRAME = 609
 
 type LottieJson = Record<string, unknown>
 
+function Player({ data }: { data: LottieJson }) {
+  const { View, playSegments, animationItem } = useLottie(
+    {
+      animationData: data,
+      loop: false,
+      autoplay: true,
+      onComplete: () => {
+        if (!animationItem) return
+        animationItem.loop = true
+        playSegments([IDLE_START_FRAME, IDLE_END_FRAME], true)
+      },
+    },
+    { width: 220, height: 220 }
+  )
+  return View
+}
+
 export default function RamificacaoIllustration() {
   const [data, setData] = useState<LottieJson | null>(null)
-  const lottieRef = useRef<LottieRefCurrentProps>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -27,26 +43,9 @@ export default function RamificacaoIllustration() {
     }
   }, [])
 
-  const handleIntroDone = () => {
-    const anim = lottieRef.current?.animationItem
-    if (!anim) return
-    anim.loop = true
-    lottieRef.current?.playSegments([IDLE_START_FRAME, IDLE_END_FRAME], true)
-  }
-
-  // Placeholder while fetching so layout doesn't jump.
   if (!data) {
     return <div className="w-[220px] h-[220px]" aria-hidden />
   }
 
-  return (
-    <Lottie
-      lottieRef={lottieRef}
-      animationData={data}
-      loop={false}
-      autoplay
-      onComplete={handleIntroDone}
-      style={{ width: 220, height: 220 }}
-    />
-  )
+  return <Player data={data} />
 }
