@@ -11,7 +11,7 @@ type LottieJson = Record<string, unknown>
 
 const PATH_BY_SELECTION: Record<Selection, string> = {
   salvos: '/illustrations/ramificacao.json',
-  favoritos: '/illustrations/ramificacao2.json',
+  favoritos: '/illustrations/ramificacao3.json',
 }
 
 type Props = { selection: Selection }

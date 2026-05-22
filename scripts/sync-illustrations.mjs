@@ -15,7 +15,7 @@ const DEST_DIR = resolve(__dirname, '../public/illustrations')
 
 const ENTRIES = [
   { src: 'v1/ramificacao.json', dest: 'ramificacao.json' },
-  { src: 'v1/ramificacao2.json', dest: 'ramificacao2.json' },
+  { src: 'v1/ramificacao3.json', dest: 'ramificacao3.json' },
   { src: 'conclusao6.json', dest: 'conclusao.json' },
 ]
 
