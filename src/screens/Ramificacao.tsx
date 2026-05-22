@@ -99,12 +99,13 @@ export default function Ramificacao() {
             filling the screen behind the foreground UI. pointer-events-none so
             it never intercepts taps on the radio cards / CONCLUIR. */}
         <fmotion.div
+          key={choice}
           variants={heroVariants}
           initial="initial"
           animate="animate"
           className="absolute inset-0 pointer-events-none z-0"
         >
-          <RamificacaoIllustration />
+          <RamificacaoIllustration selection={choice} />
         </fmotion.div>
 
         {/* Foreground UI */}
