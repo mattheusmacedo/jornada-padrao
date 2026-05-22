@@ -35,7 +35,7 @@ export default function Conclusao() {
           variants={heroVariants}
           initial="initial"
           animate={isReady ? 'animate' : 'initial'}
-          className="w-[380px] h-[302px]"
+          className="w-[456px] h-[362px]"
         >
           <ConclusaoIllustration onReady={() => setIsReady(true)} />
         </fmotion.div>
