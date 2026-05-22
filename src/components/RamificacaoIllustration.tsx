@@ -22,7 +22,7 @@ function Player({ data }: { data: LottieJson }) {
         playSegments([IDLE_START_FRAME, IDLE_END_FRAME], true)
       },
     },
-    { width: 220, height: 220 }
+    { width: '100%', height: '100%' }
   )
   return View
 }
@@ -44,7 +44,7 @@ export default function RamificacaoIllustration() {
   }, [])
 
   if (!data) {
-    return <div className="w-[220px] h-[220px]" aria-hidden />
+    return <div className="w-full h-full" aria-hidden />
   }
 
   return <Player data={data} />

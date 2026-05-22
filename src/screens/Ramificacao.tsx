@@ -94,40 +94,47 @@ export default function Ramificacao() {
   const navigate = useNavigate()
   return (
     <PageTransition>
-      <div className="relative h-full bg-white">
-        <Header />
-        <div className="mt-6 px-[28px] flex flex-col gap-[13.5px]">
-          <RadioCard
-            title="Shows salvos"
-            subtitle="Aqueles que você precisa ir"
-            selected={choice === 'salvos'}
-            onSelect={() => setChoice('salvos')}
-          />
-          <RadioCard
-            title="Shows favoritos"
-            subtitle="Aqueles que mudaram sua vida"
-            selected={choice === 'favoritos'}
-            onSelect={() => setChoice('favoritos')}
-          />
-        </div>
+      <div className="relative h-full bg-white overflow-hidden">
+        {/* Back layer: Lottie renders at its native 370×800 composition size,
+            filling the screen behind the foreground UI. pointer-events-none so
+            it never intercepts taps on the radio cards / CONCLUIR. */}
         <fmotion.div
           variants={heroVariants}
           initial="initial"
           animate="animate"
-          className="mt-[60px] flex justify-center"
+          className="absolute inset-0 pointer-events-none z-0"
         >
           <RamificacaoIllustration />
         </fmotion.div>
-        <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
-          <fmotion.button
-            type="button"
-            onClick={() => navigate('/conclusao')}
-            whileTap={pressButton}
-            transition={pressTransition}
-            className="bg-[var(--color-orange-normal)] text-white rounded-[15px] h-[57px] px-[60px] text-[15.8px] font-medium tracking-[1px] uppercase"
-          >
-            Concluir
-          </fmotion.button>
+
+        {/* Foreground UI */}
+        <div className="relative z-10 h-full">
+          <Header />
+          <div className="mt-6 px-[28px] flex flex-col gap-[13.5px]">
+            <RadioCard
+              title="Shows salvos"
+              subtitle="Aqueles que você precisa ir"
+              selected={choice === 'salvos'}
+              onSelect={() => setChoice('salvos')}
+            />
+            <RadioCard
+              title="Shows favoritos"
+              subtitle="Aqueles que mudaram sua vida"
+              selected={choice === 'favoritos'}
+              onSelect={() => setChoice('favoritos')}
+            />
+          </div>
+          <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
+            <fmotion.button
+              type="button"
+              onClick={() => navigate('/conclusao')}
+              whileTap={pressButton}
+              transition={pressTransition}
+              className="bg-[var(--color-orange-normal)] text-white rounded-[15px] h-[57px] px-[60px] text-[15.8px] font-medium tracking-[1px] uppercase"
+            >
+              Concluir
+            </fmotion.button>
+          </div>
         </div>
       </div>
     </PageTransition>
