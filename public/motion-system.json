@@ -2,8 +2,8 @@
   "_comments": {
     "purpose": "Spec source-of-truth do sistema de motion do app. Lida em runtime pela rota /motion-docs e traduzível para arquivos Lottie .json via script de export futuro.",
     "lottie_translation": "Cada keyframe do demo corresponde a uma animação de transform em uma layer a 60fps durante duration_ms. Número do frame = duration_ms * fps / 1000 * t. Nomes de easing mapeiam para control points de bezier padrão do Lottie (arrays in/out).",
-    "composition_note": "Todos os demos renderizam em uma composição 1080x1080 @ 60fps com o referenceShape centralizado. Valores translateX/translateY nos keyframes estão em pixels da composição — proporcionalmente reduzidos quando o preview é em tamanho menor (o player divide por composition.width / preview.width).",
-    "scale_opacity_note": "scale e opacity são scale-invariant — se aplicam igualmente em qualquer tamanho de preview."
+    "composition_note": "Todos os demos renderizam em uma composição 1080x1080 @ 60fps com o referenceShape centralizado. Valores translateX/translateY nos keyframes estão em pixels da composição, proporcionalmente reduzidos quando o preview é em tamanho menor (o player divide por composition.width / preview.width).",
+    "scale_opacity_note": "scale e opacity são scale-invariant. Se aplicam igualmente em qualquer tamanho de preview."
   },
   "version": "1.0.0",
   "composition": { "width": 1080, "height": 1080, "fps": 60 },
@@ -20,7 +20,7 @@
     {
       "id": "tap-button",
       "category": "rule",
-      "title": "Feedback de toque — botão",
+      "title": "Feedback de toque: botão",
       "subtitle": "150ms · ease-out · scale 0.96",
       "description": "Botões e icon buttons escalam para 0.96 no press. Rápido, responsivo, imediato. Usado em qualquer CTA primário/secundário, controles de ícone, FAB.",
       "duration_ms": 150,
@@ -34,7 +34,7 @@
     {
       "id": "press-card-standard",
       "category": "rule",
-      "title": "Feedback de pressão — card padrão",
+      "title": "Feedback de pressão: card padrão",
       "subtitle": "200ms · ease-out · scale 0.985",
       "description": "Cards padrão (cards de evento, list items) recebem um press scale bem mais sutil do que botões. Usado nos cards de evento em Perfil e Explorar, e nos radio cards não-selecionados.",
       "duration_ms": 200,
@@ -48,9 +48,9 @@
     {
       "id": "press-card-selected",
       "category": "rule",
-      "title": "Feedback de pressão — card selecionado",
+      "title": "Feedback de pressão: card selecionado",
       "subtitle": "200ms · ease-out · scale 0.99",
-      "description": "Cards já elevados (estado selecionado) têm press ainda menor — já estão elevados, então a affordance é reduzida. Usado em radio cards selecionados.",
+      "description": "Cards já elevados (estado selecionado) têm press ainda menor, já estão elevados, então a affordance é reduzida. Usado em radio cards selecionados.",
       "duration_ms": 200,
       "easing": "out",
       "keyframes": [
@@ -62,7 +62,7 @@
     {
       "id": "reveal-popup",
       "category": "rule",
-      "title": "Reveal — popup/ênfase",
+      "title": "Reveal: popup/ênfase",
       "subtitle": "200ms · ease-out · y:32→0, scale 0.98→1, opacity 0→1",
       "description": "Usado na entrada do FansPill, ênfase em card selecionado, conteúdo de popup/sheet. Entrada suave com leve translação para cima.",
       "duration_ms": 200,
@@ -75,9 +75,9 @@
     {
       "id": "container-transition",
       "category": "rule",
-      "title": "Transição de container — página/modal",
+      "title": "Transição de container: página/modal",
       "subtitle": "300ms · curva spring · x:48→0, opacity 0→1",
-      "description": "Transições de página e enter/exit de modal. A curva spring (0.22, 1, 0.36, 1) é a ÚNICA easing que usa overshoot leve. Só em containers — nunca em controles interativos.",
+      "description": "Transições de página e enter/exit de modal. A curva spring (0.22, 1, 0.36, 1) é a ÚNICA easing que usa overshoot leve. Só em containers, nunca em controles interativos.",
       "duration_ms": 300,
       "easing": "spring",
       "keyframes": [
@@ -88,9 +88,9 @@
     {
       "id": "hero-lottie",
       "category": "rule",
-      "title": "Momento hero — entrada da ilustração",
+      "title": "Momento hero: entrada da ilustração",
       "subtitle": "800ms · ease-out · scale 0.7→1.05→1, opacity 0→1",
-      "description": "Reservado para ilustrações Lottie em Ramificação e Conclusão — a duração mais longa carrega peso emocional, do tipo que um flyTo de mapa carregaria em um app baseado em mapa.",
+      "description": "Reservado para ilustrações Lottie em Ramificação e Conclusão. A duração mais longa carrega peso emocional, do tipo que um flyTo de mapa carregaria em um app baseado em mapa.",
       "duration_ms": 800,
       "easing": "out",
       "keyframes": [
@@ -120,7 +120,7 @@
       "category": "antipattern",
       "compareWith": "press-card-standard",
       "title": "❌ scale 0.94 em cards",
-      "subtitle": "Agressivo demais — parece barato, não premium",
+      "subtitle": "Agressivo demais, parece barato, não premium",
       "description": "Qualquer valor abaixo de 0.96 em botões ou 0.97 em cards parece barato. Premium = restrição.",
       "duration_ms": 200,
       "easing": "out",
@@ -135,7 +135,7 @@
       "category": "antipattern",
       "compareWith": "tap-button",
       "title": "❌ transition-colors sem duração definida",
-      "subtitle": "Cai no default de 150ms ease-in-out — errado nos dois eixos",
+      "subtitle": "Cai no default de 150ms ease-in-out, errado nos dois eixos",
       "description": "transition-colors do Tailwind sem duração usa o default ease-in-out de 150ms. Sempre defina os dois.",
       "duration_ms": 150,
       "easing": "out",
@@ -163,9 +163,9 @@
     {
       "id": "sequence-list-stagger",
       "category": "sequence",
-      "title": "Stagger de lista — entrada dos cards",
+      "title": "Stagger de lista: entrada dos cards",
       "subtitle": "5 cards · stagger de 50ms · delay de 100ms · cada um com 200ms ease-out",
-      "description": "Listas de cards de eventos em Perfil e Explorar entram em cascata no mount. Cascata, não rajada — o stagger cria uma sequência intencional.",
+      "description": "Listas de cards de eventos em Perfil e Explorar entram em cascata no mount. Cascata, não rajada: o stagger cria uma sequência intencional.",
       "duration_ms": 600,
       "easing": "out",
       "sequence": {
@@ -181,8 +181,8 @@
     {
       "id": "sequence-radio-select",
       "category": "sequence",
-      "title": "Seleção de radio — mudança de estado",
-      "subtitle": "Morph de background 200ms + preenchimento do dot 200ms — síncrono",
+      "title": "Seleção de radio: mudança de estado",
+      "subtitle": "Morph de background 200ms + preenchimento do dot 200ms, síncrono",
       "description": "Estado de seleção na Ramificação. Duas coisas mudam ao mesmo tempo: cor de background E preenchimento do dot interno. Ambos com 200ms ease-out, ambos disparam de forma síncrona no handler.",
       "duration_ms": 200,
       "easing": "out",
@@ -194,7 +194,7 @@
     {
       "id": "sequence-conclusion-hero",
       "category": "sequence",
-      "title": "Hero da conclusão — coreografado",
+      "title": "Hero da conclusão: coreografado",
       "subtitle": "Ilustração com hero de 800ms + reveal de título de 200ms (delay de 400ms entre eles)",
       "description": "Tela de Conclusão: o Lottie hero toca 800ms; o texto do título faz reveal 400ms depois do início do hero, não depois do fim. Uma motion dominante com uma camada de suporte, não sequencial.",
       "duration_ms": 1200,

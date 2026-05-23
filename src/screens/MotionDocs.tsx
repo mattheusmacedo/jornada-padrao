@@ -424,7 +424,7 @@ export default function MotionDocs() {
               Spec v{spec.version} · {spec.composition.width}×{spec.composition.height} @ {spec.composition.fps}fps · {spec.demos.length} demos
             </p>
             <p className="mt-2 text-[13px] text-[var(--color-grey-dark-active)] max-w-[640px]">
-              Source of truth fica em <code>2_SOURCE/footages/JSON/motion-system.json</code> — sincronizado para <code>public/</code> no dev/build. Traduzível para arquivos Lottie .json via script de export futuro.
+              Source of truth fica em <code>2_SOURCE/footages/JSON/motion-system.json</code>, sincronizado para <code>public/</code> no dev/build. Traduzível para arquivos Lottie .json via script de export futuro.
             </p>
           </div>
           <button
