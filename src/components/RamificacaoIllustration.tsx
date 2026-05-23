@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useLottie } from 'lottie-react'
 
-// Strategy B for both clips: play full intro once, then loop the last 25% as
-// the idle. Bounds are computed from animationItem.totalFrames at runtime so
-// either clip can be re-cut without changing this file.
-const IDLE_LOOP_FRACTION = 0.75
+// Strategy B for both clips: play full intro once, then loop the last 26
+// frames as the idle. Frame count is fixed (not proportional) so the idle
+// duration stays consistent regardless of which clip is playing.
+const IDLE_LOOP_FRAMES = 26
 
 type Selection = 'salvos' | 'favoritos'
 type LottieJson = Record<string, unknown>
@@ -25,7 +25,7 @@ function Player({ data }: { data: LottieJson }) {
       onComplete: () => {
         if (!animationItem) return
         const total = animationItem.totalFrames
-        const idleStart = Math.round(total * IDLE_LOOP_FRACTION)
+        const idleStart = Math.max(0, total - IDLE_LOOP_FRAMES)
         animationItem.loop = true
         playSegments([idleStart, total], true)
       },
