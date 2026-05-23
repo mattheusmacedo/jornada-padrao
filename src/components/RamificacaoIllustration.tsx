@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useLottie } from 'lottie-react'
 
-// Strategy B for both clips: play full intro once, then loop the last 26
-// frames as the idle. Frame count is fixed (not proportional) so the idle
-// duration stays consistent regardless of which clip is playing.
+// Intro plays frames 0 → (totalFrames - 26), then the idle loops the last 26
+// frames. The intro hands off to the loop on the same frame so there's no
+// visible jump-back at the seam.
 const IDLE_LOOP_FRAMES = 26
 
 type Selection = 'salvos' | 'favoritos'
@@ -21,7 +21,7 @@ function Player({ data }: { data: LottieJson }) {
     {
       animationData: data,
       loop: false,
-      autoplay: true,
+      autoplay: false,
       onComplete: () => {
         if (!animationItem) return
         const total = animationItem.totalFrames
@@ -32,6 +32,16 @@ function Player({ data }: { data: LottieJson }) {
     },
     { width: '100%', height: '100%' }
   )
+
+  // Once the animation is loaded, kick off the intro: play 0 → idleStart.
+  // onComplete then takes over and loops [idleStart, total].
+  useEffect(() => {
+    if (!animationItem) return
+    const total = animationItem.totalFrames
+    const idleStart = Math.max(0, total - IDLE_LOOP_FRAMES)
+    playSegments([0, idleStart], true)
+  }, [animationItem, playSegments])
+
   return View
 }
 
