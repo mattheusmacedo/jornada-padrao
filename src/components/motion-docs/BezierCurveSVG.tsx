@@ -9,10 +9,11 @@ type Props = {
   size?: number
 }
 
-const REPEAT_PAUSE_MS = 500
+// Inner inset so control points and the tracer never touch (or get clipped at)
+// the canvas border. Bezier domain (0..1) maps to [PADDING, size - PADDING].
+const PADDING = 24
 
 // Cubic bezier point evaluator — exact, no approximation.
-// Returns position along the curve at parameter v ∈ [0, 1].
 function bezierComponent(
   v: number,
   p0: number,
@@ -32,10 +33,11 @@ export default function BezierCurveSVG({
 }: Props) {
   const [x1, y1, x2, y2] = cubicBezier
 
-  // Map (t, value) ∈ [0,1]² to SVG coordinates. SVG y grows downward so we
-  // flip: value=0 → y=size (bottom), value=1 → y=0 (top).
-  const sx = (v: number) => v * size
-  const sy = (v: number) => size - v * size
+  // Inset coordinate mapping: (0,0) → bottom-left of inner area;
+  // (1,1) → top-right of inner area. SVG y-axis is flipped (grows down).
+  const inner = size - 2 * PADDING
+  const sx = (v: number) => PADDING + v * inner
+  const sy = (v: number) => PADDING + (1 - v) * inner
 
   const startX = sx(0)
   const startY = sy(0)
@@ -46,21 +48,22 @@ export default function BezierCurveSVG({
   const c2x = sx(x2)
   const c2y = sy(y2)
 
-  // Tracer animation: t advances linearly 0→1 over durationMs, holds at 1 for
-  // REPEAT_PAUSE_MS, then snaps back to 0 and repeats. The tracer's screen
-  // position is computed from t via the cubic bezier formula.
+  // Tracer: parked at t=0 on first mount; on each Replay (replayKey bump),
+  // resets to 0 and travels to 1 once, in durationMs. No auto-loop.
   const t = useMotionValue(0)
   const tracerX = useTransform(t, (v) => bezierComponent(v, startX, c1x, c2x, endX))
   const tracerY = useTransform(t, (v) => bezierComponent(v, startY, c1y, c2y, endY))
 
   useEffect(() => {
+    // replayKey === 0 is the initial-mount state — stay parked at t=0.
+    if (replayKey === 0) {
+      t.set(0)
+      return
+    }
     t.set(0)
     const controls = animate(t, 1, {
       duration: durationMs / 1000,
       ease: 'linear',
-      repeat: Infinity,
-      repeatDelay: REPEAT_PAUSE_MS / 1000,
-      repeatType: 'loop',
     })
     return () => controls.stop()
   }, [t, durationMs, replayKey])
@@ -72,12 +75,23 @@ export default function BezierCurveSVG({
       viewBox={`0 0 ${size} ${size}`}
       className="rounded-2xl bg-white border border-[var(--color-grey-light-active)]"
     >
+      {/* Faint outline of the inner math area */}
+      <rect
+        x={PADDING}
+        y={PADDING}
+        width={inner}
+        height={inner}
+        fill="none"
+        stroke="var(--color-grey-light-active)"
+        strokeWidth={1}
+        strokeOpacity={0.5}
+      />
       {/* Linear reference diagonal (t = value) */}
       <line
-        x1={0}
-        y1={size}
-        x2={size}
-        y2={0}
+        x1={startX}
+        y1={startY}
+        x2={endX}
+        y2={endY}
         stroke="var(--color-grey-light-active)"
         strokeWidth={1}
         strokeDasharray="3 4"
@@ -109,10 +123,12 @@ export default function BezierCurveSVG({
         strokeWidth={2.5}
         strokeLinecap="round"
       />
-      {/* Control points */}
+      {/* Endpoints + control points */}
+      <circle cx={startX} cy={startY} r={4} fill="var(--color-pink-normal)" />
+      <circle cx={endX} cy={endY} r={4} fill="var(--color-pink-normal)" />
       <circle cx={c1x} cy={c1y} r={6} fill="var(--color-pink-normal)" />
       <circle cx={c2x} cy={c2y} r={6} fill="var(--color-pink-normal)" />
-      {/* Tracer */}
+      {/* Tracer — parked at start by default, animates on Replay */}
       <motion.circle
         cx={tracerX}
         cy={tracerY}
@@ -135,7 +151,6 @@ export function BezierCopyButton({ values }: { values: number[] }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1200)
     } catch {
-      // Older browsers / non-secure contexts — fall back to a textarea trick.
       const ta = document.createElement('textarea')
       ta.value = text
       document.body.appendChild(ta)
