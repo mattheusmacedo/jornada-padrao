@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion as fmotion } from 'framer-motion'
+import BezierCurveSVG from '../components/motion-docs/BezierCurveSVG'
 
 type Keyframe = {
   t: number
@@ -251,6 +252,17 @@ function pickPlayer(demo: Demo) {
   return SingleCircleDemo
 }
 
+function bezierFor(demo: Demo): { curve: CubicBezier; label: string } {
+  if (demo.playerOverride?.cubicBezier) {
+    return {
+      curve: demo.playerOverride.cubicBezier,
+      label: `cubic-bezier(${demo.playerOverride.cubicBezier.join(', ')})`,
+    }
+  }
+  const curve = EASING_MAP[demo.easing] ?? EASING_MAP.out
+  return { curve, label: `cubic-bezier(${curve.join(', ')})` }
+}
+
 function DemoCard({ demo, rule, replayKey, onReplay }: {
   demo: Demo
   rule?: Demo
@@ -259,12 +271,17 @@ function DemoCard({ demo, rule, replayKey, onReplay }: {
 }) {
   const PlayerSelf = pickPlayer(demo)
   const PlayerRule = rule ? pickPlayer(rule) : null
+  const { curve, label } = bezierFor(demo)
+
   return (
     <div className="rounded-2xl bg-[var(--color-grey-light)] p-6 flex flex-col gap-4">
-      <div>
-        <h3 className="text-[18px] font-medium text-[var(--color-grey-darker)] leading-tight">{demo.title}</h3>
-        <p className="mt-1 text-[13px] text-[var(--color-grey-dark-active)]">{demo.subtitle}</p>
-        <p className="mt-2 text-[13px] leading-snug text-[var(--color-grey-dark)] max-w-[640px]">{demo.description}</p>
+      <div className="flex items-start justify-between gap-6">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[18px] font-medium text-[var(--color-grey-darker)] leading-tight">{demo.title}</h3>
+          <p className="mt-1 text-[13px] text-[var(--color-grey-dark-active)]">{demo.subtitle}</p>
+          <p className="mt-2 text-[13px] leading-snug text-[var(--color-grey-dark)] max-w-[640px]">{demo.description}</p>
+        </div>
+        <BezierCurveSVG cubicBezier={curve} label={label} />
       </div>
 
       {rule && PlayerRule ? (
@@ -341,14 +358,14 @@ export default function MotionDocs() {
   if (error) {
     return (
       <div className="min-h-screen w-full bg-[var(--color-grey-light)] p-10 text-[var(--color-grey-darker)]">
-        Failed to load motion-system.json: {error}
+        Falha ao carregar motion-system.json: {error}
       </div>
     )
   }
   if (!spec) {
     return (
       <div className="min-h-screen w-full bg-[var(--color-grey-light)] p-10 text-[var(--color-grey-darker)]">
-        Loading motion system spec…
+        Carregando spec do sistema de motion…
       </div>
     )
   }
@@ -364,13 +381,13 @@ export default function MotionDocs() {
         <header className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[34px] font-extrabold text-[var(--color-grey-darker)] leading-none">
-              Motion System Reference
+              Referência do Sistema de Motion
             </h1>
             <p className="mt-2 text-[14px] text-[var(--color-grey-dark)]">
               Spec v{spec.version} · {spec.composition.width}×{spec.composition.height} @ {spec.composition.fps}fps · {spec.demos.length} demos
             </p>
             <p className="mt-2 text-[13px] text-[var(--color-grey-dark-active)] max-w-[640px]">
-              Source of truth lives at <code>2_SOURCE/footages/JSON/motion-system.json</code> — synced to <code>public/</code> on dev/build. Translatable to Lottie .json files via a future export script.
+              Source of truth fica em <code>2_SOURCE/footages/JSON/motion-system.json</code> — sincronizado para <code>public/</code> no dev/build. Traduzível para arquivos Lottie .json via script de export futuro.
             </p>
           </div>
           <button
@@ -378,13 +395,13 @@ export default function MotionDocs() {
             onClick={() => setReplayKey((k) => k + 1)}
             className="shrink-0 text-[12px] uppercase tracking-[0.5px] font-medium text-white bg-[var(--color-pink-normal)] rounded-full px-5 py-3"
           >
-            Replay all
+            Tocar tudo novamente
           </button>
         </header>
 
-        <Section title="Rules" demos={rules} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
-        <Section title="Anti-patterns" demos={antipatterns} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
-        <Section title="Sequences" demos={sequences} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
+        <Section title="Regras" demos={rules} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
+        <Section title="Anti-padrões" demos={antipatterns} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
+        <Section title="Sequências" demos={sequences} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
       </div>
     </div>
   )
