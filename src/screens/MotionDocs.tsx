@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion as fmotion } from 'framer-motion'
-import BezierCurveSVG from '../components/motion-docs/BezierCurveSVG'
+import BezierCurveSVG, { BezierCopyButton } from '../components/motion-docs/BezierCurveSVG'
 
 type Keyframe = {
   t: number
@@ -263,6 +263,29 @@ function bezierFor(demo: Demo): { curve: CubicBezier; label: string } {
   return { curve, label: `cubic-bezier(${curve.join(', ')})` }
 }
 
+function BezierPanel({ curve, label, durationMs, replayKey, captionPrefix }: {
+  curve: CubicBezier
+  label: string
+  durationMs: number
+  replayKey: number
+  captionPrefix?: string
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      {captionPrefix && (
+        <span className="text-[11px] uppercase tracking-[0.5px] text-[var(--color-grey-dark)] font-semibold">
+          {captionPrefix}
+        </span>
+      )}
+      <BezierCurveSVG cubicBezier={curve} durationMs={durationMs} replayKey={replayKey} size={PREVIEW_SIZE} />
+      <div className="flex items-center justify-between gap-3">
+        <code className="font-mono text-[11px] text-[var(--color-grey-dark)] truncate">{label}</code>
+        <BezierCopyButton values={curve} />
+      </div>
+    </div>
+  )
+}
+
 function DemoCard({ demo, rule, replayKey, onReplay }: {
   demo: Demo
   rule?: Demo
@@ -275,33 +298,47 @@ function DemoCard({ demo, rule, replayKey, onReplay }: {
 
   return (
     <div className="rounded-2xl bg-[var(--color-grey-light)] p-6 flex flex-col gap-4">
-      <div className="flex items-start justify-between gap-6">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[18px] font-medium text-[var(--color-grey-darker)] leading-tight">{demo.title}</h3>
-          <p className="mt-1 text-[13px] text-[var(--color-grey-dark-active)]">{demo.subtitle}</p>
-          <p className="mt-2 text-[13px] leading-snug text-[var(--color-grey-dark)] max-w-[640px]">{demo.description}</p>
-        </div>
-        <BezierCurveSVG cubicBezier={curve} label={label} />
+      <div>
+        <h3 className="text-[18px] font-medium text-[var(--color-grey-darker)] leading-tight">{demo.title}</h3>
+        <p className="mt-1 text-[13px] text-[var(--color-grey-dark-active)]">{demo.subtitle}</p>
+        <p className="mt-2 text-[13px] leading-snug text-[var(--color-grey-dark)] max-w-[640px]">{demo.description}</p>
       </div>
 
-      {rule && PlayerRule ? (
-        <div className="flex flex-wrap gap-4 items-start">
-          <div className="flex flex-col gap-2">
-            <span className="text-[11px] uppercase tracking-[0.5px] text-[var(--color-grey-dark)] font-semibold">
-              ✓ {rule.title.replace(/^[^\w]+/, '').trim()}
-            </span>
-            <PlayerRule demo={rule} replayKey={replayKey} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <span className="text-[11px] uppercase tracking-[0.5px] text-[var(--color-pink-normal)] font-semibold">
-              ❌ {demo.title.replace(/^[^\w]+/, '').trim()}
-            </span>
+      <div className="flex flex-wrap gap-4 items-start">
+        {rule && PlayerRule ? (
+          <>
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] uppercase tracking-[0.5px] text-[var(--color-grey-dark)] font-semibold">
+                ✓ {rule.title.replace(/^[^\w]+/, '').trim()}
+              </span>
+              <PlayerRule demo={rule} replayKey={replayKey} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] uppercase tracking-[0.5px] text-[var(--color-pink-normal)] font-semibold">
+                ❌ {demo.title.replace(/^[^\w]+/, '').trim()}
+              </span>
+              <PlayerSelf demo={demo} replayKey={replayKey} />
+            </div>
+            <BezierPanel
+              curve={curve}
+              label={label}
+              durationMs={demo.duration_ms}
+              replayKey={replayKey}
+              captionPrefix={`Curva ${demo.playerOverride?.label ?? demo.easing}`}
+            />
+          </>
+        ) : (
+          <>
             <PlayerSelf demo={demo} replayKey={replayKey} />
-          </div>
-        </div>
-      ) : (
-        <PlayerSelf demo={demo} replayKey={replayKey} />
-      )}
+            <BezierPanel
+              curve={curve}
+              label={label}
+              durationMs={demo.duration_ms}
+              replayKey={replayKey}
+            />
+          </>
+        )}
+      </div>
 
       <button
         type="button"
@@ -377,7 +414,7 @@ export default function MotionDocs() {
 
   return (
     <div className="min-h-screen w-full bg-[var(--color-grey-light)]">
-      <div className="max-w-[900px] mx-auto px-6 py-12 flex flex-col gap-10">
+      <div className="max-w-[1200px] mx-auto px-6 py-12 flex flex-col gap-10">
         <header className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-[34px] font-extrabold text-[var(--color-grey-darker)] leading-none">
