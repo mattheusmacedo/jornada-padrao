@@ -19,9 +19,6 @@ export default function Conclusao() {
   // Two consecutive taps on the illustration re-arm a single additional
   // dance pass that fires after the current clip ends.
   const [currentVideo, setCurrentVideo] = useState<VideoState>('conclusao-dance')
-  // remountTick lets us re-fire AlphaVideo's `key` without changing src — for
-  // looping the same clip from frame 0 on its onEnded (idle re-plays).
-  const [remountTick, setRemountTick] = useState(0)
   const pendingDanceRef = useRef(false) // queued single dance from a 2-tap
   const tapCountRef = useRef(0)
 
@@ -38,8 +35,8 @@ export default function Conclusao() {
       setCurrentVideo('conclusao-dance')
       return
     }
-    // Idle loops — bump remountTick so the same src replays from frame 0.
-    setRemountTick((t) => t + 1)
+    // Idle loops — AlphaVideo will seek-to-0 internally because src didn't
+    // change, so the <video> element stays mounted (no transparent flash).
   }
 
   // Tap counter on the illustration: 2 consecutive taps (no time window)
@@ -83,7 +80,6 @@ export default function Conclusao() {
           className="mt-[30px] w-[547px] h-[434px] cursor-pointer"
         >
           <AlphaVideo
-            key={`${currentVideo}-${remountTick}`}
             src={`/videos/state-machine/${currentVideo}`}
             onEnded={handleEndedWithReset}
             className="w-full h-full"
