@@ -125,6 +125,11 @@ const events = [
   { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
 ]
 
+// Shared-element morph: tag the first RAYE card so it morphs into the
+// Evento detail page's hero. Other cards still navigate via slide transition.
+export const RAYE_EVENT_IMAGE_LAYOUT_ID = 'event-image-raye-1'
+export const RAYE_EVENT_TITLE_LAYOUT_ID = 'event-title-raye-1'
+
 function EventList({ onSelect }: { onSelect: () => void }) {
   return (
     <fmotion.div
@@ -133,9 +138,18 @@ function EventList({ onSelect }: { onSelect: () => void }) {
       animate="animate"
       className="mt-5 px-[23px] pb-[120px] flex flex-col gap-[14px]"
     >
-      {events.map((e, i) => (
-        <EventCard key={i} {...e} onClick={onSelect} />
-      ))}
+      {events.map((e, i) => {
+        const isFirstRaye = i === 0 && e.title === 'RAYE'
+        return (
+          <EventCard
+            key={i}
+            {...e}
+            onClick={onSelect}
+            imageLayoutId={isFirstRaye ? RAYE_EVENT_IMAGE_LAYOUT_ID : undefined}
+            titleLayoutId={isFirstRaye ? RAYE_EVENT_TITLE_LAYOUT_ID : undefined}
+          />
+        )
+      })}
     </fmotion.div>
   )
 }

@@ -60,6 +60,38 @@ export const heroVariants: Variants = {
   },
 }
 
+// Container morph (shared-element layoutId) transition — 500ms ease-out.
+// Used by motion elements that share a layoutId across routes (e.g. card image
+// morphing into hero image). NOT spring — spring would feel wobbly on an
+// interactive control like a tapped card.
+export const containerMorphTransition: Transition = {
+  duration: motionTokens.duration.containerMorph / 1000,
+  ease: motionTokens.easing.out,
+}
+
+// Content reveal that follows a container morph — 200ms ease-out, delayed
+// so it lands after the morph completes its first half. Used on the
+// destination page's non-morphing content.
+export const morphContentRevealVariants: Variants = {
+  initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: motionTokens.duration.reveal / 1000,
+      delay: motionTokens.duration.reveal / 1000,
+      ease: motionTokens.easing.out,
+    },
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      duration: motionTokens.duration.tap / 1000,
+      ease: motionTokens.easing.out,
+    },
+  },
+}
+
 export const pressButton = { scale: motionTokens.press.button }
 export const pressCardStandard = { scale: motionTokens.press.cardStandard }
 export const pressCardSelected = { scale: motionTokens.press.cardSelected }

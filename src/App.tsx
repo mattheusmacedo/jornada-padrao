@@ -27,7 +27,10 @@ function AnimatedPhoneRoutes() {
 
   return (
     <PhoneFrame bgColor={bgColor} statusBarStyle={statusBarStyle} showBottomNav={showBottomNav}>
-      <AnimatePresence mode="wait">
+      {/* mode="popLayout" keeps the exiting page mounted briefly so shared-
+          element morphs (layoutId-tagged) can measure both source and
+          destination positions for the cross-route interpolation. */}
+      <AnimatePresence mode="popLayout">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Perfil />} />
           <Route path="/explorar" element={<Explorar />} />

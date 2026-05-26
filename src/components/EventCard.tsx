@@ -1,6 +1,7 @@
 import { Ticket } from 'lucide-react'
 import { motion as fmotion } from 'framer-motion'
 import {
+  containerMorphTransition,
   listItemVariants,
   pressCardStandard,
   pressTransition,
@@ -14,6 +15,12 @@ type CommonProps = {
   location: string
   badgeCount?: number
   onClick?: () => void
+  /** When set, the card's image element shares a layoutId with a matching
+   *  element on the destination route — Framer Motion morphs between them. */
+  imageLayoutId?: string
+  /** When set, the card's title element shares a layoutId with a matching
+   *  element on the destination route. */
+  titleLayoutId?: string
 }
 
 type Props = CommonProps & { variant?: 'compact' | 'fullbleed' }
@@ -31,7 +38,7 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick }: CommonProps) {
+function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, imageLayoutId, titleLayoutId }: CommonProps) {
   return (
     <fmotion.button
       type="button"
@@ -41,14 +48,22 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
       transition={pressTransition}
       className="w-full text-left bg-[var(--color-grey-light)] rounded-2xl px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)]"
     >
-      <img
+      <fmotion.img
+        layoutId={imageLayoutId}
+        transition={imageLayoutId ? containerMorphTransition : undefined}
         src={image}
         alt=""
         className="w-[83.582px] h-[57.214px] rounded-lg object-cover shrink-0"
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate">{title}</p>
+          <fmotion.p
+            layoutId={titleLayoutId}
+            transition={titleLayoutId ? containerMorphTransition : undefined}
+            className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate"
+          >
+            {title}
+          </fmotion.p>
           <Badge count={badgeCount} />
         </div>
         <p className="mt-[10px] text-[var(--color-grey-darker)] text-[9px] leading-tight">
