@@ -97,6 +97,12 @@ function RadioCard({
 export default function Ramificacao() {
   const [choice, setChoice] = useState<Choice | null>(null)
   const [currentVideo, setCurrentVideo] = useState<VideoState>('idle')
+  // remountTick bumps on every onEnded so the AlphaVideo re-mounts (and the
+  // <video> replays from frame 0) even when currentVideo doesn't change. Without
+  // this, a setState that resolves to the same VideoState (e.g. idle → idle when
+  // no tap has happened) is bailed by React and the video stays paused at its
+  // last frame, freezing the state machine.
+  const [remountTick, setRemountTick] = useState(0)
   // pendingVideo (a ref because the onEnded callback reads it asynchronously
   // and we don't want a stale-closure re-render dance — last tap wins, set
   // synchronously in the click handler).
@@ -114,6 +120,11 @@ export default function Ramificacao() {
   }
 
   const handleEnded = () => {
+    // Always bump so the next playback fires regardless of whether the clip
+    // changes. If currentVideo doesn't change, this is the only thing that
+    // causes the <video> to actually replay.
+    setRemountTick((t) => t + 1)
+
     if (pendingVideoRef.current) {
       const next = pendingVideoRef.current
       pendingVideoRef.current = null
@@ -125,9 +136,8 @@ export default function Ramificacao() {
     if (lastTappedRef.current) {
       const variation = VARIATION_FOR_CHOICE[lastTappedRef.current]
       setCurrentVideo((prev) => (prev === 'idle' ? variation : 'idle'))
-    } else {
-      setCurrentVideo('idle')
     }
+    // else: leave currentVideo as 'idle' — remountTick bump above will replay it.
   }
 
   return (
@@ -137,6 +147,7 @@ export default function Ramificacao() {
             intercept taps on the radio cards / CONCLUIR. */}
         <div className="absolute inset-0 pointer-events-none z-0">
           <AlphaVideo
+            key={`${currentVideo}-${remountTick}`}
             src={`/videos/state-machine/${currentVideo}`}
             onEnded={handleEnded}
             className="w-full h-full"

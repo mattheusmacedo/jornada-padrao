@@ -15,28 +15,19 @@ type VideoState = 'conclusao-dance' | 'conclusao-idle'
 export default function Conclusao() {
   const navigate = useNavigate()
 
-  // State machine: on mount play dance twice, then settle into idle loop.
-  // Two consecutive taps on the illustration re-arms a single dance pass.
+  // State machine: on mount play dance ONCE, then settle into idle loop.
+  // Two consecutive taps on the illustration re-arm a single additional
+  // dance pass that fires after the current clip ends.
   const [currentVideo, setCurrentVideo] = useState<VideoState>('conclusao-dance')
-  const dancePassesRef = useRef(0) // counts dance plays in the current sequence
+  // remountTick lets us re-fire AlphaVideo's `key` without changing src — for
+  // looping the same clip from frame 0 on its onEnded (idle re-plays).
+  const [remountTick, setRemountTick] = useState(0)
   const pendingDanceRef = useRef(false) // queued single dance from a 2-tap
   const tapCountRef = useRef(0)
 
   const handleEnded = () => {
     if (currentVideo === 'conclusao-dance') {
-      dancePassesRef.current += 1
-      // Auto sequence on entry: dance plays twice before settling.
-      if (dancePassesRef.current < 2 && !pendingDanceRef.current) {
-        // Trigger a re-mount of the same clip so it replays from frame 0.
-        // setState with the same value would bail out — bump via setter form.
-        setCurrentVideo((v) => (v === 'conclusao-dance' ? 'conclusao-dance' : v))
-        // Force the AlphaVideo to remount by toggling and restoring next tick.
-        // Cleaner: use a small bump key (see remountTick below).
-        setRemountTick((t) => t + 1)
-        return
-      }
-      // Dance is done — fall back to idle.
-      dancePassesRef.current = 0
+      // Dance plays exactly once per trigger — transition straight to idle.
       setCurrentVideo('conclusao-idle')
       return
     }
@@ -44,21 +35,12 @@ export default function Conclusao() {
     // currentVideo === 'conclusao-idle'
     if (pendingDanceRef.current) {
       pendingDanceRef.current = false
-      dancePassesRef.current = 0
-      // Play dance once when re-armed by a 2-tap. After it ends, the
-      // dancePassesRef === 1 path above transitions back to idle.
-      // We set dancePassesRef to 1 directly so dance plays exactly once.
-      dancePassesRef.current = 1
       setCurrentVideo('conclusao-dance')
       return
     }
-    // Idle just loops — re-key the same src to replay from frame 0.
+    // Idle loops — bump remountTick so the same src replays from frame 0.
     setRemountTick((t) => t + 1)
   }
-
-  // remountTick lets us re-fire AlphaVideo's `key` without changing src — for
-  // looping the same clip from frame 0 on its onEnded.
-  const [remountTick, setRemountTick] = useState(0)
 
   // Tap counter on the illustration: 2 consecutive taps (no time window)
   // arm one more dance pass once the current clip finishes. The counter
