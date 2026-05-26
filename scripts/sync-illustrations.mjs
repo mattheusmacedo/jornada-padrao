@@ -1,7 +1,12 @@
-// Copies hand-authored Lottie illustration JSONs from the source folder into
-// the Vite app's public/illustrations/ so screens can fetch them at runtime.
-// Each entry has a source path (relative to 2_SOURCE/footages/JSON) and a
-// destination filename (so we can normalize names like conclusao6 → conclusao).
+// Copies hand-authored assets from 2_SOURCE into the Vite app's public/ folder
+// so screens can fetch them at runtime. Two asset families:
+//
+//   Lottie JSONs → public/illustrations/
+//   Alpha videos → public/videos/state-machine/
+//
+// On Vercel (where 2_SOURCE does not exist), this script no-ops: it logs
+// "skipped" for every entry whose source file is missing, then exits 0 so
+// the build continues using the already-committed public/ files.
 
 import { copyFileSync, existsSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -10,30 +15,57 @@ import { fileURLToPath } from 'node:url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-const SRC_ROOT = resolve(__dirname, '../../2_SOURCE/footages/JSON')
-const DEST_DIR = resolve(__dirname, '../public/illustrations')
+const SRC_ROOT = resolve(__dirname, '../../2_SOURCE/footages')
 
-const ENTRIES = [
-  { src: 'v1/ramificacao.json', dest: 'ramificacao.json' },
-  { src: 'v1/ramificacao3.json', dest: 'ramificacao3.json' },
-  { src: 'conclusao6.json', dest: 'conclusao.json' },
+const ILLUSTRATIONS_DEST = resolve(__dirname, '../public/illustrations')
+const VIDEOS_DEST = resolve(__dirname, '../public/videos/state-machine')
+
+// Lottie illustrations (small vector files only — bloated raster Lotties are
+// gone now that the character animation is served as alpha video).
+const ILLUSTRATIONS = [
+  // (intentionally none right now — the small ramificacao.json was the only
+  // candidate, and even that is no longer referenced after Phase F. Add entries
+  // here as new vector Lotties land.)
 ]
 
-mkdirSync(DEST_DIR, { recursive: true })
+// Alpha-video state machine clips. WebM VP9 with alpha for now; MP4 HEVC alpha
+// can be dropped into the same VIDEO/ folder later (Path 2, requires macOS
+// encoding) and this script will pick them up automatically.
+const VIDEO_NAMES = [
+  'idle',
+  'idle-phone',
+  'idle-bands',
+  'conclusao-idle',
+  'conclusao-dance',
+]
+const VIDEO_EXTS = ['.webm', '.mp4']
+
+mkdirSync(ILLUSTRATIONS_DEST, { recursive: true })
+mkdirSync(VIDEOS_DEST, { recursive: true })
 
 let copied = 0
 let skipped = 0
-for (const { src, dest } of ENTRIES) {
-  const srcPath = resolve(SRC_ROOT, src)
-  const destPath = resolve(DEST_DIR, dest)
+
+function copyOne(srcPath, destPath, label) {
   if (!existsSync(srcPath)) {
-    console.warn(`[sync-illustrations] WARN: ${srcPath} not found — skipping`)
+    console.warn(`[sync-illustrations] WARN: ${label} not found at ${srcPath} — skipping`)
     skipped++
-    continue
+    return
   }
   copyFileSync(srcPath, destPath)
-  console.log(`[sync-illustrations] copied ${src} → ${dest}`)
+  console.log(`[sync-illustrations] copied ${label}`)
   copied++
+}
+
+for (const { src, dest } of ILLUSTRATIONS) {
+  copyOne(resolve(SRC_ROOT, 'JSON', src), resolve(ILLUSTRATIONS_DEST, dest), src)
+}
+
+for (const name of VIDEO_NAMES) {
+  for (const ext of VIDEO_EXTS) {
+    const file = `${name}${ext}`
+    copyOne(resolve(SRC_ROOT, 'VIDEO', file), resolve(VIDEOS_DEST, file), file)
+  }
 }
 
 console.log(`[sync-illustrations] ${copied} copied, ${skipped} skipped`)

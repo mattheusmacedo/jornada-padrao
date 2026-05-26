@@ -8,6 +8,7 @@
     "sync:illustrations": "node scripts/sync-illustrations.mjs",
     "sync:all": "npm run sync:motion-spec && npm run sync:illustrations",
     "export:lottie": "node scripts/export-lottie.mjs",
+    "encode:states": "node scripts/encode-state-videos.mjs",
     "dev": "npm run sync:all && vite",
     "build": "npm run sync:all && tsc -b && vite build",
     "lint": "eslint .",
