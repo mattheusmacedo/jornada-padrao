@@ -3,7 +3,6 @@ import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
-import { PageTransition } from '../motion/transitions'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
 import avatar from '../assets/perfil/avatar-quinn.png'
 import eventRaye from '../assets/perfil/event-raye.png'
@@ -158,14 +157,16 @@ export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const navigate = useNavigate()
   return (
-    <PageTransition>
-      <div className="pb-[20px]">
-        <Header />
-        <ProfileBlock />
-        <ActionButtons />
-        <TabBar active={tab} onChange={setTab} />
-        <EventList onSelect={() => navigate('/evento')} />
-      </div>
-    </PageTransition>
+    // Perfil intentionally does NOT wrap in PageTransition: the morph from
+    // the RAYE card to Evento's hero (layoutId) needs the source's parent
+    // to be transform-stable, otherwise the page-level slide composes with
+    // the layoutId animation and produces a "dip then pop" artifact.
+    <div className="pb-[20px]">
+      <Header />
+      <ProfileBlock />
+      <ActionButtons />
+      <TabBar active={tab} onChange={setTab} />
+      <EventList onSelect={() => navigate('/evento')} />
+    </div>
   )
 }

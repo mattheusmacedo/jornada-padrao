@@ -1,7 +1,6 @@
 import { ArrowLeft, Bookmark, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
-import { PageTransition } from '../motion/transitions'
 import {
   containerMorphTransition,
   morphContentRevealVariants,
@@ -208,8 +207,12 @@ function CTAButton() {
 
 export default function Evento() {
   return (
-    <PageTransition>
-      <div className="h-full flex flex-col bg-white">
+    // Evento intentionally does NOT wrap in PageTransition: the destination
+    // layoutId hero/title need a transform-stable parent so the morph from
+    // the Perfil RAYE card interpolates cleanly. The non-morph reveal of
+    // the rest of the content (date row, description, CTA) is handled by
+    // morphContentRevealVariants on its own wrappers below.
+    <div className="h-full flex flex-col bg-white">
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <HeroImage />
           {/* Non-morphing content fades + slides up with a 200ms delay so it
@@ -247,6 +250,5 @@ export default function Evento() {
           <CTAButton />
         </fmotion.div>
       </div>
-    </PageTransition>
   )
 }
