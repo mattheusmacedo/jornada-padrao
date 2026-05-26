@@ -1,19 +1,24 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
 import { PageTransition } from '../motion/transitions'
 import {
-  heroVariants,
   pressButton,
   pressCardStandard,
   pressCardSelected,
   pressTransition,
 } from '../motion/variants'
 import { motion as motionTokens } from '../motion/tokens'
-import RamificacaoIllustration from '../components/RamificacaoIllustration'
+import AlphaVideo from '../components/AlphaVideo'
 
 type Choice = 'salvos' | 'favoritos'
+type VideoState = 'idle' | 'idle-phone' | 'idle-bands'
+
+const VARIATION_FOR_CHOICE: Record<Choice, Exclude<VideoState, 'idle'>> = {
+  salvos: 'idle-phone',
+  favoritos: 'idle-bands',
+}
 
 function Header() {
   const navigate = useNavigate()
@@ -90,23 +95,54 @@ function RadioCard({
 }
 
 export default function Ramificacao() {
-  const [choice, setChoice] = useState<Choice>('salvos')
+  const [choice, setChoice] = useState<Choice | null>(null)
+  const [currentVideo, setCurrentVideo] = useState<VideoState>('idle')
+  // pendingVideo (a ref because the onEnded callback reads it asynchronously
+  // and we don't want a stale-closure re-render dance — last tap wins, set
+  // synchronously in the click handler).
+  const pendingVideoRef = useRef<VideoState | null>(null)
+  // lastTapped persists across cycles so once the user has expressed a
+  // preference, the variation alternates with idle forever.
+  const lastTappedRef = useRef<Choice | null>(null)
+
   const navigate = useNavigate()
+
+  const handleSelect = (next: Choice) => {
+    setChoice(next)
+    lastTappedRef.current = next
+    pendingVideoRef.current = VARIATION_FOR_CHOICE[next]
+  }
+
+  const handleEnded = () => {
+    if (pendingVideoRef.current) {
+      const next = pendingVideoRef.current
+      pendingVideoRef.current = null
+      setCurrentVideo(next)
+      return
+    }
+    // No pending swap — alternate variation/idle as long as the user has
+    // expressed a preference; otherwise just keep looping idle.
+    if (lastTappedRef.current) {
+      const variation = VARIATION_FOR_CHOICE[lastTappedRef.current]
+      setCurrentVideo((prev) => (prev === 'idle' ? variation : 'idle'))
+    } else {
+      setCurrentVideo('idle')
+    }
+  }
+
   return (
     <PageTransition>
       <div className="relative h-full bg-white overflow-hidden">
-        {/* Back layer: Lottie renders at its native 370×800 composition size,
-            filling the screen behind the foreground UI. pointer-events-none so
-            it never intercepts taps on the radio cards / CONCLUIR. */}
-        <fmotion.div
-          key={choice}
-          variants={heroVariants}
-          initial="initial"
-          animate="animate"
-          className="absolute inset-0 pointer-events-none z-0"
-        >
-          <RamificacaoIllustration selection={choice} />
-        </fmotion.div>
+        {/* Back layer: alpha-video character. pointer-events-none so it doesn't
+            intercept taps on the radio cards / CONCLUIR. */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <AlphaVideo
+            src={`/videos/state-machine/${currentVideo}`}
+            onEnded={handleEnded}
+            className="w-full h-full"
+            style={{ objectFit: 'contain' }}
+          />
+        </div>
 
         {/* Foreground UI */}
         <div className="relative z-10 h-full">
@@ -116,13 +152,13 @@ export default function Ramificacao() {
               title="Shows salvos"
               subtitle="Aqueles que você precisa ir"
               selected={choice === 'salvos'}
-              onSelect={() => setChoice('salvos')}
+              onSelect={() => handleSelect('salvos')}
             />
             <RadioCard
               title="Shows favoritos"
               subtitle="Aqueles que mudaram sua vida"
               selected={choice === 'favoritos'}
-              onSelect={() => setChoice('favoritos')}
+              onSelect={() => handleSelect('favoritos')}
             />
           </div>
           <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
