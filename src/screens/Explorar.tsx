@@ -85,17 +85,21 @@ export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
   // Mirrors Perfil's pattern. Source text hides for the whole open→close
-  // cycle; on close a calibrated 260ms timer restores it AS the reverse
-  // morph is landing (waiting for AnimatePresence.onExitComplete feels laggy
-  // because that fires only after every exit animation in the overlay tree
-  // has finished, not when the card has visually returned).
+  // cycle and restores via 260ms timer. morphArmed gates whether the card
+  // even has a layoutId — outside an active morph cycle the card behaves
+  // like every other list item during list entrance / tab swap.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
+  const [morphArmed, setMorphArmed] = useState(false)
   const closeTimerRef = useRef<number | null>(null)
+  const openFrameRef = useRef<number | null>(null)
 
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) {
         window.clearTimeout(closeTimerRef.current)
+      }
+      if (openFrameRef.current) {
+        window.cancelAnimationFrame(openFrameRef.current)
       }
     }
   }, [])
@@ -105,8 +109,16 @@ export default function Explorar() {
       window.clearTimeout(closeTimerRef.current)
       closeTimerRef.current = null
     }
+    if (openFrameRef.current) {
+      window.cancelAnimationFrame(openFrameRef.current)
+    }
+    // Two-step open: attach layoutIds this render, mount overlay next frame.
     setSuppressRayeSourceContent(true)
-    setSelectedEvent('raye')
+    setMorphArmed(true)
+    openFrameRef.current = window.requestAnimationFrame(() => {
+      setSelectedEvent('raye')
+      openFrameRef.current = null
+    })
   }
   const closeRaye = () => {
     setSelectedEvent(null)
@@ -141,15 +153,20 @@ export default function Explorar() {
                 variant="fullbleed"
                 {...e}
                 onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
-                cardLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
-                imageLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
+                cardLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
+                imageLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
                 suppressContent={isFirstRaye && suppressRayeSourceContent}
+                disablePress={isFirstRaye}
               />
             )
           })}
         </fmotion.div>
       </div>
-      <AnimatePresence initial={false} mode="sync">
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        onExitComplete={() => setMorphArmed(false)}
+      >
         {selectedEvent === 'raye' && (
           <EventMorphOverlay
             key="explorar-raye-overlay"

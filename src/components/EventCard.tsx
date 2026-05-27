@@ -20,7 +20,12 @@ type CommonProps = {
   /** Shared layoutIds for the card → overlay morph. The container morphs
    *  the card box; the image morphs from thumb to hero. The title is NOT
    *  shared — it disappears with the source card and the destination title
-   *  reveals separately via the stagger group on the overlay. */
+   *  reveals separately via the stagger group on the overlay.
+   *
+   *  IMPORTANT: only pass these while the morph is actively transitioning.
+   *  An always-mounted layoutId creates an FM projection node that can
+   *  pollute the card's position during list entrance/tab swap. Callers
+   *  arm the ids on tap, then disarm them via AnimatePresence.onExitComplete. */
   cardLayoutId?: string
   imageLayoutId?: string
   /** When true, the source-only content (title, badge, date/venue) fades
@@ -28,6 +33,11 @@ type CommonProps = {
    *  open and close morph so it never visually deforms inside the shrinking
    *  container. The image stays visible — it's the shared morph element. */
   suppressContent?: boolean
+  /** Disables the press-scale (whileTap) on cards that are morph candidates,
+   *  regardless of whether the morph is currently armed. Without this, a
+   *  press in flight at the moment cardLayoutId arms would scale the source
+   *  rect FM captures, producing a small jump on morph start. */
+  disablePress?: boolean
 }
 
 type Props = CommonProps & { variant?: 'compact' | 'fullbleed' }
@@ -45,19 +55,20 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, suppressContent = false }: CommonProps) {
+function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
+  // Armed only during the actual morph (open/close). Outside that window
+  // cardLayoutId is undefined and FM doesn't create a projection node —
+  // the card behaves like every other list item during tab entrance.
   const isMorphing = Boolean(cardLayoutId)
   return (
     <fmotion.button
       type="button"
       onClick={onClick}
       layoutId={cardLayoutId}
-      // Same list entrance variant for every card (morph source or not) —
-      // RAYE must blend into the staggered rhythm during tab swaps, not
-      // animate differently. Morph-only specials (no press, spring
-      // transition, animatable border-radius) live in other props.
+      // Same list entrance variant for every card — RAYE blends into the
+      // staggered rhythm during tab swaps. Morph-only specials live below.
       variants={listItemVariants}
-      whileTap={isMorphing ? undefined : pressCardStandard}
+      whileTap={disablePress ? undefined : pressCardStandard}
       transition={isMorphing ? MORPH_TRANSITION : pressTransition}
       style={isMorphing ? { borderRadius: 16 } : undefined}
       className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
@@ -94,7 +105,7 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
   )
 }
 
-function FullbleedCard({ image, title, date, venue, location, onClick, cardLayoutId, imageLayoutId, suppressContent = false }: CommonProps) {
+function FullbleedCard({ image, title, date, venue, location, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
   const isMorphing = Boolean(cardLayoutId)
   return (
     <fmotion.button
@@ -102,7 +113,7 @@ function FullbleedCard({ image, title, date, venue, location, onClick, cardLayou
       onClick={onClick}
       layoutId={cardLayoutId}
       variants={listItemVariants}
-      whileTap={isMorphing ? undefined : pressCardStandard}
+      whileTap={disablePress ? undefined : pressCardStandard}
       transition={isMorphing ? MORPH_TRANSITION : pressTransition}
       style={isMorphing ? { borderRadius: 16 } : undefined}
       className={`relative w-full text-left overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)] ${isMorphing ? '' : 'rounded-2xl'}`}

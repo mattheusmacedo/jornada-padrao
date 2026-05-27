@@ -134,10 +134,12 @@ function EventList({
   onSelectRaye,
   onSelectOther,
   suppressRayeSourceContent,
+  morphArmed,
 }: {
   onSelectRaye: () => void
   onSelectOther: () => void
   suppressRayeSourceContent: boolean
+  morphArmed: boolean
 }) {
   return (
     <fmotion.div
@@ -153,9 +155,11 @@ function EventList({
             key={i}
             {...e}
             onClick={isFirstRaye ? onSelectRaye : onSelectOther}
-            cardLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.container : undefined}
-            imageLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.image : undefined}
+            // layoutIds attach ONLY during an active morph cycle.
+            cardLayoutId={isFirstRaye && morphArmed ? PERFIL_RAYE_MORPH_IDS.container : undefined}
+            imageLayoutId={isFirstRaye && morphArmed ? PERFIL_RAYE_MORPH_IDS.image : undefined}
             suppressContent={isFirstRaye && suppressRayeSourceContent}
+            disablePress={isFirstRaye}
           />
         )
       })}
@@ -166,21 +170,25 @@ function EventList({
 export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // suppressRayeSourceContent stays true for the entire open→close cycle so
-  // the source card's title/badge/date/venue never become visible while the
-  // shared layoutId container is mid-transform (forward OR reverse).
-  // On close we use a calibrated timer to restore visibility AS the reverse
-  // morph is mostly landing — waiting for AnimatePresence.onExitComplete
-  // makes the text return feel laggy because that fires after every exit
-  // animation on the overlay tree has finished.
+  // suppressRayeSourceContent: source-only card text hides during open/close.
+  // Restored via a 260ms timer in closeRaye, not via onExitComplete.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
+  // morphArmed: when true, the RAYE card receives a layoutId. Only during
+  // an active open→close cycle. Outside that window the card has no
+  // layoutId at all, so FM doesn't create a projection node that could
+  // interfere with list entrance / tab swap layout.
+  const [morphArmed, setMorphArmed] = useState(false)
   const closeTimerRef = useRef<number | null>(null)
+  const openFrameRef = useRef<number | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     return () => {
       if (closeTimerRef.current) {
         window.clearTimeout(closeTimerRef.current)
+      }
+      if (openFrameRef.current) {
+        window.cancelAnimationFrame(openFrameRef.current)
       }
     }
   }, [])
@@ -190,8 +198,18 @@ export default function Perfil() {
       window.clearTimeout(closeTimerRef.current)
       closeTimerRef.current = null
     }
+    if (openFrameRef.current) {
+      window.cancelAnimationFrame(openFrameRef.current)
+    }
+    // Two-step open: first commit suppress + armed so the source card
+    // re-renders with cardLayoutId attached. Then on the NEXT frame mount
+    // the overlay. This gives FM a valid source projection to morph from.
     setSuppressRayeSourceContent(true)
-    setSelectedEvent('raye')
+    setMorphArmed(true)
+    openFrameRef.current = window.requestAnimationFrame(() => {
+      setSelectedEvent('raye')
+      openFrameRef.current = null
+    })
   }
   const closeRaye = () => {
     setSelectedEvent(null)
@@ -218,12 +236,19 @@ export default function Perfil() {
           onSelectRaye={openRaye}
           onSelectOther={() => navigate('/evento')}
           suppressRayeSourceContent={suppressRayeSourceContent}
+          morphArmed={morphArmed}
         />
       </div>
-      {/* No onExitComplete here: the calibrated closeTimer in closeRaye
-          restores source visibility as the reverse morph is mostly landing.
-          A safety reset on unmount lives in the useEffect above. */}
-      <AnimatePresence initial={false} mode="sync">
+      {/* closeTimer restores source visibility ~260ms after closeRaye fires
+          (calibrated to the reverse morph). onExitComplete fires only AFTER
+          the overlay's full exit tree is done — used here only to disarm
+          morphArmed, which removes the layoutId from the source card so
+          future tab swaps don't have a stale projection. */}
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        onExitComplete={() => setMorphArmed(false)}
+      >
         {selectedEvent === 'raye' && (
           <EventMorphOverlay
             key="perfil-raye-overlay"
