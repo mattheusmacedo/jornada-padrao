@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+import { createEventMorphIds, EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 // Use the same hero asset for the RAYE source thumbnail so the morph's
 // source and destination share identical image data — no swap mid-morph.
 import raye from '../assets/evento/hero-raye.png'
@@ -90,9 +90,18 @@ export default function Explorar() {
   // expansion because FM has no source projection registered.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
   const [morphArmed, setMorphArmed] = useState(false)
+  // Monotonic counter — each open→close cycle ends with a bump so the next
+  // open uses fresh layoutId strings (avoids stale FM projection state).
+  const [morphSession, setMorphSession] = useState(0)
   const armTimerRef = useRef<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)
   const openFrameRef = useRef<number | null>(null)
+  const refreshFrameRef = useRef<number | null>(null)
+
+  const morphIds = useMemo(
+    () => createEventMorphIds(EXPLORAR_RAYE_MORPH_IDS, morphSession),
+    [morphSession]
+  )
 
   // Mirrors listVariants timing (see motion/variants.ts).
   const LIST_DELAY_MS = 100
@@ -110,9 +119,27 @@ export default function Explorar() {
       if (armTimerRef.current) window.clearTimeout(armTimerRef.current)
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
       if (openFrameRef.current) window.cancelAnimationFrame(openFrameRef.current)
+      if (refreshFrameRef.current) window.cancelAnimationFrame(refreshFrameRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // After overlay close completes, disarm → bump session → re-arm over two
+  // rAFs so the source card briefly renders without a layoutId, then re-renders
+  // with a fresh session-suffixed layoutId. FM gets a clean slate per open.
+  const refreshMorphIds = () => {
+    if (refreshFrameRef.current) {
+      window.cancelAnimationFrame(refreshFrameRef.current)
+    }
+    setMorphArmed(false)
+    refreshFrameRef.current = window.requestAnimationFrame(() => {
+      setMorphSession((s) => s + 1)
+      refreshFrameRef.current = window.requestAnimationFrame(() => {
+        setMorphArmed(true)
+        refreshFrameRef.current = null
+      })
+    })
+  }
 
   const openRaye = () => {
     if (closeTimerRef.current) {
@@ -175,8 +202,8 @@ export default function Explorar() {
                   variant="fullbleed"
                   {...e}
                   onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
-                  cardLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
-                  imageLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
+                  cardLayoutId={isFirstRaye && morphArmed ? morphIds.container : undefined}
+                  imageLayoutId={isFirstRaye && morphArmed ? morphIds.image : undefined}
                   suppressContent={isFirstRaye && suppressRayeSourceContent}
                   disablePress={isFirstRaye}
                 />
@@ -184,13 +211,17 @@ export default function Explorar() {
             })}
           </fmotion.div>
         </div>
-        {/* No onExitComplete: morphArmed stays true so the second open can
-            morph again. layoutIds drop only on screen unmount. */}
-        <AnimatePresence initial={false} mode="sync">
+        {/* onExitComplete only refreshes layoutIds — text restoration is
+            handled by the 260ms timer in closeRaye, not here. */}
+        <AnimatePresence
+          initial={false}
+          mode="sync"
+          onExitComplete={refreshMorphIds}
+        >
           {selectedEvent === 'raye' && (
             <EventMorphOverlay
-              key="explorar-raye-overlay"
-              morphIds={EXPLORAR_RAYE_MORPH_IDS}
+              key={`explorar-raye-overlay-${morphSession}`}
+              morphIds={morphIds}
               onClose={closeRaye}
             />
           )}

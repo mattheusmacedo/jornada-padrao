@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { PERFIL_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+import { createEventMorphIds, PERFIL_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 import avatar from '../assets/perfil/avatar-quinn.png'
 // Use the same hero asset for the RAYE thumbnail so the source and
 // destination of the morph share identical image data — no swap mid-morph.
@@ -135,11 +135,13 @@ function EventList({
   onSelectOther,
   suppressRayeSourceContent,
   morphArmed,
+  morphIds,
 }: {
   onSelectRaye: () => void
   onSelectOther: () => void
   suppressRayeSourceContent: boolean
   morphArmed: boolean
+  morphIds: { container: string; image: string }
 }) {
   return (
     <fmotion.div
@@ -155,9 +157,10 @@ function EventList({
             key={i}
             {...e}
             onClick={isFirstRaye ? onSelectRaye : onSelectOther}
-            // layoutIds attach ONLY during an active morph cycle.
-            cardLayoutId={isFirstRaye && morphArmed ? PERFIL_RAYE_MORPH_IDS.container : undefined}
-            imageLayoutId={isFirstRaye && morphArmed ? PERFIL_RAYE_MORPH_IDS.image : undefined}
+            // Session-rotated layoutIds — fresh strings per open cycle so
+            // FM never reuses a stale projection node.
+            cardLayoutId={isFirstRaye && morphArmed ? morphIds.container : undefined}
+            imageLayoutId={isFirstRaye && morphArmed ? morphIds.image : undefined}
             suppressContent={isFirstRaye && suppressRayeSourceContent}
             disablePress={isFirstRaye}
           />
@@ -178,10 +181,20 @@ export default function Perfil() {
   // overlay close, otherwise the second open loses the card-to-page
   // expansion because FM has no source projection registered.
   const [morphArmed, setMorphArmed] = useState(false)
+  // Monotonic counter — each open→close cycle ends with a bump so the next
+  // open uses fresh layoutId strings. FM treats them as new projection
+  // nodes and never reuses a stale source/destination pair.
+  const [morphSession, setMorphSession] = useState(0)
   const armTimerRef = useRef<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)
   const openFrameRef = useRef<number | null>(null)
+  const refreshFrameRef = useRef<number | null>(null)
   const navigate = useNavigate()
+
+  const morphIds = useMemo(
+    () => createEventMorphIds(PERFIL_RAYE_MORPH_IDS, morphSession),
+    [morphSession]
+  )
 
   // Mirrors listVariants timing (see motion/variants.ts).
   const LIST_DELAY_MS = 100
@@ -199,9 +212,29 @@ export default function Perfil() {
       if (armTimerRef.current) window.clearTimeout(armTimerRef.current)
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
       if (openFrameRef.current) window.cancelAnimationFrame(openFrameRef.current)
+      if (refreshFrameRef.current) window.cancelAnimationFrame(refreshFrameRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // After the overlay's full exit animation completes, briefly disarm,
+  // bump the session, and re-arm — all within two animation frames. The
+  // source card briefly renders without a layoutId, then renders again
+  // with a fresh layoutId tied to the new session. FM gets a clean slate
+  // for the next open.
+  const refreshMorphIds = () => {
+    if (refreshFrameRef.current) {
+      window.cancelAnimationFrame(refreshFrameRef.current)
+    }
+    setMorphArmed(false)
+    refreshFrameRef.current = window.requestAnimationFrame(() => {
+      setMorphSession((s) => s + 1)
+      refreshFrameRef.current = window.requestAnimationFrame(() => {
+        setMorphArmed(true)
+        refreshFrameRef.current = null
+      })
+    })
+  }
 
   const openRaye = () => {
     if (closeTimerRef.current) {
@@ -258,16 +291,20 @@ export default function Perfil() {
             onSelectOther={() => navigate('/evento')}
             suppressRayeSourceContent={suppressRayeSourceContent}
             morphArmed={morphArmed}
+            morphIds={morphIds}
           />
         </div>
-        {/* No onExitComplete: morphArmed stays true after close so the next
-            open can morph again. The layoutId is only removed when the screen
-            unmounts (route change). */}
-        <AnimatePresence initial={false} mode="sync">
+        {/* onExitComplete only refreshes layoutIds — text restoration is
+            handled by the 260ms timer in closeRaye, not here. */}
+        <AnimatePresence
+          initial={false}
+          mode="sync"
+          onExitComplete={refreshMorphIds}
+        >
           {selectedEvent === 'raye' && (
             <EventMorphOverlay
-              key="perfil-raye-overlay"
-              morphIds={PERFIL_RAYE_MORPH_IDS}
+              key={`perfil-raye-overlay-${morphSession}`}
+              morphIds={morphIds}
               onClose={closeRaye}
             />
           )}
