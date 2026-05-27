@@ -84,24 +84,34 @@ const events = [
 export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // Mirrors Perfil's pattern. Source text hides for the whole open→close
-  // cycle and restores via 260ms timer. morphArmed gates whether the card
-  // even has a layoutId — outside an active morph cycle the card behaves
-  // like every other list item during list entrance / tab swap.
+  // morphArmed: "list has settled, morph IDs are safe to attach now."
+  // Stays armed forever after the entrance completes — never disarmed on
+  // overlay close, otherwise the second open loses the card-to-page
+  // expansion because FM has no source projection registered.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
   const [morphArmed, setMorphArmed] = useState(false)
+  const armTimerRef = useRef<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)
   const openFrameRef = useRef<number | null>(null)
 
+  // Mirrors listVariants timing (see motion/variants.ts).
+  const LIST_DELAY_MS = 100
+  const LIST_STAGGER_MS = 50
+  const LIST_ITEM_MS = 200
+  const MORPH_ARM_DELAY_MS =
+    LIST_DELAY_MS + (events.length - 1) * LIST_STAGGER_MS + LIST_ITEM_MS + 50
+
   useEffect(() => {
+    armTimerRef.current = window.setTimeout(() => {
+      setMorphArmed(true)
+      armTimerRef.current = null
+    }, MORPH_ARM_DELAY_MS)
     return () => {
-      if (closeTimerRef.current) {
-        window.clearTimeout(closeTimerRef.current)
-      }
-      if (openFrameRef.current) {
-        window.cancelAnimationFrame(openFrameRef.current)
-      }
+      if (armTimerRef.current) window.clearTimeout(armTimerRef.current)
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+      if (openFrameRef.current) window.cancelAnimationFrame(openFrameRef.current)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const openRaye = () => {
@@ -109,15 +119,23 @@ export default function Explorar() {
       window.clearTimeout(closeTimerRef.current)
       closeTimerRef.current = null
     }
-    if (openFrameRef.current) {
-      window.cancelAnimationFrame(openFrameRef.current)
-    }
-    // Two-step open: attach layoutIds this render, mount overlay next frame.
     setSuppressRayeSourceContent(true)
+
+    if (morphArmed) {
+      // Common case: list has settled, layoutIds already attached → open
+      // immediately. FM uses the already-registered source projection.
+      setSelectedEvent('raye')
+      return
+    }
+
+    // Fallback: very early tap. Attach the layoutId now, wait two animation
+    // frames so FM commits the source projection, then mount the overlay.
     setMorphArmed(true)
     openFrameRef.current = window.requestAnimationFrame(() => {
-      setSelectedEvent('raye')
-      openFrameRef.current = null
+      openFrameRef.current = window.requestAnimationFrame(() => {
+        setSelectedEvent('raye')
+        openFrameRef.current = null
+      })
     })
   }
   const closeRaye = () => {
@@ -162,11 +180,9 @@ export default function Explorar() {
           })}
         </fmotion.div>
       </div>
-      <AnimatePresence
-        initial={false}
-        mode="sync"
-        onExitComplete={() => setMorphArmed(false)}
-      >
+      {/* No onExitComplete: morphArmed stays true so the second open can
+          morph again. layoutIds drop only on screen unmount. */}
+      <AnimatePresence initial={false} mode="sync">
         {selectedEvent === 'raye' && (
           <EventMorphOverlay
             key="explorar-raye-overlay"

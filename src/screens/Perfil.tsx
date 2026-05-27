@@ -171,26 +171,36 @@ export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
   // suppressRayeSourceContent: source-only card text hides during open/close.
-  // Restored via a 260ms timer in closeRaye, not via onExitComplete.
+  // Restored via a 260ms timer in closeRaye.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
-  // morphArmed: when true, the RAYE card receives a layoutId. Only during
-  // an active open→close cycle. Outside that window the card has no
-  // layoutId at all, so FM doesn't create a projection node that could
-  // interfere with list entrance / tab swap layout.
+  // morphArmed: "list has settled, morph IDs are safe to attach now."
+  // Stays armed forever after the entrance completes — never disarmed on
+  // overlay close, otherwise the second open loses the card-to-page
+  // expansion because FM has no source projection registered.
   const [morphArmed, setMorphArmed] = useState(false)
+  const armTimerRef = useRef<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)
   const openFrameRef = useRef<number | null>(null)
   const navigate = useNavigate()
 
+  // Mirrors listVariants timing (see motion/variants.ts).
+  const LIST_DELAY_MS = 100
+  const LIST_STAGGER_MS = 50
+  const LIST_ITEM_MS = 200
+  const MORPH_ARM_DELAY_MS =
+    LIST_DELAY_MS + (events.length - 1) * LIST_STAGGER_MS + LIST_ITEM_MS + 50
+
   useEffect(() => {
+    armTimerRef.current = window.setTimeout(() => {
+      setMorphArmed(true)
+      armTimerRef.current = null
+    }, MORPH_ARM_DELAY_MS)
     return () => {
-      if (closeTimerRef.current) {
-        window.clearTimeout(closeTimerRef.current)
-      }
-      if (openFrameRef.current) {
-        window.cancelAnimationFrame(openFrameRef.current)
-      }
+      if (armTimerRef.current) window.clearTimeout(armTimerRef.current)
+      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
+      if (openFrameRef.current) window.cancelAnimationFrame(openFrameRef.current)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const openRaye = () => {
@@ -198,17 +208,24 @@ export default function Perfil() {
       window.clearTimeout(closeTimerRef.current)
       closeTimerRef.current = null
     }
-    if (openFrameRef.current) {
-      window.cancelAnimationFrame(openFrameRef.current)
-    }
-    // Two-step open: first commit suppress + armed so the source card
-    // re-renders with cardLayoutId attached. Then on the NEXT frame mount
-    // the overlay. This gives FM a valid source projection to morph from.
     setSuppressRayeSourceContent(true)
+
+    if (morphArmed) {
+      // Common case: list has settled, layoutIds already attached → open
+      // immediately. FM uses the already-registered source projection.
+      setSelectedEvent('raye')
+      return
+    }
+
+    // Fallback: very early tap before the arm timer fires. Attach the
+    // layoutId now, wait two animation frames so FM commits the source
+    // projection, then mount the overlay.
     setMorphArmed(true)
     openFrameRef.current = window.requestAnimationFrame(() => {
-      setSelectedEvent('raye')
-      openFrameRef.current = null
+      openFrameRef.current = window.requestAnimationFrame(() => {
+        setSelectedEvent('raye')
+        openFrameRef.current = null
+      })
     })
   }
   const closeRaye = () => {
@@ -239,16 +256,10 @@ export default function Perfil() {
           morphArmed={morphArmed}
         />
       </div>
-      {/* closeTimer restores source visibility ~260ms after closeRaye fires
-          (calibrated to the reverse morph). onExitComplete fires only AFTER
-          the overlay's full exit tree is done — used here only to disarm
-          morphArmed, which removes the layoutId from the source card so
-          future tab swaps don't have a stale projection. */}
-      <AnimatePresence
-        initial={false}
-        mode="sync"
-        onExitComplete={() => setMorphArmed(false)}
-      >
+      {/* No onExitComplete: morphArmed stays true after close so the next
+          open can morph again. The layoutId is only removed when the screen
+          unmounts (route change). */}
+      <AnimatePresence initial={false} mode="sync">
         {selectedEvent === 'raye' && (
           <EventMorphOverlay
             key="perfil-raye-overlay"
