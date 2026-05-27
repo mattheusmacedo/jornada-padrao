@@ -37,22 +37,23 @@ const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as cons
 const EASE_OUT = [0, 0, 0.2, 1] as [number, number, number, number]
 
 // Source face: visible at open start (shell = card rect), fades out as
-// shell expands; on close it fades back in slightly after destination
-// has begun fading out, then sits visible through the final shrink so
-// the last frame already looks like the card.
+// shell expands; on close it fades back in almost immediately and sits
+// visible through the rest of the shrink so the landing frame already
+// looks like the card.
 const SOURCE_FACE = {
   initial: { opacity: 1 },
   animate: { opacity: 0, transition: { duration: 0.14, ease: EASE_OUT } },
-  exit: { opacity: 1, transition: { delay: 0.08, duration: 0.12, ease: EASE_OUT } },
+  exit: { opacity: 1, transition: { delay: 0.02, duration: 0.16, ease: EASE_OUT } },
 }
 
 // Destination face: hidden at open start, fades in after a small delay
-// so the source has begun receding first. On close it fades out quickly
-// before the shell shrinks far.
+// so the source has begun receding first. On close it stays visible for
+// the first beat while source fades back in — both layers overlap during
+// the early collapse so there's never a pale empty-shell phase.
 const DEST_FACE = {
   initial: { opacity: 0 },
   animate: { opacity: 1, transition: { delay: 0.06, duration: 0.14, ease: EASE_OUT } },
-  exit: { opacity: 0, transition: { duration: 0.1, ease: EASE_OUT } },
+  exit: { opacity: 0, transition: { delay: 0.08, duration: 0.16, ease: EASE_OUT } },
 }
 
 const CTA_REVEAL = {

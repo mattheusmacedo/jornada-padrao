@@ -87,10 +87,16 @@ export default function Explorar() {
   const [morphRect, setMorphRect] = useState<MorphRect | null>(null)
   const screenRootRef = useRef<HTMLDivElement | null>(null)
   const rayeCardRef = useRef<HTMLButtonElement | null>(null)
+  const chromeRestoreTimerRef = useRef<number | null>(null)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
 
   useEffect(() => {
-    return () => setEventOverlayOpen(false)
+    return () => {
+      if (chromeRestoreTimerRef.current) {
+        window.clearTimeout(chromeRestoreTimerRef.current)
+      }
+      setEventOverlayOpen(false)
+    }
   }, [setEventOverlayOpen])
 
   const measureRayeCard = (): MorphRect | null => {
@@ -131,9 +137,18 @@ export default function Explorar() {
   }
   const closeRaye = () => {
     // The overlay renders its own source-card face during exit, so the
-    // real source can stay hidden until unmount. Chrome + visibility
-    // restore in onExitComplete.
+    // real source can stay hidden until unmount. Visibility restore
+    // stays in onExitComplete; BottomNav, however, returns on a short
+    // timer so it's already coming back while the shell is collapsing
+    // rather than popping in after the whole exit lands.
     setSelectedEvent(null)
+    if (chromeRestoreTimerRef.current) {
+      window.clearTimeout(chromeRestoreTimerRef.current)
+    }
+    chromeRestoreTimerRef.current = window.setTimeout(() => {
+      setEventOverlayOpen(false)
+      chromeRestoreTimerRef.current = null
+    }, 180)
   }
 
   return (
@@ -167,8 +182,12 @@ export default function Explorar() {
         initial={false}
         mode="sync"
         onExitComplete={() => {
-          setHideRayeSourceVisual(false)
+          if (chromeRestoreTimerRef.current) {
+            window.clearTimeout(chromeRestoreTimerRef.current)
+            chromeRestoreTimerRef.current = null
+          }
           setEventOverlayOpen(false)
+          setHideRayeSourceVisual(false)
           setMorphRect(null)
         }}
       >
