@@ -22,10 +22,10 @@ type Props = {
 
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
-// CTAFooter lives outside the stagger group's scroll body, so it needs its
-// own reveal with a delay calibrated to land after the in-scroll stagger.
-// Group delay-children is 0.32 + 4 items × 0.05 = 0.52. CTA reveals at 0.5
-// so it lands roughly with the last in-scroll item.
+// CTAFooter lives outside the stagger group's scroll body so it needs its
+// own reveal calibrated to land after the in-scroll stagger. Exit is a
+// fast fade with no y travel — matches detailRevealItem's instant-exit
+// principle so the close doesn't ping-pong.
 const CTA_REVEAL = {
   initial: { opacity: 0, y: 10 },
   animate: {
@@ -35,8 +35,8 @@ const CTA_REVEAL = {
   },
   exit: {
     opacity: 0,
-    y: 6,
-    transition: { duration: 0.12, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
+    y: 0,
+    transition: { duration: 0.06, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
   },
 }
 

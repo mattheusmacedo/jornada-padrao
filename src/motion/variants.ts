@@ -79,6 +79,11 @@ export const heroVariants: Variants = {
 // shared-element morph has mostly settled. Used by EventMorphOverlay (and
 // Evento on direct load) so icons/text don't visibly deform while the
 // morphing container is mid-scale. Pure opacity + y — no scale, no width.
+// Stagger group + item for revealing destination-only content AFTER a
+// shared-element morph has mostly settled. Exit is INSTANT (no reverse
+// stagger, no y travel) — the morph itself carries the visual handoff
+// back to the card on close, so detail content should just fade away
+// instead of choreographing backward (which reads as a ping-pong).
 export const detailRevealGroup: Variants = {
   initial: {},
   animate: {
@@ -89,8 +94,8 @@ export const detailRevealGroup: Variants = {
   },
   exit: {
     transition: {
-      staggerChildren: 0.03,
-      staggerDirection: -1,
+      staggerChildren: 0,
+      delayChildren: 0,
     },
   },
 }
@@ -106,9 +111,9 @@ export const detailRevealItem: Variants = {
   },
   exit: {
     opacity: 0,
-    y: 6,
+    y: 0,
     transition: {
-      duration: 0.12,
+      duration: 0.06,
       ease: motionTokens.easing.out,
     },
   },

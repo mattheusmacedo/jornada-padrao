@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { createEventMorphIds, EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+import { EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 // Use the same hero asset for the RAYE source thumbnail so the morph's
 // source and destination share identical image data — no swap mid-morph.
 import raye from '../assets/evento/hero-raye.png'
@@ -84,62 +84,16 @@ const events = [
 export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // morphArmed: "list has settled, morph IDs are safe to attach now."
-  // Stays armed forever after the entrance completes — never disarmed on
-  // overlay close, otherwise the second open loses the card-to-page
-  // expansion because FM has no source projection registered.
+  // Source card hides its text during open/close so it never deforms inside
+  // the shrinking morph container. Restored via a 260ms timer in closeRaye.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
-  const [morphArmed, setMorphArmed] = useState(false)
-  // Monotonic counter — each open→close cycle ends with a bump so the next
-  // open uses fresh layoutId strings (avoids stale FM projection state).
-  const [morphSession, setMorphSession] = useState(0)
-  const armTimerRef = useRef<number | null>(null)
   const closeTimerRef = useRef<number | null>(null)
-  const openFrameRef = useRef<number | null>(null)
-  const refreshFrameRef = useRef<number | null>(null)
-
-  const morphIds = useMemo(
-    () => createEventMorphIds(EXPLORAR_RAYE_MORPH_IDS, morphSession),
-    [morphSession]
-  )
-
-  // Mirrors listVariants timing (see motion/variants.ts).
-  const LIST_DELAY_MS = 100
-  const LIST_STAGGER_MS = 50
-  const LIST_ITEM_MS = 200
-  const MORPH_ARM_DELAY_MS =
-    LIST_DELAY_MS + (events.length - 1) * LIST_STAGGER_MS + LIST_ITEM_MS + 50
 
   useEffect(() => {
-    armTimerRef.current = window.setTimeout(() => {
-      setMorphArmed(true)
-      armTimerRef.current = null
-    }, MORPH_ARM_DELAY_MS)
     return () => {
-      if (armTimerRef.current) window.clearTimeout(armTimerRef.current)
       if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
-      if (openFrameRef.current) window.cancelAnimationFrame(openFrameRef.current)
-      if (refreshFrameRef.current) window.cancelAnimationFrame(refreshFrameRef.current)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // After overlay close completes, disarm → bump session → re-arm over two
-  // rAFs so the source card briefly renders without a layoutId, then re-renders
-  // with a fresh session-suffixed layoutId. FM gets a clean slate per open.
-  const refreshMorphIds = () => {
-    if (refreshFrameRef.current) {
-      window.cancelAnimationFrame(refreshFrameRef.current)
-    }
-    setMorphArmed(false)
-    refreshFrameRef.current = window.requestAnimationFrame(() => {
-      setMorphSession((s) => s + 1)
-      refreshFrameRef.current = window.requestAnimationFrame(() => {
-        setMorphArmed(true)
-        refreshFrameRef.current = null
-      })
-    })
-  }
 
   const openRaye = () => {
     if (closeTimerRef.current) {
@@ -147,23 +101,7 @@ export default function Explorar() {
       closeTimerRef.current = null
     }
     setSuppressRayeSourceContent(true)
-
-    if (morphArmed) {
-      // Common case: list has settled, layoutIds already attached → open
-      // immediately. FM uses the already-registered source projection.
-      setSelectedEvent('raye')
-      return
-    }
-
-    // Fallback: very early tap. Attach the layoutId now, wait two animation
-    // frames so FM commits the source projection, then mount the overlay.
-    setMorphArmed(true)
-    openFrameRef.current = window.requestAnimationFrame(() => {
-      openFrameRef.current = window.requestAnimationFrame(() => {
-        setSelectedEvent('raye')
-        openFrameRef.current = null
-      })
-    })
+    setSelectedEvent('raye')
   }
   const closeRaye = () => {
     setSelectedEvent(null)
@@ -202,8 +140,8 @@ export default function Explorar() {
                   variant="fullbleed"
                   {...e}
                   onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
-                  cardLayoutId={isFirstRaye && morphArmed ? morphIds.container : undefined}
-                  imageLayoutId={isFirstRaye && morphArmed ? morphIds.image : undefined}
+                  cardLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
+                  imageLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
                   suppressContent={isFirstRaye && suppressRayeSourceContent}
                   disablePress={isFirstRaye}
                 />
@@ -211,17 +149,11 @@ export default function Explorar() {
             })}
           </fmotion.div>
         </div>
-        {/* onExitComplete only refreshes layoutIds — text restoration is
-            handled by the 260ms timer in closeRaye, not here. */}
-        <AnimatePresence
-          initial={false}
-          mode="sync"
-          onExitComplete={refreshMorphIds}
-        >
+        <AnimatePresence initial={false} mode="sync">
           {selectedEvent === 'raye' && (
             <EventMorphOverlay
-              key={`explorar-raye-overlay-${morphSession}`}
-              morphIds={morphIds}
+              key="explorar-raye-overlay"
+              morphIds={EXPLORAR_RAYE_MORPH_IDS}
               onClose={closeRaye}
             />
           )}
