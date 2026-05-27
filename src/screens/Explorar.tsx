@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { motion as fmotion } from 'framer-motion'
+import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
-import { PageTransition } from '../motion/transitions'
+import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import raye from '../assets/explorar/raye.png'
+import { RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+// Use the same hero asset for the RAYE source thumbnail so the morph's
+// source and destination share identical image data — no swap mid-morph.
+import raye from '../assets/evento/hero-raye.png'
 import badBunny from '../assets/explorar/bad-bunny.png'
 import titas from '../assets/explorar/titas.png'
 import deadFish from '../assets/explorar/dead-fish.png'
@@ -12,6 +16,8 @@ import primavera from '../assets/explorar/primavera-sound.png'
 import anitta from '../assets/explorar/anitta.png'
 import spiritbox from '../assets/explorar/spiritbox.png'
 import lauraPasini from '../assets/explorar/laura-pasini.png'
+
+type SelectedEvent = 'raye' | null
 
 function Header() {
   const navigate = useNavigate()
@@ -77,8 +83,25 @@ const events = [
 
 export default function Explorar() {
   const navigate = useNavigate()
+  const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
+  // Mirrors Perfil's pattern: keep the source text hidden through the whole
+  // open→close cycle. AnimatePresence.onExitComplete restores it once the
+  // reverse morph has fully landed.
+  const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
+
+  const openRaye = () => {
+    setSuppressRayeSourceContent(true)
+    setSelectedEvent('raye')
+  }
+  const closeRaye = () => {
+    setSelectedEvent(null)
+  }
+
+  // Explorar intentionally does NOT wrap in PageTransition: the morph from
+  // the RAYE card to the detail overlay needs the source's parent to be
+  // transform-stable.
   return (
-    <PageTransition>
+    <LayoutGroup id="explorar-raye-morph">
       <div className="bg-white pb-[20px]">
         <Header />
         <SearchBar />
@@ -88,11 +111,31 @@ export default function Explorar() {
           animate="animate"
           className="mt-5 px-[23px] flex flex-col gap-[14px]"
         >
-          {events.map((e, i) => (
-            <EventCard key={i} variant="fullbleed" {...e} onClick={() => navigate('/evento')} />
-          ))}
+          {events.map((e, i) => {
+            const isFirstRaye = i === 0 && e.title === 'RAYE'
+            return (
+              <EventCard
+                key={i}
+                variant="fullbleed"
+                {...e}
+                onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
+                cardLayoutId={isFirstRaye ? RAYE_MORPH_IDS.container : undefined}
+                imageLayoutId={isFirstRaye ? RAYE_MORPH_IDS.image : undefined}
+                suppressContent={isFirstRaye && suppressRayeSourceContent}
+              />
+            )
+          })}
         </fmotion.div>
       </div>
-    </PageTransition>
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        onExitComplete={() => setSuppressRayeSourceContent(false)}
+      >
+        {selectedEvent === 'raye' && (
+          <EventMorphOverlay key="explorar-raye-overlay" onClose={closeRaye} />
+        )}
+      </AnimatePresence>
+    </LayoutGroup>
   )
 }

@@ -45,6 +45,21 @@ export const listItemVariants: Variants = {
   },
 }
 
+// Variant for cards that act as a morph SOURCE: opacity-only entrance, no y
+// motion. The y translation in listItemVariants would shift the source card's
+// measured layout box at the moment FM captures it for the morph, producing
+// a small jump in the first frame of the transition.
+export const morphSourceListItemVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: {
+    opacity: 1,
+    transition: {
+      duration: motionTokens.duration.reveal / 1000,
+      ease: motionTokens.easing.out,
+    },
+  },
+}
+
 // Hero entry — Lottie wrapper reveal. 800ms ease-out with a slight scale overshoot at 60%.
 // Mirrors the hero-lottie demo in motion-system.json.
 export const heroVariants: Variants = {
