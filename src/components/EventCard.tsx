@@ -15,12 +15,15 @@ type CommonProps = {
   location: string
   badgeCount?: number
   onClick?: () => void
-  /** When set, the entire card container shares a layoutId with a matching
-   *  motion element on the destination route. Framer Motion morphs the card's
-   *  box (position, size, border-radius) into the destination shape — the
-   *  card *becomes* the page. Internal elements ride along inside the
-   *  morphing container. */
+  /** Three shared layoutIds for the hybrid morph pattern (matches
+   *  motion-primitives MorphingDialog). The container morphs the card's
+   *  box geometry; the image and title each morph from their card-frame
+   *  positions to their destination-frame positions inside the morphing
+   *  container. Source-only children (badge, date/venue) are plain elements
+   *  and fade out as the exiting layoutId parent unmounts. */
   cardLayoutId?: string
+  imageLayoutId?: string
+  titleLayoutId?: string
 }
 
 type Props = CommonProps & { variant?: 'compact' | 'fullbleed' }
@@ -38,7 +41,8 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId }: CommonProps) {
+function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, titleLayoutId }: CommonProps) {
+  const isMorphing = Boolean(cardLayoutId)
   return (
     <fmotion.button
       type="button"
@@ -46,19 +50,26 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
       layoutId={cardLayoutId}
       variants={listItemVariants}
       whileTap={pressCardStandard}
-      transition={cardLayoutId ? containerMorphTransition : pressTransition}
-      className="w-full text-left bg-[var(--color-grey-light)] rounded-2xl px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)]"
+      transition={isMorphing ? containerMorphTransition : pressTransition}
+      style={isMorphing ? { borderRadius: 16 } : undefined}
+      className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
     >
-      <img
+      <fmotion.img
+        layoutId={imageLayoutId}
+        transition={imageLayoutId ? containerMorphTransition : undefined}
         src={image}
         alt=""
         className="w-[83.582px] h-[57.214px] rounded-lg object-cover shrink-0"
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate">
+          <fmotion.p
+            layoutId={titleLayoutId}
+            transition={titleLayoutId ? containerMorphTransition : undefined}
+            className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate"
+          >
             {title}
-          </p>
+          </fmotion.p>
           <Badge count={badgeCount} />
         </div>
         <p className="mt-[10px] text-[var(--color-grey-darker)] text-[9px] leading-tight">

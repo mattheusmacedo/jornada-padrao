@@ -124,10 +124,13 @@ const events = [
   { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
 ]
 
-// Shared-element morph: the first RAYE card morphs into the entire Evento
-// detail page. Single layoutId on the card container — image and title ride
-// along as the container's geometry interpolates from card box to page box.
-export const RAYE_EVENT_LAYOUT_ID = 'event-raye-1'
+// Shared-element morph (hybrid pattern, matches motion-primitives MorphingDialog):
+//   container — morphs the card's box geometry into the page's box
+//   image     — morphs the card thumbnail into the hero image (no duplicate)
+//   title     — morphs the card title into the detail title (no duplicate)
+export const RAYE_EVENT_CONTAINER_LAYOUT_ID = 'event-raye-1-container'
+export const RAYE_EVENT_IMAGE_LAYOUT_ID = 'event-raye-1-image'
+export const RAYE_EVENT_TITLE_LAYOUT_ID = 'event-raye-1-title'
 
 function EventList({ onSelect }: { onSelect: () => void }) {
   return (
@@ -144,7 +147,9 @@ function EventList({ onSelect }: { onSelect: () => void }) {
             key={i}
             {...e}
             onClick={onSelect}
-            cardLayoutId={isFirstRaye ? RAYE_EVENT_LAYOUT_ID : undefined}
+            cardLayoutId={isFirstRaye ? RAYE_EVENT_CONTAINER_LAYOUT_ID : undefined}
+            imageLayoutId={isFirstRaye ? RAYE_EVENT_IMAGE_LAYOUT_ID : undefined}
+            titleLayoutId={isFirstRaye ? RAYE_EVENT_TITLE_LAYOUT_ID : undefined}
           />
         )
       })}

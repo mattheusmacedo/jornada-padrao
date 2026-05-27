@@ -9,8 +9,14 @@ import {
   revealVariants,
   revealTransition,
 } from '../motion/variants'
-import { RAYE_EVENT_LAYOUT_ID } from './Perfil'
-import hero from '../assets/evento/hero-raye.png'
+import {
+  RAYE_EVENT_CONTAINER_LAYOUT_ID,
+  RAYE_EVENT_IMAGE_LAYOUT_ID,
+  RAYE_EVENT_TITLE_LAYOUT_ID,
+} from './Perfil'
+// Use the same image asset as the Perfil RAYE card so the layoutId
+// hybrid morph has matching pixel data on both sides — no flicker swap.
+import hero from '../assets/perfil/event-raye.png'
 import avatar1 from '../assets/evento/avatar-1.png'
 import avatar2 from '../assets/evento/avatar-2.png'
 import avatar3 from '../assets/evento/avatar-3.png'
@@ -20,11 +26,11 @@ function HeroImage() {
   const navigate = useNavigate()
   return (
     <div className="relative h-[300px] w-full shrink-0 -mt-[44px]">
-      {/* Hero image rides along inside the morphing container. `layout`
-          (not layoutId) lets FM animate this image's box within the parent
-          morph — it doesn't need its own cross-route shared element. */}
+      {/* Hero image is the destination half of the image shared element —
+          shares a layoutId with the card thumbnail on Perfil so FM morphs
+          one image element across routes (no duplicate hero pop-in). */}
       <fmotion.img
-        layout
+        layoutId={RAYE_EVENT_IMAGE_LAYOUT_ID}
         transition={containerMorphTransition}
         src={hero}
         alt=""
@@ -90,7 +96,7 @@ function FansPill() {
 function EventTitle() {
   return (
     <fmotion.h2
-      layout
+      layoutId={RAYE_EVENT_TITLE_LAYOUT_ID}
       transition={containerMorphTransition}
       className="mt-[16px] px-[24px] text-[var(--color-typography-title)] text-[34.5px] font-extrabold leading-none shrink-0"
     >
@@ -213,9 +219,10 @@ export default function Evento() {
     // the destination content reveals via morphContentRevealVariants delayed
     // until after the morph settles.
     <fmotion.div
-      layoutId={RAYE_EVENT_LAYOUT_ID}
+      layoutId={RAYE_EVENT_CONTAINER_LAYOUT_ID}
       transition={containerMorphTransition}
-      className="h-full flex flex-col bg-white"
+      style={{ borderRadius: 0 }}
+      className="h-full flex flex-col bg-white overflow-hidden"
     >
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <HeroImage />
