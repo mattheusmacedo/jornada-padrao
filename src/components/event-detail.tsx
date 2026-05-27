@@ -41,16 +41,8 @@ type EventHeroProps = {
 export function EventHero({ onBack }: EventHeroProps) {
   return (
     <div className="relative h-[300px] w-full shrink-0">
-      {/* `layout` (not layoutId) — the hero participates as a layout child
-          of the morphing page shell, not as a shared element with the
-          source thumbnail. The source thumbnails on Perfil (compact) vs
-          Explorar (fullbleed) have different geometries; bridging them
-          via shared layoutId produces inconsistent morph paths across
-          tabs. Letting the hero ride inside the shell gives both tabs
-          the same choreography. */}
-      <fmotion.img
-        layout
-        transition={MORPH_TRANSITION}
+      {/* Plain img — the parent shell owns the morph. No layout/layoutId here. */}
+      <img
         src={rayeHero}
         alt=""
         className="absolute inset-0 w-full h-full object-cover"

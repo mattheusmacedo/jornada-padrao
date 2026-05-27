@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
-import type { EventMorphIds } from '../motion/eventMorphIds'
 import { detailRevealGroup, detailRevealItem } from '../motion/variants'
 import {
   EventHero,
@@ -13,19 +12,26 @@ import {
   CTAFooter,
 } from './event-detail'
 
+export type MorphRect = {
+  /** Source card position relative to the screen-root. */
+  x: number
+  y: number
+  /** Source card size. */
+  width: number
+  height: number
+  /** Screen-root size — the morph's destination box. */
+  targetWidth: number
+  targetHeight: number
+}
+
 type Props = {
   onClose: () => void
-  /** Per-tab shared layoutIds. Perfil and Explorar each pass their own set
-   *  so the morph stays scoped to the tab that launched the overlay. */
-  morphIds: EventMorphIds
+  /** Measured at click time. Initial+exit anchor for the FLIP morph. */
+  sourceRect: MorphRect
 }
 
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
-// CTAFooter lives outside the stagger group's scroll body so it needs its
-// own reveal calibrated to land after the in-scroll stagger. Exit is a
-// fast fade with no y travel — matches detailRevealItem's instant-exit
-// principle so the close doesn't ping-pong.
 const CTA_REVEAL = {
   initial: { opacity: 0, y: 10 },
   animate: {
@@ -41,26 +47,16 @@ const CTA_REVEAL = {
 }
 
 /**
- * RAYE detail overlay launched from Perfil/Explorar. Two shared layoutIds
- * (container, hero image) handle the card → page morph; destination-only
- * content (FansPill, title, the three info rows, AboutBlock, CTA) reveals
- * AFTER the morph via the detailRevealGroup stagger.
- *
- * Rendered INLINE inside each screen's LayoutGroup — no portal — so the
- * source card and the morph destination are siblings within the same
- * layout context. Portaling to document.body broke FM's projection
- * relationship across the boundary, especially with morph IDs that
- * arm/disarm after mount. The trade-off: the overlay no longer covers
- * PhoneFrame chrome (BottomNav) by default. If needed, expose an overlay
- * slot on PhoneFrame in a follow-up — do NOT re-portal.
+ * Measured FLIP morph. The caller measures the source card and screen-root
+ * rects at click time and passes them in via sourceRect. The shell starts
+ * at the card's position/size, animates to the screen-root size, and on
+ * close animates back to the same captured rect. Deterministic, no Framer
+ * shared-layout projection — every cycle uses a fresh measurement.
  */
-export default function EventMorphOverlay({ onClose, morphIds }: Props) {
+export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
   const navigate = useNavigate()
   return (
     <>
-      {/* Subtle app-dimming scrim. Pure white at 40% was washing out the
-          morph shell against the light background — a soft black tint
-          recedes the page underneath without modal-darkening it. */}
       <fmotion.div
         className="absolute inset-0 z-30 bg-black/[0.04]"
         initial={{ opacity: 0 }}
@@ -69,27 +65,41 @@ export default function EventMorphOverlay({ onClose, morphIds }: Props) {
         transition={{ duration: 0.2 }}
         onClick={onClose}
       />
-      <div className="absolute inset-0 z-40 pointer-events-none flex">
-        {/* Visible shell: soft drop shadow + 1px ring so the user reads
-            "card surface expanding into page" instead of "white-on-white
-            hero image appearing". The same element carries the layoutId. */}
+      <div className="absolute inset-0 z-40 pointer-events-none">
         <fmotion.div
-          layoutId={morphIds.container}
+          initial={{
+            x: sourceRect.x,
+            y: sourceRect.y,
+            width: sourceRect.width,
+            height: sourceRect.height,
+            borderRadius: 16,
+          }}
+          animate={{
+            x: 0,
+            y: 0,
+            width: sourceRect.targetWidth,
+            height: sourceRect.targetHeight,
+            borderRadius: 0,
+          }}
+          exit={{
+            x: sourceRect.x,
+            y: sourceRect.y,
+            width: sourceRect.width,
+            height: sourceRect.height,
+            borderRadius: 16,
+          }}
           transition={MORPH_TRANSITION}
           style={{
-            borderRadius: 0,
+            position: 'absolute',
+            left: 0,
+            top: 0,
             boxShadow: '0 18px 60px rgba(15, 23, 42, 0.16)',
           }}
-          className="pointer-events-auto h-full w-full flex flex-col bg-white overflow-hidden ring-1 ring-black/[0.04]"
+          className="pointer-events-auto flex flex-col bg-white overflow-hidden ring-1 ring-black/[0.04]"
         >
           <div className="flex-1 overflow-y-auto scrollbar-hide">
             <EventHero onBack={onClose} />
 
-            {/* One stagger group containing FansPill → Title → rows → about.
-                The title no longer shares a layoutId with the source card —
-                it reveals here as a stagger item instead of morphing from the
-                yellow card label. FansPill stays first so its -mt-[30px]
-                overlaps the hero, not the title. */}
             <fmotion.div
               variants={detailRevealGroup}
               initial="initial"

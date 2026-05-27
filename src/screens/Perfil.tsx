@@ -1,15 +1,12 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
+import { AnimatePresence, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
-import EventMorphOverlay from '../components/EventMorphOverlay'
+import EventMorphOverlay, { type MorphRect } from '../components/EventMorphOverlay'
 import { usePhoneFrameChrome } from '../components/PhoneFrameChromeContext'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { PERFIL_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 import avatar from '../assets/perfil/avatar-quinn.png'
-// Use the same hero asset for the RAYE thumbnail so the source and
-// destination of the morph share identical image data — no swap mid-morph.
 import eventRaye from '../assets/evento/hero-raye.png'
 import eventLuan from '../assets/perfil/event-luan-santana.png'
 
@@ -135,12 +132,12 @@ function EventList({
   onSelectRaye,
   onSelectOther,
   hideRayeSourceVisual,
-  morphReady,
+  rayeCardRef,
 }: {
   onSelectRaye: () => void
   onSelectOther: () => void
   hideRayeSourceVisual: boolean
-  morphReady: boolean
+  rayeCardRef: React.Ref<HTMLButtonElement>
 }) {
   return (
     <fmotion.div
@@ -154,20 +151,9 @@ function EventList({
         return (
           <EventCard
             key={i}
+            ref={isFirstRaye ? rayeCardRef : undefined}
             {...e}
-            // Tap is a no-op for RAYE until morphReady — no rAF fallback,
-            // no early-tap fast path. RAYE only opens after the list has
-            // visually settled (~550ms after mount).
-            onClick={
-              isFirstRaye
-                ? morphReady ? onSelectRaye : undefined
-                : onSelectOther
-            }
-            // Container-only layoutId. Attached after morphReady; stays
-            // stable thereafter for the lifetime of the screen.
-            cardLayoutId={
-              isFirstRaye && morphReady ? PERFIL_RAYE_MORPH_IDS.container : undefined
-            }
+            onClick={isFirstRaye ? onSelectRaye : onSelectOther}
             hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
             disablePress={isFirstRaye}
           />
@@ -181,35 +167,36 @@ export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
   const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
-  // morphReady gates whether the RAYE card carries its container layoutId.
-  // During the initial list entrance the card has NO layoutId so FM doesn't
-  // build a projection node — RAYE staggers in like every other card. After
-  // the entrance settles, the layoutId attaches and stays stable for the
-  // lifetime of the screen.
-  const [morphReady, setMorphReady] = useState(false)
+  const [morphRect, setMorphRect] = useState<MorphRect | null>(null)
+  const screenRootRef = useRef<HTMLDivElement | null>(null)
+  const rayeCardRef = useRef<HTMLButtonElement | null>(null)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
   const navigate = useNavigate()
 
-  // Calibrated to listVariants: delayChildren 100 + (n-1)·staggerChildren 50
-  // + item duration 200 + 50ms slack.
-  const listSettleMs = useMemo(
-    () => 100 + (events.length - 1) * 50 + 200 + 50,
-    []
-  )
-
-  useEffect(() => {
-    setMorphReady(false)
-    const t = window.setTimeout(() => setMorphReady(true), listSettleMs)
-    return () => window.clearTimeout(t)
-  }, [listSettleMs])
-
-  // Safety: if Perfil unmounts mid-overlay (route change, refresh), release
-  // the chrome lock so the next screen's BottomNav doesn't stay hidden.
   useEffect(() => {
     return () => setEventOverlayOpen(false)
   }, [setEventOverlayOpen])
 
+  const measureRayeCard = (): MorphRect | null => {
+    const card = rayeCardRef.current
+    const root = screenRootRef.current
+    if (!card || !root) return null
+    const cardBox = card.getBoundingClientRect()
+    const rootBox = root.getBoundingClientRect()
+    return {
+      x: cardBox.left - rootBox.left,
+      y: cardBox.top - rootBox.top,
+      width: cardBox.width,
+      height: cardBox.height,
+      targetWidth: rootBox.width,
+      targetHeight: rootBox.height,
+    }
+  }
+
   const openRaye = () => {
+    const rect = measureRayeCard()
+    if (!rect) return
+    setMorphRect(rect)
     setEventOverlayOpen(true)
     setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
@@ -219,43 +206,36 @@ export default function Perfil() {
   }
 
   return (
-    // The first RAYE card opens via an in-screen overlay morph (not a route
-    // change), so Perfil stays mounted underneath. Other cards still
-    // navigate to /evento (a regular route).
-    // The screen root is `relative h-full` so EventMorphOverlay's absolute
-    // inset-0 covers exactly this screen and the source card lives in the
-    // same LayoutGroup subtree as the overlay (no portal across boundaries).
-    <LayoutGroup id="event-raye-morph">
-      <div className="relative h-full">
-        <div className="pb-[20px]">
-          <Header />
-          <ProfileBlock />
-          <ActionButtons />
-          <TabBar active={tab} onChange={setTab} />
-          <EventList
-            onSelectRaye={openRaye}
-            onSelectOther={() => navigate('/evento')}
-            hideRayeSourceVisual={hideRayeSourceVisual}
-            morphReady={morphReady}
-          />
-        </div>
-        <AnimatePresence
-          initial={false}
-          mode="sync"
-          onExitComplete={() => {
-            setHideRayeSourceVisual(false)
-            setEventOverlayOpen(false)
-          }}
-        >
-          {selectedEvent === 'raye' && (
-            <EventMorphOverlay
-              key="perfil-raye-overlay"
-              morphIds={PERFIL_RAYE_MORPH_IDS}
-              onClose={closeRaye}
-            />
-          )}
-        </AnimatePresence>
+    <div ref={screenRootRef} className="relative h-full">
+      <div className="pb-[20px]">
+        <Header />
+        <ProfileBlock />
+        <ActionButtons />
+        <TabBar active={tab} onChange={setTab} />
+        <EventList
+          onSelectRaye={openRaye}
+          onSelectOther={() => navigate('/evento')}
+          hideRayeSourceVisual={hideRayeSourceVisual}
+          rayeCardRef={rayeCardRef}
+        />
       </div>
-    </LayoutGroup>
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        onExitComplete={() => {
+          setHideRayeSourceVisual(false)
+          setEventOverlayOpen(false)
+          setMorphRect(null)
+        }}
+      >
+        {selectedEvent === 'raye' && morphRect && (
+          <EventMorphOverlay
+            key="perfil-raye-overlay"
+            sourceRect={morphRect}
+            onClose={closeRaye}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   )
 }

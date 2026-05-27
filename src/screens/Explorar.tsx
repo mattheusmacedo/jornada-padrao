@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
+import { AnimatePresence, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
-import EventMorphOverlay from '../components/EventMorphOverlay'
+import EventMorphOverlay, { type MorphRect } from '../components/EventMorphOverlay'
 import { usePhoneFrameChrome } from '../components/PhoneFrameChromeContext'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
-// Use the same hero asset for the RAYE source thumbnail so the morph's
-// source and destination share identical image data — no swap mid-morph.
 import raye from '../assets/evento/hero-raye.png'
 import badBunny from '../assets/explorar/bad-bunny.png'
 import titas from '../assets/explorar/titas.png'
@@ -85,36 +82,36 @@ const events = [
 export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // hideRayeSourceVisual flips the source card to `visibility: hidden` while
-  // the overlay owns the screen. setEventOverlayOpen(true) tells PhoneFrame
-  // to release the BottomNav area + fade the nav so the overlay can own the
-  // viewport. Both flags restore in AnimatePresence.onExitComplete.
   const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
-  // morphReady gates whether the RAYE card carries its container layoutId.
-  // During the list entrance the card has NO layoutId so FM doesn't build a
-  // projection node — RAYE staggers in like every other card. After the
-  // entrance settles, the layoutId attaches and stays stable.
-  const [morphReady, setMorphReady] = useState(false)
+  const [morphRect, setMorphRect] = useState<MorphRect | null>(null)
+  const screenRootRef = useRef<HTMLDivElement | null>(null)
+  const rayeCardRef = useRef<HTMLButtonElement | null>(null)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
-
-  // Calibrated to listVariants: delayChildren 100 + (n-1)·staggerChildren 50
-  // + item duration 200 + 50ms slack. Explorar has 8 events → ~700ms.
-  const listSettleMs = useMemo(
-    () => 100 + (events.length - 1) * 50 + 200 + 50,
-    []
-  )
-
-  useEffect(() => {
-    setMorphReady(false)
-    const t = window.setTimeout(() => setMorphReady(true), listSettleMs)
-    return () => window.clearTimeout(t)
-  }, [listSettleMs])
 
   useEffect(() => {
     return () => setEventOverlayOpen(false)
   }, [setEventOverlayOpen])
 
+  const measureRayeCard = (): MorphRect | null => {
+    const card = rayeCardRef.current
+    const root = screenRootRef.current
+    if (!card || !root) return null
+    const cardBox = card.getBoundingClientRect()
+    const rootBox = root.getBoundingClientRect()
+    return {
+      x: cardBox.left - rootBox.left,
+      y: cardBox.top - rootBox.top,
+      width: cardBox.width,
+      height: cardBox.height,
+      targetWidth: rootBox.width,
+      targetHeight: rootBox.height,
+    }
+  }
+
   const openRaye = () => {
+    const rect = measureRayeCard()
+    if (!rect) return
+    setMorphRect(rect)
     setEventOverlayOpen(true)
     setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
@@ -123,63 +120,50 @@ export default function Explorar() {
     setSelectedEvent(null)
   }
 
-  // Explorar intentionally does NOT wrap in PageTransition: the morph from
-  // the RAYE card to the detail overlay needs the source's parent to be
-  // transform-stable.
   return (
-    // The screen root is `relative h-full` so EventMorphOverlay's absolute
-    // inset-0 covers exactly this screen and the source card lives in the
-    // same LayoutGroup subtree as the overlay (no portal across boundaries).
-    <LayoutGroup id="explorar-raye-morph">
-      <div className="relative h-full bg-white">
-        <div className="pb-[20px]">
-          <Header />
-          <SearchBar />
-          <fmotion.div
-            variants={listVariants}
-            initial="initial"
-            animate="animate"
-            className="mt-5 px-[23px] flex flex-col gap-[14px]"
-          >
-            {events.map((e, i) => {
-              const isFirstRaye = i === 0 && e.title === 'RAYE'
-              return (
-                <EventCard
-                  key={i}
-                  variant="fullbleed"
-                  {...e}
-                  onClick={
-                    isFirstRaye
-                      ? morphReady ? openRaye : undefined
-                      : () => navigate('/evento')
-                  }
-                  cardLayoutId={
-                    isFirstRaye && morphReady ? EXPLORAR_RAYE_MORPH_IDS.container : undefined
-                  }
-                  hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
-                  disablePress={isFirstRaye}
-                />
-              )
-            })}
-          </fmotion.div>
-        </div>
-        <AnimatePresence
-          initial={false}
-          mode="sync"
-          onExitComplete={() => {
-            setHideRayeSourceVisual(false)
-            setEventOverlayOpen(false)
-          }}
+    <div ref={screenRootRef} className="relative h-full bg-white">
+      <div className="pb-[20px]">
+        <Header />
+        <SearchBar />
+        <fmotion.div
+          variants={listVariants}
+          initial="initial"
+          animate="animate"
+          className="mt-5 px-[23px] flex flex-col gap-[14px]"
         >
-          {selectedEvent === 'raye' && (
-            <EventMorphOverlay
-              key="explorar-raye-overlay"
-              morphIds={EXPLORAR_RAYE_MORPH_IDS}
-              onClose={closeRaye}
-            />
-          )}
-        </AnimatePresence>
+          {events.map((e, i) => {
+            const isFirstRaye = i === 0 && e.title === 'RAYE'
+            return (
+              <EventCard
+                key={i}
+                ref={isFirstRaye ? rayeCardRef : undefined}
+                variant="fullbleed"
+                {...e}
+                onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
+                hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
+                disablePress={isFirstRaye}
+              />
+            )
+          })}
+        </fmotion.div>
       </div>
-    </LayoutGroup>
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        onExitComplete={() => {
+          setHideRayeSourceVisual(false)
+          setEventOverlayOpen(false)
+          setMorphRect(null)
+        }}
+      >
+        {selectedEvent === 'raye' && morphRect && (
+          <EventMorphOverlay
+            key="explorar-raye-overlay"
+            sourceRect={morphRect}
+            onClose={closeRaye}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
