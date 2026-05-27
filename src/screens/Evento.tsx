@@ -2,21 +2,15 @@ import { ArrowLeft, Bookmark, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
 import {
-  containerMorphTransition,
-  morphContentRevealVariants,
   pressButton,
   pressTransition,
   revealVariants,
   revealTransition,
 } from '../motion/variants'
-import {
-  RAYE_EVENT_CONTAINER_LAYOUT_ID,
-  RAYE_EVENT_IMAGE_LAYOUT_ID,
-  RAYE_EVENT_TITLE_LAYOUT_ID,
-} from './Perfil'
-// Use the same image asset as the Perfil RAYE card so the layoutId
-// hybrid morph has matching pixel data on both sides — no flicker swap.
-import hero from '../assets/perfil/event-raye.png'
+// Standalone /evento route — no shared layoutIds. The card-to-detail morph
+// is now an in-Perfil overlay (see EventMorphOverlay). This page is for
+// direct URL loads or future non-RAYE detail navigations.
+import hero from '../assets/evento/hero-raye.png'
 import avatar1 from '../assets/evento/avatar-1.png'
 import avatar2 from '../assets/evento/avatar-2.png'
 import avatar3 from '../assets/evento/avatar-3.png'
@@ -24,22 +18,9 @@ import ticketmaster from '../assets/evento/ticketmaster.png'
 
 function HeroImage() {
   const navigate = useNavigate()
-  // No negative margin here. The full-bleed top is achieved at the
-  // PhoneFrame level (noTopInset=true on /evento) so the morphing layoutId
-  // image's destination box has a clean viewport position without parent
-  // offset hacks.
   return (
     <div className="relative h-[300px] w-full shrink-0">
-      {/* Hero image is the destination half of the image shared element —
-          shares a layoutId with the card thumbnail on Perfil so FM morphs
-          one image element across routes (no duplicate hero pop-in). */}
-      <fmotion.img
-        layoutId={RAYE_EVENT_IMAGE_LAYOUT_ID}
-        transition={containerMorphTransition}
-        src={hero}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-black/60 to-transparent" />
 
       <div className="relative flex items-center gap-3 px-[18px] pt-[52px]">
@@ -99,13 +80,9 @@ function FansPill() {
 
 function EventTitle() {
   return (
-    <fmotion.h2
-      layoutId={RAYE_EVENT_TITLE_LAYOUT_ID}
-      transition={containerMorphTransition}
-      className="mt-[16px] px-[24px] text-[var(--color-typography-title)] text-[34.5px] font-extrabold leading-none shrink-0"
-    >
+    <h2 className="mt-[16px] px-[24px] text-[var(--color-typography-title)] text-[34.5px] font-extrabold leading-none shrink-0">
       RAYE
-    </fmotion.h2>
+    </h2>
   )
 }
 
@@ -216,54 +193,19 @@ function CTAButton() {
 
 export default function Evento() {
   return (
-    // Single layoutId on the page root: this entire screen IS the destination
-    // of the Perfil RAYE card morph. Framer Motion interpolates the box from
-    // card (~320×80) to page (full viewport) over 500ms ease-out. The hero
-    // image and title inside use the `layout` prop to ride along; the rest of
-    // the destination content reveals via morphContentRevealVariants delayed
-    // until after the morph settles.
-    <fmotion.div
-      layoutId={RAYE_EVENT_CONTAINER_LAYOUT_ID}
-      transition={containerMorphTransition}
-      style={{ borderRadius: 0 }}
-      className="h-full flex flex-col bg-white overflow-hidden"
-    >
+    <div className="h-full flex flex-col bg-white">
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <HeroImage />
-          {/* Non-morphing content fades + slides up with a 200ms delay so it
-              lands after the shared-element morph has finished its first half.
-              Split into two wrappers because EventTitle (morph target) sits
-              between FansPill and InfoRows in the DOM order. */}
-          <fmotion.div
-            variants={morphContentRevealVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <FansPill />
-          </fmotion.div>
+          <FansPill />
           <EventTitle />
-          <fmotion.div
-            variants={morphContentRevealVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            <InfoRows />
-            <AboutBlock />
-            <div className="h-[20px]" />
-          </fmotion.div>
+          <InfoRows />
+          <AboutBlock />
+          <div className="h-[20px]" />
         </div>
-        <fmotion.div
-          variants={morphContentRevealVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          className="relative shrink-0 pb-[20px] pt-[20px] flex justify-center bg-white"
-        >
+        <div className="relative shrink-0 pb-[20px] pt-[20px] flex justify-center bg-white">
           <div className="pointer-events-none absolute -top-[40px] inset-x-0 h-[40px] bg-gradient-to-t from-white to-transparent" />
           <CTAButton />
-        </fmotion.div>
-    </fmotion.div>
+        </div>
+    </div>
   )
 }

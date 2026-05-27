@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { motion as fmotion } from 'framer-motion'
+import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
+import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
+import { RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 import avatar from '../assets/perfil/avatar-quinn.png'
 import eventRaye from '../assets/perfil/event-raye.png'
 import eventLuan from '../assets/perfil/event-luan-santana.png'
+
+type SelectedEvent = 'raye' | null
 
 function Header() {
   const navigate = useNavigate()
@@ -124,15 +128,13 @@ const events = [
   { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
 ]
 
-// Shared-element morph (hybrid pattern, matches motion-primitives MorphingDialog):
-//   container — morphs the card's box geometry into the page's box
-//   image     — morphs the card thumbnail into the hero image (no duplicate)
-//   title     — morphs the card title into the detail title (no duplicate)
-export const RAYE_EVENT_CONTAINER_LAYOUT_ID = 'event-raye-1-container'
-export const RAYE_EVENT_IMAGE_LAYOUT_ID = 'event-raye-1-image'
-export const RAYE_EVENT_TITLE_LAYOUT_ID = 'event-raye-1-title'
-
-function EventList({ onSelect }: { onSelect: () => void }) {
+function EventList({
+  onSelectRaye,
+  onSelectOther,
+}: {
+  onSelectRaye: () => void
+  onSelectOther: () => void
+}) {
   return (
     <fmotion.div
       variants={listVariants}
@@ -146,10 +148,10 @@ function EventList({ onSelect }: { onSelect: () => void }) {
           <EventCard
             key={i}
             {...e}
-            onClick={onSelect}
-            cardLayoutId={isFirstRaye ? RAYE_EVENT_CONTAINER_LAYOUT_ID : undefined}
-            imageLayoutId={isFirstRaye ? RAYE_EVENT_IMAGE_LAYOUT_ID : undefined}
-            titleLayoutId={isFirstRaye ? RAYE_EVENT_TITLE_LAYOUT_ID : undefined}
+            onClick={isFirstRaye ? onSelectRaye : onSelectOther}
+            cardLayoutId={isFirstRaye ? RAYE_MORPH_IDS.container : undefined}
+            imageLayoutId={isFirstRaye ? RAYE_MORPH_IDS.image : undefined}
+            titleLayoutId={isFirstRaye ? RAYE_MORPH_IDS.title : undefined}
           />
         )
       })}
@@ -159,18 +161,28 @@ function EventList({ onSelect }: { onSelect: () => void }) {
 
 export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
+  const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
   const navigate = useNavigate()
   return (
-    // Perfil intentionally does NOT wrap in PageTransition: the morph from
-    // the RAYE card to Evento's hero (layoutId) needs the source's parent
-    // to be transform-stable, otherwise the page-level slide composes with
-    // the layoutId animation and produces a "dip then pop" artifact.
-    <div className="pb-[20px]">
-      <Header />
-      <ProfileBlock />
-      <ActionButtons />
-      <TabBar active={tab} onChange={setTab} />
-      <EventList onSelect={() => navigate('/evento')} />
-    </div>
+    // The first RAYE card opens via an in-screen overlay morph (not a route
+    // change), so Perfil stays mounted underneath. Other cards still
+    // navigate to /evento (a regular route).
+    <LayoutGroup id="event-raye-morph">
+      <div className="pb-[20px]">
+        <Header />
+        <ProfileBlock />
+        <ActionButtons />
+        <TabBar active={tab} onChange={setTab} />
+        <EventList
+          onSelectRaye={() => setSelectedEvent('raye')}
+          onSelectOther={() => navigate('/evento')}
+        />
+      </div>
+      <AnimatePresence initial={false} mode="sync">
+        {selectedEvent === 'raye' && (
+          <EventMorphOverlay key="event-raye-overlay" onClose={() => setSelectedEvent(null)} />
+        )}
+      </AnimatePresence>
+    </LayoutGroup>
   )
 }

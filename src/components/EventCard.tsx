@@ -1,11 +1,12 @@
 import { Ticket } from 'lucide-react'
 import { motion as fmotion } from 'framer-motion'
 import {
-  containerMorphTransition,
   listItemVariants,
   pressCardStandard,
   pressTransition,
 } from '../motion/variants'
+
+const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
 type CommonProps = {
   image: string
@@ -48,19 +49,19 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
       type="button"
       onClick={onClick}
       layoutId={cardLayoutId}
-      variants={listItemVariants}
-      // Press feedback (scale 0.985) is disabled on the morph source card —
-      // it would otherwise pollute FM's layout measurement (the source box
-      // would be captured at the pressed/scaled state) and produce a small
-      // dip at the start of the morph.
+      // No listItemVariants stagger and no whileTap on the morph trigger:
+      // FM must capture this card at its rest layout — any transform
+      // (entrance y:32→0 or pressed scale 0.985) at capture time pollutes
+      // the source measurement and produces a visible dip in the morph.
+      variants={isMorphing ? undefined : listItemVariants}
       whileTap={isMorphing ? undefined : pressCardStandard}
-      transition={isMorphing ? containerMorphTransition : pressTransition}
+      transition={isMorphing ? MORPH_TRANSITION : pressTransition}
       style={isMorphing ? { borderRadius: 16 } : undefined}
       className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
     >
       <fmotion.img
         layoutId={imageLayoutId}
-        transition={imageLayoutId ? containerMorphTransition : undefined}
+        transition={imageLayoutId ? MORPH_TRANSITION : undefined}
         src={image}
         alt=""
         className="w-[83.582px] h-[57.214px] rounded-lg object-cover shrink-0"
@@ -69,7 +70,7 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
         <div className="flex items-center justify-between gap-2">
           <fmotion.p
             layoutId={titleLayoutId}
-            transition={titleLayoutId ? containerMorphTransition : undefined}
+            transition={titleLayoutId ? MORPH_TRANSITION : undefined}
             className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate"
           >
             {title}
