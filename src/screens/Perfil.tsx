@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
@@ -133,11 +133,11 @@ const events = [
 function EventList({
   onSelectRaye,
   onSelectOther,
-  suppressRayeSourceContent,
+  hideRayeSourceVisual,
 }: {
   onSelectRaye: () => void
   onSelectOther: () => void
-  suppressRayeSourceContent: boolean
+  hideRayeSourceVisual: boolean
 }) {
   return (
     <fmotion.div
@@ -157,7 +157,7 @@ function EventList({
             // while Perfil is mounted. FM keeps a stable projection node.
             cardLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.container : undefined}
             imageLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.image : undefined}
-            suppressContent={isFirstRaye && suppressRayeSourceContent}
+            hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
             disablePress={isFirstRaye}
           />
         )
@@ -169,35 +169,20 @@ function EventList({
 export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // Source card hides its text during open/close so it never deforms inside
-  // the shrinking morph container. Restored via a 260ms timer in closeRaye.
-  const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
-  const closeTimerRef = useRef<number | null>(null)
+  // hideRayeSourceVisual flips the source card to `visibility: hidden` while
+  // the overlay owns the screen. The DOM node stays mounted so FM can still
+  // measure the source rect, but paint goes away → no duplicate card visible
+  // behind the morph. Restored via AnimatePresence onExitComplete after the
+  // overlay's reverse morph has fully landed.
+  const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
   const navigate = useNavigate()
 
-  useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
-    }
-  }, [])
-
   const openRaye = () => {
-    if (closeTimerRef.current) {
-      window.clearTimeout(closeTimerRef.current)
-      closeTimerRef.current = null
-    }
-    setSuppressRayeSourceContent(true)
+    setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
   }
   const closeRaye = () => {
     setSelectedEvent(null)
-    if (closeTimerRef.current) {
-      window.clearTimeout(closeTimerRef.current)
-    }
-    closeTimerRef.current = window.setTimeout(() => {
-      setSuppressRayeSourceContent(false)
-      closeTimerRef.current = null
-    }, 260)
   }
 
   return (
@@ -217,10 +202,14 @@ export default function Perfil() {
           <EventList
             onSelectRaye={openRaye}
             onSelectOther={() => navigate('/evento')}
-            suppressRayeSourceContent={suppressRayeSourceContent}
+            hideRayeSourceVisual={hideRayeSourceVisual}
           />
         </div>
-        <AnimatePresence initial={false} mode="sync">
+        <AnimatePresence
+          initial={false}
+          mode="sync"
+          onExitComplete={() => setHideRayeSourceVisual(false)}
+        >
           {selectedEvent === 'raye' && (
             <EventMorphOverlay
               key="perfil-raye-overlay"

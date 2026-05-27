@@ -38,6 +38,12 @@ type CommonProps = {
    *  press in flight at the moment cardLayoutId arms would scale the source
    *  rect FM captures, producing a small jump on morph start. */
   disablePress?: boolean
+  /** Visually hides the inner morph surface while keeping its layout box
+   *  in flow. Use during an active card→page morph so the destination is
+   *  the only visible owner of the surface, but FM can still measure the
+   *  source rect via its still-mounted DOM node. Uses `visibility: hidden`
+   *  (not `display: none`) — layout stays, paint goes away. */
+  hideSourceVisual?: boolean
 }
 
 type Props = CommonProps & { variant?: 'compact' | 'fullbleed' }
@@ -55,7 +61,7 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
+function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false, hideSourceVisual = false }: CommonProps) {
   // Two-layer split: outer wrapper handles list-entrance stagger only; the
   // inner button is the layoutId morph surface. The layoutId element MUST
   // NOT also be the list-variant element — FM's shared-layout projection
@@ -70,7 +76,10 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
         layoutId={cardLayoutId}
         whileTap={disablePress ? undefined : pressCardStandard}
         transition={isMorphing ? MORPH_TRANSITION : pressTransition}
-        style={isMorphing ? { borderRadius: 16 } : undefined}
+        style={{
+          ...(isMorphing ? { borderRadius: 16 } : undefined),
+          visibility: hideSourceVisual ? 'hidden' : 'visible',
+        }}
         className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
       >
         <fmotion.img
@@ -106,7 +115,7 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
   )
 }
 
-function FullbleedCard({ image, title, date, venue, location, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
+function FullbleedCard({ image, title, date, venue, location, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false, hideSourceVisual = false }: CommonProps) {
   // Same two-layer split as CompactCard: outer wrapper for list stagger,
   // inner button for the layoutId morph.
   const isMorphing = Boolean(cardLayoutId)
@@ -118,7 +127,10 @@ function FullbleedCard({ image, title, date, venue, location, onClick, cardLayou
         layoutId={cardLayoutId}
         whileTap={disablePress ? undefined : pressCardStandard}
         transition={isMorphing ? MORPH_TRANSITION : pressTransition}
-        style={isMorphing ? { borderRadius: 16 } : undefined}
+        style={{
+          ...(isMorphing ? { borderRadius: 16 } : undefined),
+          visibility: hideSourceVisual ? 'hidden' : 'visible',
+        }}
         className={`relative w-full text-left overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)] ${isMorphing ? '' : 'rounded-2xl'}`}
       >
         <fmotion.img

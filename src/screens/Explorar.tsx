@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
@@ -84,34 +84,18 @@ const events = [
 export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // Source card hides its text during open/close so it never deforms inside
-  // the shrinking morph container. Restored via a 260ms timer in closeRaye.
-  const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
-  const closeTimerRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (closeTimerRef.current) window.clearTimeout(closeTimerRef.current)
-    }
-  }, [])
+  // hideRayeSourceVisual flips the source card to `visibility: hidden` while
+  // the overlay owns the screen. The DOM stays mounted so FM can still
+  // measure the source rect. Restored on AnimatePresence.onExitComplete
+  // once the reverse morph has fully landed.
+  const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
 
   const openRaye = () => {
-    if (closeTimerRef.current) {
-      window.clearTimeout(closeTimerRef.current)
-      closeTimerRef.current = null
-    }
-    setSuppressRayeSourceContent(true)
+    setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
   }
   const closeRaye = () => {
     setSelectedEvent(null)
-    if (closeTimerRef.current) {
-      window.clearTimeout(closeTimerRef.current)
-    }
-    closeTimerRef.current = window.setTimeout(() => {
-      setSuppressRayeSourceContent(false)
-      closeTimerRef.current = null
-    }, 260)
   }
 
   // Explorar intentionally does NOT wrap in PageTransition: the morph from
@@ -142,14 +126,18 @@ export default function Explorar() {
                   onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
                   cardLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
                   imageLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
-                  suppressContent={isFirstRaye && suppressRayeSourceContent}
+                  hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
                   disablePress={isFirstRaye}
                 />
               )
             })}
           </fmotion.div>
         </div>
-        <AnimatePresence initial={false} mode="sync">
+        <AnimatePresence
+          initial={false}
+          mode="sync"
+          onExitComplete={() => setHideRayeSourceVisual(false)}
+        >
           {selectedEvent === 'raye' && (
             <EventMorphOverlay
               key="explorar-raye-overlay"
