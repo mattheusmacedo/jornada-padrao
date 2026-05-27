@@ -2,7 +2,6 @@ import { Ticket } from 'lucide-react'
 import { motion as fmotion } from 'framer-motion'
 import {
   listItemVariants,
-  morphSourceListItemVariants,
   pressCardStandard,
   pressTransition,
 } from '../motion/variants'
@@ -53,10 +52,11 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
       type="button"
       onClick={onClick}
       layoutId={cardLayoutId}
-      // On the morph source: opacity-only entrance (no y) so FM captures the
-      // source layout cleanly. No press scale either — it would pollute the
-      // measurement at capture time.
-      variants={isMorphing ? morphSourceListItemVariants : listItemVariants}
+      // Same list entrance variant for every card (morph source or not) —
+      // RAYE must blend into the staggered rhythm during tab swaps, not
+      // animate differently. Morph-only specials (no press, spring
+      // transition, animatable border-radius) live in other props.
+      variants={listItemVariants}
       whileTap={isMorphing ? undefined : pressCardStandard}
       transition={isMorphing ? MORPH_TRANSITION : pressTransition}
       style={isMorphing ? { borderRadius: 16 } : undefined}
@@ -101,7 +101,7 @@ function FullbleedCard({ image, title, date, venue, location, onClick, cardLayou
       type="button"
       onClick={onClick}
       layoutId={cardLayoutId}
-      variants={isMorphing ? morphSourceListItemVariants : listItemVariants}
+      variants={listItemVariants}
       whileTap={isMorphing ? undefined : pressCardStandard}
       transition={isMorphing ? MORPH_TRANSITION : pressTransition}
       style={isMorphing ? { borderRadius: 16 } : undefined}
