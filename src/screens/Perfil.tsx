@@ -7,7 +7,9 @@ import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
 import { RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 import avatar from '../assets/perfil/avatar-quinn.png'
-import eventRaye from '../assets/perfil/event-raye.png'
+// Use the same hero asset for the RAYE thumbnail so the source and
+// destination of the morph share identical image data — no swap mid-morph.
+import eventRaye from '../assets/evento/hero-raye.png'
 import eventLuan from '../assets/perfil/event-luan-santana.png'
 
 type SelectedEvent = 'raye' | null
