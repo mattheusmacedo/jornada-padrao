@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
@@ -90,7 +90,25 @@ export default function Explorar() {
   // to release the BottomNav area + fade the nav so the overlay can own the
   // viewport. Both flags restore in AnimatePresence.onExitComplete.
   const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
+  // morphReady gates whether the RAYE card carries its container layoutId.
+  // During the list entrance the card has NO layoutId so FM doesn't build a
+  // projection node — RAYE staggers in like every other card. After the
+  // entrance settles, the layoutId attaches and stays stable.
+  const [morphReady, setMorphReady] = useState(false)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
+
+  // Calibrated to listVariants: delayChildren 100 + (n-1)·staggerChildren 50
+  // + item duration 200 + 50ms slack. Explorar has 8 events → ~700ms.
+  const listSettleMs = useMemo(
+    () => 100 + (events.length - 1) * 50 + 200 + 50,
+    []
+  )
+
+  useEffect(() => {
+    setMorphReady(false)
+    const t = window.setTimeout(() => setMorphReady(true), listSettleMs)
+    return () => window.clearTimeout(t)
+  }, [listSettleMs])
 
   useEffect(() => {
     return () => setEventOverlayOpen(false)
@@ -130,9 +148,14 @@ export default function Explorar() {
                   key={i}
                   variant="fullbleed"
                   {...e}
-                  onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
-                  cardLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
-                  imageLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
+                  onClick={
+                    isFirstRaye
+                      ? morphReady ? openRaye : undefined
+                      : () => navigate('/evento')
+                  }
+                  cardLayoutId={
+                    isFirstRaye && morphReady ? EXPLORAR_RAYE_MORPH_IDS.container : undefined
+                  }
                   hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
                   disablePress={isFirstRaye}
                 />

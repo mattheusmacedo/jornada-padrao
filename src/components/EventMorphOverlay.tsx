@@ -83,7 +83,7 @@ export default function EventMorphOverlay({ onClose, morphIds }: Props) {
           className="pointer-events-auto h-full w-full flex flex-col bg-white overflow-hidden ring-1 ring-black/[0.04]"
         >
           <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <EventHero onBack={onClose} imageLayoutId={morphIds.image} />
+            <EventHero onBack={onClose} />
 
             {/* One stagger group containing FansPill → Title → rows → about.
                 The title no longer shares a layoutId with the source card —

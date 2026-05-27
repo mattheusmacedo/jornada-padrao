@@ -17,16 +17,20 @@ type CommonProps = {
   location: string
   badgeCount?: number
   onClick?: () => void
-  /** Shared layoutIds for the card → overlay morph. The container morphs
-   *  the card box; the image morphs from thumb to hero. The title is NOT
-   *  shared — it disappears with the source card and the destination title
-   *  reveals separately via the stagger group on the overlay.
+  /** Container layoutId for the card → overlay morph. Pass it only AFTER
+   *  the list-entrance stagger has settled (callers gate this on a
+   *  morphReady flag). During the entrance window the card has no
+   *  layoutId so it doesn't get FM projection-node treatment and
+   *  staggers like every other list item. Once attached, the id stays
+   *  stable for the lifetime of the screen — repeated open/close cycles
+   *  reuse the same source projection.
    *
-   *  IMPORTANT: only pass these while the morph is actively transitioning.
-   *  An always-mounted layoutId creates an FM projection node that can
-   *  pollute the card's position during list entrance/tab swap. Callers
-   *  arm the ids on tap, then disarm them via AnimatePresence.onExitComplete. */
+   *  The image is NOT a shared layout element in this flow: source-image
+   *  geometry differs between Perfil (thumbnail) and Explorar (fullbleed),
+   *  so the hero rides inside the morphing container instead of bridging. */
   cardLayoutId?: string
+  /** Reserved for flows that need a shared image element. Not used by the
+   *  Perfil/Explorar event morph; see the cardLayoutId comment for why. */
   imageLayoutId?: string
   /** When true, the source-only content (title, badge, date/venue) fades
    *  to opacity 0. Used by Perfil to hide the card's text during both the

@@ -36,24 +36,25 @@ const HEADER_REVEAL_TRANSITION = {
 
 type EventHeroProps = {
   onBack: () => void
-  /** Set in the overlay context to bridge the source thumbnail's layoutId. */
-  imageLayoutId?: string
 }
 
-export function EventHero({ onBack, imageLayoutId }: EventHeroProps) {
+export function EventHero({ onBack }: EventHeroProps) {
   return (
     <div className="relative h-[300px] w-full shrink-0">
-      {imageLayoutId ? (
-        <fmotion.img
-          layoutId={imageLayoutId}
-          transition={MORPH_TRANSITION}
-          src={rayeHero}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <img src={rayeHero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-      )}
+      {/* `layout` (not layoutId) — the hero participates as a layout child
+          of the morphing page shell, not as a shared element with the
+          source thumbnail. The source thumbnails on Perfil (compact) vs
+          Explorar (fullbleed) have different geometries; bridging them
+          via shared layoutId produces inconsistent morph paths across
+          tabs. Letting the hero ride inside the shell gives both tabs
+          the same choreography. */}
+      <fmotion.img
+        layout
+        transition={MORPH_TRANSITION}
+        src={rayeHero}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+      />
       <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-black/60 to-transparent" />
       <fmotion.div
         initial={{ opacity: 0, y: 4 }}

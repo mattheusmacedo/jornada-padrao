@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
@@ -135,10 +135,12 @@ function EventList({
   onSelectRaye,
   onSelectOther,
   hideRayeSourceVisual,
+  morphReady,
 }: {
   onSelectRaye: () => void
   onSelectOther: () => void
   hideRayeSourceVisual: boolean
+  morphReady: boolean
 }) {
   return (
     <fmotion.div
@@ -153,11 +155,19 @@ function EventList({
           <EventCard
             key={i}
             {...e}
-            onClick={isFirstRaye ? onSelectRaye : onSelectOther}
-            // Stable per-tab layoutIds — the source identity never changes
-            // while Perfil is mounted. FM keeps a stable projection node.
-            cardLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.container : undefined}
-            imageLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.image : undefined}
+            // Tap is a no-op for RAYE until morphReady — no rAF fallback,
+            // no early-tap fast path. RAYE only opens after the list has
+            // visually settled (~550ms after mount).
+            onClick={
+              isFirstRaye
+                ? morphReady ? onSelectRaye : undefined
+                : onSelectOther
+            }
+            // Container-only layoutId. Attached after morphReady; stays
+            // stable thereafter for the lifetime of the screen.
+            cardLayoutId={
+              isFirstRaye && morphReady ? PERFIL_RAYE_MORPH_IDS.container : undefined
+            }
             hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
             disablePress={isFirstRaye}
           />
@@ -170,15 +180,28 @@ function EventList({
 export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // hideRayeSourceVisual flips the source card to `visibility: hidden` while
-  // the overlay owns the screen. DOM stays mounted so FM can still measure
-  // the source rect. setEventOverlayOpen(true) tells PhoneFrame to release
-  // the BottomNav area + fade the nav so the overlay can own the viewport.
-  // Both flags restore in AnimatePresence.onExitComplete after the reverse
-  // morph has fully landed.
   const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
+  // morphReady gates whether the RAYE card carries its container layoutId.
+  // During the initial list entrance the card has NO layoutId so FM doesn't
+  // build a projection node — RAYE staggers in like every other card. After
+  // the entrance settles, the layoutId attaches and stays stable for the
+  // lifetime of the screen.
+  const [morphReady, setMorphReady] = useState(false)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
   const navigate = useNavigate()
+
+  // Calibrated to listVariants: delayChildren 100 + (n-1)·staggerChildren 50
+  // + item duration 200 + 50ms slack.
+  const listSettleMs = useMemo(
+    () => 100 + (events.length - 1) * 50 + 200 + 50,
+    []
+  )
+
+  useEffect(() => {
+    setMorphReady(false)
+    const t = window.setTimeout(() => setMorphReady(true), listSettleMs)
+    return () => window.clearTimeout(t)
+  }, [listSettleMs])
 
   // Safety: if Perfil unmounts mid-overlay (route change, refresh), release
   // the chrome lock so the next screen's BottomNav doesn't stay hidden.
@@ -213,6 +236,7 @@ export default function Perfil() {
             onSelectRaye={openRaye}
             onSelectOther={() => navigate('/evento')}
             hideRayeSourceVisual={hideRayeSourceVisual}
+            morphReady={morphReady}
           />
         </div>
         <AnimatePresence
