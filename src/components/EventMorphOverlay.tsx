@@ -73,6 +73,7 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
+            opacity: 1,
           }}
           animate={{
             x: 0,
@@ -80,6 +81,7 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             width: sourceRect.targetWidth,
             height: sourceRect.targetHeight,
             borderRadius: 0,
+            opacity: 1,
           }}
           exit={{
             x: sourceRect.x,
@@ -87,6 +89,22 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
+            opacity: 0,
+            // Geometry still does the reverse FLIP on the morph spring; the
+            // shell's opaque white fades out late so the source card (already
+            // restored by the screen on close) is revealed before unmount.
+            transition: {
+              x: MORPH_TRANSITION,
+              y: MORPH_TRANSITION,
+              width: MORPH_TRANSITION,
+              height: MORPH_TRANSITION,
+              borderRadius: MORPH_TRANSITION,
+              opacity: {
+                delay: 0.2,
+                duration: 0.12,
+                ease: [0, 0, 0.2, 1] as [number, number, number, number],
+              },
+            },
           }}
           transition={MORPH_TRANSITION}
           style={{
