@@ -114,10 +114,17 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
-            // Drop the shell's own elevation as it lands so the source
-            // face / real card is the only thing carrying shadow at the
-            // final frame — no double-shadow pop on handoff.
-            boxShadow: '0 0px 0px rgba(15, 23, 42, 0)',
+            // Shadow ownership at landing depends on variant:
+            //  - compact (Perfil) keeps a soft shadow on the shell that
+            //    matches the source face's own drop-shadow, so the card
+            //    lands already elevated and there's no delayed shadow
+            //    pop after unmount.
+            //  - fullbleed (Explorar) drops to 0; the fullbleed source
+            //    face also suppresses its shadow to avoid a halo stack.
+            boxShadow:
+              sourceCard.variant === 'fullbleed'
+                ? '0 0px 0px rgba(15, 23, 42, 0)'
+                : '0 7px 24px rgba(64, 64, 64, 0.10)',
           }}
           transition={MORPH_TRANSITION}
           style={{
@@ -134,7 +141,10 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             animate={SOURCE_FACE.animate}
             exit={SOURCE_FACE.exit}
           >
-            <EventCardSurface {...sourceCard} />
+            <EventCardSurface
+              {...sourceCard}
+              suppressShadow={sourceCard.variant === 'fullbleed'}
+            />
           </fmotion.div>
 
           {/* Destination face — the full detail page. bg-white so it covers

@@ -15,6 +15,11 @@ export type EventCardSurfaceProps = {
   venue: string
   location: string
   badgeCount?: number
+  /** Drops the card's own drop-shadow. Used by the morph overlay for the
+   *  fullbleed source face so the shell shadow + face shadow don't stack
+   *  into a halo at landing. Compact cards keep their shadow so the
+   *  Perfil card lands with its normal soft elevation. */
+  suppressShadow?: boolean
 }
 
 type EventCardProps = EventCardSurfaceProps & {
@@ -74,9 +79,9 @@ export function EventCardSurface(props: EventCardSurfaceProps) {
     : <CompactSurface {...props} />
 }
 
-function CompactSurface({ image, title, date, venue, location, badgeCount = 1 }: EventCardSurfaceProps) {
+function CompactSurface({ image, title, date, venue, location, badgeCount = 1, suppressShadow = false }: EventCardSurfaceProps) {
   return (
-    <div className="w-full h-full bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden rounded-2xl">
+    <div className={`w-full h-full bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center overflow-hidden rounded-2xl ${suppressShadow ? '' : 'shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)]'}`}>
       <img
         src={image}
         alt=""
@@ -99,9 +104,9 @@ function CompactSurface({ image, title, date, venue, location, badgeCount = 1 }:
   )
 }
 
-function FullbleedSurface({ image, title, date, venue, location }: EventCardSurfaceProps) {
+function FullbleedSurface({ image, title, date, venue, location, suppressShadow = false }: EventCardSurfaceProps) {
   return (
-    <div className="relative w-full h-full overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)] rounded-2xl">
+    <div className={`relative w-full h-full overflow-hidden rounded-2xl ${suppressShadow ? '' : 'shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)]'}`}>
       <img
         src={image}
         alt=""
