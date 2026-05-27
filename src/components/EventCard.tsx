@@ -56,101 +56,105 @@ function Badge({ count }: { count: number }) {
 }
 
 function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
-  // Armed only during the actual morph (open/close). Outside that window
-  // cardLayoutId is undefined and FM doesn't create a projection node —
-  // the card behaves like every other list item during tab entrance.
+  // Two-layer split: outer wrapper handles list-entrance stagger only; the
+  // inner button is the layoutId morph surface. The layoutId element MUST
+  // NOT also be the list-variant element — FM's shared-layout projection
+  // wants a stable source rect, and the list variant's y/opacity were
+  // polluting that capture.
   const isMorphing = Boolean(cardLayoutId)
   return (
-    <fmotion.button
-      type="button"
-      onClick={onClick}
-      layoutId={cardLayoutId}
-      // Same list entrance variant for every card — RAYE blends into the
-      // staggered rhythm during tab swaps. Morph-only specials live below.
-      variants={listItemVariants}
-      whileTap={disablePress ? undefined : pressCardStandard}
-      transition={isMorphing ? MORPH_TRANSITION : pressTransition}
-      style={isMorphing ? { borderRadius: 16 } : undefined}
-      className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
-    >
-      <fmotion.img
-        layoutId={imageLayoutId}
-        transition={imageLayoutId ? MORPH_TRANSITION : undefined}
-        src={image}
-        alt=""
-        className="w-[83.582px] h-[57.214px] rounded-lg object-cover shrink-0"
-      />
-      {/* Source-only content (title, badge, date/venue). Opacity-only fade
-          tied to suppressContent so the text never visually deforms while
-          the shared layoutId container is mid-transform. Image lives outside
-          this wrapper because it's the morph's shared element. */}
-      <fmotion.div
-        animate={{ opacity: suppressContent ? 0 : 1 }}
-        transition={SUPPRESS_TRANSITION}
-        className="flex-1 min-w-0"
+    <fmotion.div variants={listItemVariants} className="w-full">
+      <fmotion.button
+        type="button"
+        onClick={onClick}
+        layoutId={cardLayoutId}
+        whileTap={disablePress ? undefined : pressCardStandard}
+        transition={isMorphing ? MORPH_TRANSITION : pressTransition}
+        style={isMorphing ? { borderRadius: 16 } : undefined}
+        className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
       >
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate">
-            {title}
-          </p>
-          <Badge count={badgeCount} />
-        </div>
-        <p className="mt-[10px] text-[var(--color-grey-darker)] text-[9px] leading-tight">
-          <span className="font-semibold">{date}</span>
-          <br />
-          <span>{venue} • {location}</span>
-        </p>
-      </fmotion.div>
-    </fmotion.button>
-  )
-}
-
-function FullbleedCard({ image, title, date, venue, location, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
-  const isMorphing = Boolean(cardLayoutId)
-  return (
-    <fmotion.button
-      type="button"
-      onClick={onClick}
-      layoutId={cardLayoutId}
-      variants={listItemVariants}
-      whileTap={disablePress ? undefined : pressCardStandard}
-      transition={isMorphing ? MORPH_TRANSITION : pressTransition}
-      style={isMorphing ? { borderRadius: 16 } : undefined}
-      className={`relative w-full text-left overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)] ${isMorphing ? '' : 'rounded-2xl'}`}
-    >
-      <fmotion.img
-        layoutId={imageLayoutId}
-        transition={imageLayoutId ? MORPH_TRANSITION : undefined}
-        src={image}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover z-0"
-      />
-      {/* Source-only overlay (gradient + title + date/venue) fades out via
-          suppressContent. Wrapper is `relative` so its text contributes to
-          the button's height — the image stays full-bleed via absolute. */}
-      <fmotion.div
-        animate={{ opacity: suppressContent ? 0 : 1 }}
-        transition={SUPPRESS_TRANSITION}
-        className="relative z-[1]"
-      >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent z-[1]" />
-        <div className="relative z-10 px-[17.5px] py-[12.5px] flex flex-col items-start gap-[25px]">
-          <p
-            className="font-extrabold text-[var(--color-orange-light-hover)] text-[17.5px] leading-none"
-            style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
-          >
-            {title}
-          </p>
-          <p
-            className="text-[9.27px] leading-tight text-[var(--color-orange-light-active)]"
-            style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
-          >
+        <fmotion.img
+          layoutId={imageLayoutId}
+          transition={imageLayoutId ? MORPH_TRANSITION : undefined}
+          src={image}
+          alt=""
+          className="w-[83.582px] h-[57.214px] rounded-lg object-cover shrink-0"
+        />
+        {/* Source-only content (title, badge, date/venue). Opacity-only fade
+            tied to suppressContent so the text never visually deforms while
+            the shared layoutId container is mid-transform. Image lives outside
+            this wrapper because it's the morph's shared element. */}
+        <fmotion.div
+          animate={{ opacity: suppressContent ? 0 : 1 }}
+          transition={SUPPRESS_TRANSITION}
+          className="flex-1 min-w-0"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <p className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate">
+              {title}
+            </p>
+            <Badge count={badgeCount} />
+          </div>
+          <p className="mt-[10px] text-[var(--color-grey-darker)] text-[9px] leading-tight">
             <span className="font-semibold">{date}</span>
             <br />
             <span>{venue} • {location}</span>
           </p>
-        </div>
-      </fmotion.div>
-    </fmotion.button>
+        </fmotion.div>
+      </fmotion.button>
+    </fmotion.div>
+  )
+}
+
+function FullbleedCard({ image, title, date, venue, location, onClick, cardLayoutId, imageLayoutId, suppressContent = false, disablePress = false }: CommonProps) {
+  // Same two-layer split as CompactCard: outer wrapper for list stagger,
+  // inner button for the layoutId morph.
+  const isMorphing = Boolean(cardLayoutId)
+  return (
+    <fmotion.div variants={listItemVariants} className="w-full">
+      <fmotion.button
+        type="button"
+        onClick={onClick}
+        layoutId={cardLayoutId}
+        whileTap={disablePress ? undefined : pressCardStandard}
+        transition={isMorphing ? MORPH_TRANSITION : pressTransition}
+        style={isMorphing ? { borderRadius: 16 } : undefined}
+        className={`relative w-full text-left overflow-hidden shadow-[0_7.882px_24.631px_0_rgba(83,89,144,0.07)] ${isMorphing ? '' : 'rounded-2xl'}`}
+      >
+        <fmotion.img
+          layoutId={imageLayoutId}
+          transition={imageLayoutId ? MORPH_TRANSITION : undefined}
+          src={image}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        />
+        {/* Source-only overlay (gradient + title + date/venue) fades out via
+            suppressContent. Wrapper is `relative` so its text contributes to
+            the button's height — the image stays full-bleed via absolute. */}
+        <fmotion.div
+          animate={{ opacity: suppressContent ? 0 : 1 }}
+          transition={SUPPRESS_TRANSITION}
+          className="relative z-[1]"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/15 to-transparent z-[1]" />
+          <div className="relative z-10 px-[17.5px] py-[12.5px] flex flex-col items-start gap-[25px]">
+            <p
+              className="font-extrabold text-[var(--color-orange-light-hover)] text-[17.5px] leading-none"
+              style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
+            >
+              {title}
+            </p>
+            <p
+              className="text-[9.27px] leading-tight text-[var(--color-orange-light-active)]"
+              style={{ textShadow: '0 0 6px rgba(0,0,0,0.75)' }}
+            >
+              <span className="font-semibold">{date}</span>
+              <br />
+              <span>{venue} • {location}</span>
+            </p>
+          </div>
+        </fmotion.div>
+      </fmotion.button>
+    </fmotion.div>
   )
 }
