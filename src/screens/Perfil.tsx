@@ -153,7 +153,6 @@ function EventList({
             onClick={isFirstRaye ? onSelectRaye : onSelectOther}
             cardLayoutId={isFirstRaye ? RAYE_MORPH_IDS.container : undefined}
             imageLayoutId={isFirstRaye ? RAYE_MORPH_IDS.image : undefined}
-            titleLayoutId={isFirstRaye ? RAYE_MORPH_IDS.title : undefined}
           />
         )
       })}

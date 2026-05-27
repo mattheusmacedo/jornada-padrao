@@ -16,15 +16,12 @@ type CommonProps = {
   location: string
   badgeCount?: number
   onClick?: () => void
-  /** Three shared layoutIds for the hybrid morph pattern (matches
-   *  motion-primitives MorphingDialog). The container morphs the card's
-   *  box geometry; the image and title each morph from their card-frame
-   *  positions to their destination-frame positions inside the morphing
-   *  container. Source-only children (badge, date/venue) are plain elements
-   *  and fade out as the exiting layoutId parent unmounts. */
+  /** Shared layoutIds for the card → overlay morph. The container morphs
+   *  the card box; the image morphs from thumb to hero. The title is NOT
+   *  shared — it disappears with the source card and the destination title
+   *  reveals separately via the stagger group on the overlay. */
   cardLayoutId?: string
   imageLayoutId?: string
-  titleLayoutId?: string
 }
 
 type Props = CommonProps & { variant?: 'compact' | 'fullbleed' }
@@ -42,7 +39,7 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, titleLayoutId }: CommonProps) {
+function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId }: CommonProps) {
   const isMorphing = Boolean(cardLayoutId)
   return (
     <fmotion.button
@@ -68,13 +65,12 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
       />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <fmotion.p
-            layoutId={titleLayoutId}
-            transition={titleLayoutId ? MORPH_TRANSITION : undefined}
-            className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate"
-          >
+          {/* Title is plain text: it disappears with the source card on morph
+              rather than morphing into the large detail title. The destination
+              title reveals separately via the stagger group. */}
+          <p className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate">
             {title}
-          </fmotion.p>
+          </p>
           <Badge count={badgeCount} />
         </div>
         <p className="mt-[10px] text-[var(--color-grey-darker)] text-[9px] leading-tight">

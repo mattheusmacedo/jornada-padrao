@@ -68,9 +68,11 @@ export default function EventMorphOverlay({ onClose }: Props) {
           <div className="flex-1 overflow-y-auto scrollbar-hide">
             <EventHero onBack={onClose} imageLayoutId={RAYE_MORPH_IDS.image} />
 
-            {/* FansPill comes BEFORE EventTitle in DOM order so its
-                -mt-[30px] overlaps the hero, not the title. Wrapped in its
-                own stagger group so it reveals via detailRevealItem. */}
+            {/* One stagger group containing FansPill → Title → rows → about.
+                The title no longer shares a layoutId with the source card —
+                it reveals here as a stagger item instead of morphing from the
+                yellow card label. FansPill stays first so its -mt-[30px]
+                overlaps the hero, not the title. */}
             <fmotion.div
               variants={detailRevealGroup}
               initial="initial"
@@ -80,19 +82,9 @@ export default function EventMorphOverlay({ onClose }: Props) {
               <fmotion.div variants={detailRevealItem}>
                 <FansPill />
               </fmotion.div>
-            </fmotion.div>
-
-            <EventTitle titleLayoutId={RAYE_MORPH_IDS.title} />
-
-            {/* Second stagger group — rows + about. Each item is a direct
-                motion child of the group (no non-motion wrappers between
-                parent and item) so staggerChildren cascades them in order. */}
-            <fmotion.div
-              variants={detailRevealGroup}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-            >
+              <fmotion.div variants={detailRevealItem}>
+                <EventTitle />
+              </fmotion.div>
               <fmotion.div variants={detailRevealItem} className="mt-6">
                 <DateRow />
               </fmotion.div>
