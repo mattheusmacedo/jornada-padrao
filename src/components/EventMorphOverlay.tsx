@@ -32,6 +32,32 @@ type Props = {
 
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
+// Single fade wrapper sitting INSIDE the morph shell. Owns the visible
+// content lifecycle so the shell never has to crossfade itself to look
+// clean. On exit, this is the thing the user actually sees disappearing —
+// the shrinking white surface behind it then collapses onto the source
+// card.
+const CONTENT_FADE = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.18, ease: [0, 0, 0.2, 1] as [number, number, number, number] } },
+  exit: { opacity: 0, transition: { duration: 0.12, ease: [0, 0, 0.2, 1] as [number, number, number, number] } },
+}
+
+// Hero gets a slight scale settle so the page feels alive immediately
+// instead of opening to a blank white panel until detail rows arrive.
+const HERO_REVEAL = {
+  initial: { opacity: 0, scale: 1.02 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    transition: { delay: 0.06, duration: 0.18, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.1, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
+  },
+}
+
 const CTA_REVEAL = {
   initial: { opacity: 0, y: 10 },
   animate: {
@@ -90,9 +116,11 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             height: sourceRect.height,
             borderRadius: 16,
             opacity: 0,
-            // Geometry still does the reverse FLIP on the morph spring; the
-            // shell's opaque white fades out late so the source card (already
-            // restored by the screen on close) is revealed before unmount.
+            // Shell stays opaque while it shrinks back to the card rect.
+            // The inner content wrapper does the visible exit work (a
+            // single quick fade); shell opacity is just a final 80ms tail
+            // so the white surface vanishes onto the already-restored
+            // source card without a visible crossfade.
             transition: {
               x: MORPH_TRANSITION,
               y: MORPH_TRANSITION,
@@ -100,8 +128,8 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
               height: MORPH_TRANSITION,
               borderRadius: MORPH_TRANSITION,
               opacity: {
-                delay: 0.2,
-                duration: 0.12,
+                delay: 0.28,
+                duration: 0.08,
                 ease: [0, 0, 0.2, 1] as [number, number, number, number],
               },
             },
@@ -115,48 +143,65 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
           }}
           className="pointer-events-auto flex flex-col bg-white overflow-hidden ring-1 ring-black/[0.04]"
         >
-          <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <EventHero onBack={onClose} />
+          {/* Everything visible inside the shell lives in one fade wrapper.
+              On close it does the perceptible exit; the shell's own opacity
+              tail just hides the surface once the content is already gone. */}
+          <fmotion.div
+            className="flex h-full w-full flex-col"
+            initial={CONTENT_FADE.initial}
+            animate={CONTENT_FADE.animate}
+            exit={CONTENT_FADE.exit}
+          >
+            <div className="flex-1 overflow-y-auto scrollbar-hide">
+              <fmotion.div
+                initial={HERO_REVEAL.initial}
+                animate={HERO_REVEAL.animate}
+                exit={HERO_REVEAL.exit}
+                style={{ transformOrigin: 'top center' }}
+              >
+                <EventHero onBack={onClose} />
+              </fmotion.div>
+
+              <fmotion.div
+                variants={detailRevealGroup}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+              >
+                <fmotion.div variants={detailRevealItem}>
+                  <FansPill />
+                </fmotion.div>
+                <fmotion.div variants={detailRevealItem}>
+                  <EventTitle />
+                </fmotion.div>
+                <fmotion.div variants={detailRevealItem} className="mt-6">
+                  <DateRow />
+                </fmotion.div>
+                <fmotion.div variants={detailRevealItem} className="mt-4">
+                  <VenueRow />
+                </fmotion.div>
+                <fmotion.div variants={detailRevealItem} className="mt-4">
+                  <OrganizerRow />
+                </fmotion.div>
+                <fmotion.div variants={detailRevealItem} className="mt-6">
+                  <AboutBlock />
+                </fmotion.div>
+              </fmotion.div>
+              <div className="h-[20px]" />
+            </div>
 
             <fmotion.div
-              variants={detailRevealGroup}
-              initial="initial"
-              animate="animate"
-              exit="exit"
+              initial={CTA_REVEAL.initial}
+              animate={CTA_REVEAL.animate}
+              exit={CTA_REVEAL.exit}
             >
-              <fmotion.div variants={detailRevealItem}>
-                <FansPill />
-              </fmotion.div>
-              <fmotion.div variants={detailRevealItem}>
-                <EventTitle />
-              </fmotion.div>
-              <fmotion.div variants={detailRevealItem} className="mt-6">
-                <DateRow />
-              </fmotion.div>
-              <fmotion.div variants={detailRevealItem} className="mt-4">
-                <VenueRow />
-              </fmotion.div>
-              <fmotion.div variants={detailRevealItem} className="mt-4">
-                <OrganizerRow />
-              </fmotion.div>
-              <fmotion.div variants={detailRevealItem} className="mt-6">
-                <AboutBlock />
-              </fmotion.div>
+              <CTAFooter
+                onClick={() => {
+                  onClose()
+                  navigate('/ramificacao')
+                }}
+              />
             </fmotion.div>
-            <div className="h-[20px]" />
-          </div>
-
-          <fmotion.div
-            initial={CTA_REVEAL.initial}
-            animate={CTA_REVEAL.animate}
-            exit={CTA_REVEAL.exit}
-          >
-            <CTAFooter
-              onClick={() => {
-                onClose()
-                navigate('/ramificacao')
-              }}
-            />
           </fmotion.div>
         </fmotion.div>
       </div>
