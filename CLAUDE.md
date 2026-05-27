@@ -37,6 +37,8 @@ src/motion/transitions.tsx ← shared transition wrappers
 
 The `motion/` folder currently contains TODO stubs — **do not modify them** during screen pulls.
 
+**Card-to-detail morph rule:** when the source card and the destination screen have structurally different layouts (e.g. compact thumbnail vs. fullbleed hero), use **measured FLIP with a two-face overlay**: the outer shell owns geometry only (x/y/width/height/borderRadius), and a source-face + destination-face inside it own the visual content. Do NOT mix `layoutId`, manual FLIP, and crossfade cleanup for the same transition — pick one primary model. See `sequence-card-detail-flip` in `motion-system.json`.
+
 ---
 
 ## 2. Component library

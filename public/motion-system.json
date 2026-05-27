@@ -227,6 +227,78 @@
         { "t": 0.5,  "opacity": 1, "scale": 1.05 },
         { "t": 0.67, "opacity": 1, "scale": 1 }
       ]
+    },
+    {
+      "id": "sequence-card-detail-flip",
+      "category": "sequence",
+      "title": "Card → detalhe: FLIP medido com duas faces",
+      "subtitle": "Shell geométrico + face de origem + face de destino",
+      "description": "Use este padrão quando o card de origem e a tela de destino não têm a mesma estrutura visual. O shell externo anima apenas geometria medida (x, y, width, height, borderRadius) a partir do rect do card até o viewport do PhoneFrame. Dentro dele, duas faces fazem a troca visual: a face do card de origem e a face da tela de destino, ambas em absolute inset-0. Isso evita deformação de texto/ícones, evita estado branco intermediário e mantém o retorno visualmente contínuo. Não misture este padrão com layoutId para o mesmo morph. Regras de implementação: meça depois de liberar o chrome do PhoneFrame (flushSync); mantenha o card real escondido (visibility:hidden) até onExitComplete; o overlay desenha sua própria face de origem durante o close; o shell é dono apenas de geometria; sombra deve ter um único dono por fase (não empilhe shell shadow + source shadow + card shadow).",
+      "duration_ms": 500,
+      "easing": "spring",
+      "layers": [
+        {
+          "id": "shell",
+          "role": "geometry",
+          "duration_ms": 500,
+          "delay_ms": 0,
+          "keyframes": [
+            { "t": 0,    "translateX": 0, "translateY": 0, "scale": 0.28, "borderRadius": 16 },
+            { "t": 0.45, "translateX": 0, "translateY": 0, "scale": 1,    "borderRadius": 4 },
+            { "t": 1,    "translateX": 0, "translateY": 0, "scale": 1,    "borderRadius": 0 }
+          ]
+        },
+        {
+          "id": "source-face",
+          "role": "source visual",
+          "duration_ms": 160,
+          "delay_ms": 0,
+          "keyframes": [
+            { "t": 0, "opacity": 1 },
+            { "t": 1, "opacity": 0 }
+          ]
+        },
+        {
+          "id": "destination-face",
+          "role": "destination visual",
+          "duration_ms": 160,
+          "delay_ms": 60,
+          "keyframes": [
+            { "t": 0, "opacity": 0 },
+            { "t": 1, "opacity": 1 }
+          ]
+        },
+        {
+          "id": "chrome",
+          "role": "phone chrome",
+          "duration_ms": 200,
+          "delay_ms": 0,
+          "keyframes": [
+            { "t": 0, "opacity": 1, "translateY": 0 },
+            { "t": 1, "opacity": 0, "translateY": 16 }
+          ]
+        }
+      ],
+      "keyframes": [
+        { "t": 0,    "opacity": 1, "scale": 0.28, "borderRadius": 16 },
+        { "t": 0.45, "opacity": 1, "scale": 1,    "borderRadius": 4 },
+        { "t": 1,    "opacity": 1, "scale": 1,    "borderRadius": 0 }
+      ]
+    },
+    {
+      "id": "anti-mixed-morph-ownership",
+      "category": "antipattern",
+      "compareWith": "sequence-card-detail-flip",
+      "title": "❌ Não misturar layoutId + FLIP + crossfade corretivo",
+      "subtitle": "Três donos da mesma transição criam bugs fantasma",
+      "description": "Evite usar layoutId, medição manual FLIP e crossfade corretivo para resolver o mesmo morph. layoutId quer que Framer Motion seja dono da medição; FLIP manual quer que o app seja dono da medição; crossfade corretivo esconde diferenças depois do fato. Misturar os três gera projection stale, medidas erradas quando o chrome muda, flashes brancos, sombras duplicadas e handoffs frágeis. Escolha um modelo primário por transição.",
+      "duration_ms": 500,
+      "easing": "spring",
+      "keyframes": [
+        { "t": 0,   "opacity": 1, "scale": 0.28 },
+        { "t": 0.5, "opacity": 0.6, "scale": 0.7 },
+        { "t": 1,   "opacity": 1, "scale": 1 }
+      ]
     }
   ]
 }
