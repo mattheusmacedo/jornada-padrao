@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
 import { detailRevealGroup, detailRevealItem } from '../motion/variants'
+import { EventCardSurface, type EventCardSurfaceProps } from './EventCard'
 import {
   EventHero,
   FansPill,
@@ -13,13 +14,10 @@ import {
 } from './event-detail'
 
 export type MorphRect = {
-  /** Source card position relative to the screen-root. */
   x: number
   y: number
-  /** Source card size. */
   width: number
   height: number
-  /** Screen-root size — the morph's destination box. */
   targetWidth: number
   targetHeight: number
 }
@@ -28,34 +26,33 @@ type Props = {
   onClose: () => void
   /** Measured at click time. Initial+exit anchor for the FLIP morph. */
   sourceRect: MorphRect
+  /** Visual props for the source-card face rendered inside the shell.
+   *  The shell renders BOTH faces (source + destination) so the close
+   *  reverse-FLIP lands on a card-looking surface, not a blank white
+   *  rectangle. */
+  sourceCard: EventCardSurfaceProps
 }
 
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
+const EASE_OUT = [0, 0, 0.2, 1] as [number, number, number, number]
 
-// Single fade wrapper sitting INSIDE the morph shell. Owns the visible
-// content lifecycle so the shell never has to crossfade itself to look
-// clean. On exit, this is the thing the user actually sees disappearing —
-// the shrinking white surface behind it then collapses onto the source
-// card.
-const CONTENT_FADE = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.18, ease: [0, 0, 0.2, 1] as [number, number, number, number] } },
-  exit: { opacity: 0, transition: { duration: 0.12, ease: [0, 0, 0.2, 1] as [number, number, number, number] } },
+// Source face: visible at open start (shell = card rect), fades out as
+// shell expands; on close it fades back in slightly after destination
+// has begun fading out, then sits visible through the final shrink so
+// the last frame already looks like the card.
+const SOURCE_FACE = {
+  initial: { opacity: 1 },
+  animate: { opacity: 0, transition: { duration: 0.14, ease: EASE_OUT } },
+  exit: { opacity: 1, transition: { delay: 0.08, duration: 0.12, ease: EASE_OUT } },
 }
 
-// Hero gets a slight scale settle so the page feels alive immediately
-// instead of opening to a blank white panel until detail rows arrive.
-const HERO_REVEAL = {
-  initial: { opacity: 0, scale: 1.02 },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    transition: { delay: 0.06, duration: 0.18, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
-  },
-  exit: {
-    opacity: 0,
-    transition: { duration: 0.1, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
-  },
+// Destination face: hidden at open start, fades in after a small delay
+// so the source has begun receding first. On close it fades out quickly
+// before the shell shrinks far.
+const DEST_FACE = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { delay: 0.06, duration: 0.14, ease: EASE_OUT } },
+  exit: { opacity: 0, transition: { duration: 0.1, ease: EASE_OUT } },
 }
 
 const CTA_REVEAL = {
@@ -63,23 +60,24 @@ const CTA_REVEAL = {
   animate: {
     opacity: 1,
     y: 0,
-    transition: { delay: 0.6, duration: 0.2, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
+    transition: { delay: 0.6, duration: 0.2, ease: EASE_OUT },
   },
   exit: {
     opacity: 0,
     y: 0,
-    transition: { duration: 0.06, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
+    transition: { duration: 0.06, ease: EASE_OUT },
   },
 }
 
 /**
- * Measured FLIP morph. The caller measures the source card and screen-root
- * rects at click time and passes them in via sourceRect. The shell starts
- * at the card's position/size, animates to the screen-root size, and on
- * close animates back to the same captured rect. Deterministic, no Framer
- * shared-layout projection — every cycle uses a fresh measurement.
+ * Measured FLIP morph with a two-face shell. Outer shell only animates
+ * geometry (x/y/width/height/borderRadius). Inside, a source-card face
+ * and a destination-detail face crossfade. The shell never has to fade
+ * itself out — the visual handoff is owned by the inner layers, so the
+ * close lands cleanly on a card-looking surface that matches the still-
+ * hidden real card behind it.
  */
-export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
+export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: Props) {
   const navigate = useNavigate()
   return (
     <>
@@ -99,7 +97,6 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
-            opacity: 1,
           }}
           animate={{
             x: 0,
@@ -107,7 +104,6 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             width: sourceRect.targetWidth,
             height: sourceRect.targetHeight,
             borderRadius: 0,
-            opacity: 1,
           }}
           exit={{
             x: sourceRect.x,
@@ -115,24 +111,6 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
-            opacity: 0,
-            // Shell stays opaque while it shrinks back to the card rect.
-            // The inner content wrapper does the visible exit work (a
-            // single quick fade); shell opacity is just a final 80ms tail
-            // so the white surface vanishes onto the already-restored
-            // source card without a visible crossfade.
-            transition: {
-              x: MORPH_TRANSITION,
-              y: MORPH_TRANSITION,
-              width: MORPH_TRANSITION,
-              height: MORPH_TRANSITION,
-              borderRadius: MORPH_TRANSITION,
-              opacity: {
-                delay: 0.28,
-                duration: 0.08,
-                ease: [0, 0, 0.2, 1] as [number, number, number, number],
-              },
-            },
           }}
           transition={MORPH_TRANSITION}
           style={{
@@ -141,26 +119,28 @@ export default function EventMorphOverlay({ onClose, sourceRect }: Props) {
             top: 0,
             boxShadow: '0 18px 60px rgba(15, 23, 42, 0.16)',
           }}
-          className="pointer-events-auto flex flex-col bg-white overflow-hidden ring-1 ring-black/[0.04]"
+          className="pointer-events-auto overflow-hidden ring-1 ring-black/[0.04]"
         >
-          {/* Everything visible inside the shell lives in one fade wrapper.
-              On close it does the perceptible exit; the shell's own opacity
-              tail just hides the surface once the content is already gone. */}
+          {/* Source face — what the user sees at open start and at close end. */}
           <fmotion.div
-            className="flex h-full w-full flex-col"
-            initial={CONTENT_FADE.initial}
-            animate={CONTENT_FADE.animate}
-            exit={CONTENT_FADE.exit}
+            className="absolute inset-0"
+            initial={SOURCE_FACE.initial}
+            animate={SOURCE_FACE.animate}
+            exit={SOURCE_FACE.exit}
+          >
+            <EventCardSurface {...sourceCard} />
+          </fmotion.div>
+
+          {/* Destination face — the full detail page. bg-white so it covers
+              source while opacity ramps in. */}
+          <fmotion.div
+            className="absolute inset-0 flex flex-col bg-white"
+            initial={DEST_FACE.initial}
+            animate={DEST_FACE.animate}
+            exit={DEST_FACE.exit}
           >
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-              <fmotion.div
-                initial={HERO_REVEAL.initial}
-                animate={HERO_REVEAL.animate}
-                exit={HERO_REVEAL.exit}
-                style={{ transformOrigin: 'top center' }}
-              >
-                <EventHero onBack={onClose} />
-              </fmotion.div>
+              <EventHero onBack={onClose} />
 
               <fmotion.div
                 variants={detailRevealGroup}

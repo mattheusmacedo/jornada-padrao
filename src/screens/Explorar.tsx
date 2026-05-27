@@ -130,14 +130,9 @@ export default function Explorar() {
     setSelectedEvent('raye')
   }
   const closeRaye = () => {
-    // Reveal the source card synchronously before the overlay starts
-    // exiting so the real image is already painted underneath the
-    // shrinking shell. The shell itself fades out at the end of the
-    // reverse FLIP (see EventMorphOverlay), so the user never sees a
-    // blank white card between unmount and source restore.
-    flushSync(() => {
-      setHideRayeSourceVisual(false)
-    })
+    // The overlay renders its own source-card face during exit, so the
+    // real source can stay hidden until unmount. Chrome + visibility
+    // restore in onExitComplete.
     setSelectedEvent(null)
   }
 
@@ -172,6 +167,7 @@ export default function Explorar() {
         initial={false}
         mode="sync"
         onExitComplete={() => {
+          setHideRayeSourceVisual(false)
           setEventOverlayOpen(false)
           setMorphRect(null)
         }}
@@ -180,6 +176,14 @@ export default function Explorar() {
           <EventMorphOverlay
             key="explorar-raye-overlay"
             sourceRect={morphRect}
+            sourceCard={{
+              variant: 'fullbleed',
+              image: raye,
+              title: 'RAYE',
+              date: '12 de julho de 2026',
+              venue: 'Audio Club',
+              location: 'São Paulo',
+            }}
             onClose={closeRaye}
           />
         )}
