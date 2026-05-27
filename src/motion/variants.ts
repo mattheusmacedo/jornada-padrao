@@ -70,7 +70,7 @@ export const containerMorphTransition: Transition = {
 }
 
 // Content reveal that follows a container morph — 200ms ease-out, delayed
-// so it lands after the morph completes its first half. Used on the
+// 400ms so it starts as the morph finishes its 500ms run. Used on the
 // destination page's non-morphing content.
 export const morphContentRevealVariants: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -79,7 +79,7 @@ export const morphContentRevealVariants: Variants = {
     y: 0,
     transition: {
       duration: motionTokens.duration.reveal / 1000,
-      delay: motionTokens.duration.reveal / 1000,
+      delay: 0.4,
       ease: motionTokens.easing.out,
     },
   },

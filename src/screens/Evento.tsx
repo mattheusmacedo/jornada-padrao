@@ -9,10 +9,7 @@ import {
   revealVariants,
   revealTransition,
 } from '../motion/variants'
-import {
-  RAYE_EVENT_IMAGE_LAYOUT_ID,
-  RAYE_EVENT_TITLE_LAYOUT_ID,
-} from './Perfil'
+import { RAYE_EVENT_LAYOUT_ID } from './Perfil'
 import hero from '../assets/evento/hero-raye.png'
 import avatar1 from '../assets/evento/avatar-1.png'
 import avatar2 from '../assets/evento/avatar-2.png'
@@ -23,9 +20,11 @@ function HeroImage() {
   const navigate = useNavigate()
   return (
     <div className="relative h-[300px] w-full shrink-0 -mt-[44px]">
-      {/* Shared element morph: card thumbnail expands into this hero. */}
+      {/* Hero image rides along inside the morphing container. `layout`
+          (not layoutId) lets FM animate this image's box within the parent
+          morph — it doesn't need its own cross-route shared element. */}
       <fmotion.img
-        layoutId={RAYE_EVENT_IMAGE_LAYOUT_ID}
+        layout
         transition={containerMorphTransition}
         src={hero}
         alt=""
@@ -91,7 +90,7 @@ function FansPill() {
 function EventTitle() {
   return (
     <fmotion.h2
-      layoutId={RAYE_EVENT_TITLE_LAYOUT_ID}
+      layout
       transition={containerMorphTransition}
       className="mt-[16px] px-[24px] text-[var(--color-typography-title)] text-[34.5px] font-extrabold leading-none shrink-0"
     >
@@ -207,12 +206,17 @@ function CTAButton() {
 
 export default function Evento() {
   return (
-    // Evento intentionally does NOT wrap in PageTransition: the destination
-    // layoutId hero/title need a transform-stable parent so the morph from
-    // the Perfil RAYE card interpolates cleanly. The non-morph reveal of
-    // the rest of the content (date row, description, CTA) is handled by
-    // morphContentRevealVariants on its own wrappers below.
-    <div className="h-full flex flex-col bg-white">
+    // Single layoutId on the page root: this entire screen IS the destination
+    // of the Perfil RAYE card morph. Framer Motion interpolates the box from
+    // card (~320×80) to page (full viewport) over 500ms ease-out. The hero
+    // image and title inside use the `layout` prop to ride along; the rest of
+    // the destination content reveals via morphContentRevealVariants delayed
+    // until after the morph settles.
+    <fmotion.div
+      layoutId={RAYE_EVENT_LAYOUT_ID}
+      transition={containerMorphTransition}
+      className="h-full flex flex-col bg-white"
+    >
         <div className="flex-1 overflow-y-auto scrollbar-hide">
           <HeroImage />
           {/* Non-morphing content fades + slides up with a 200ms delay so it
@@ -249,6 +253,6 @@ export default function Evento() {
           <div className="pointer-events-none absolute -top-[40px] inset-x-0 h-[40px] bg-gradient-to-t from-white to-transparent" />
           <CTAButton />
         </fmotion.div>
-      </div>
+    </fmotion.div>
   )
 }

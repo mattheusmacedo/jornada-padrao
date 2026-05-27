@@ -124,10 +124,10 @@ const events = [
   { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
 ]
 
-// Shared-element morph: tag the first RAYE card so it morphs into the
-// Evento detail page's hero. Other cards still navigate via slide transition.
-export const RAYE_EVENT_IMAGE_LAYOUT_ID = 'event-image-raye-1'
-export const RAYE_EVENT_TITLE_LAYOUT_ID = 'event-title-raye-1'
+// Shared-element morph: the first RAYE card morphs into the entire Evento
+// detail page. Single layoutId on the card container — image and title ride
+// along as the container's geometry interpolates from card box to page box.
+export const RAYE_EVENT_LAYOUT_ID = 'event-raye-1'
 
 function EventList({ onSelect }: { onSelect: () => void }) {
   return (
@@ -144,8 +144,7 @@ function EventList({ onSelect }: { onSelect: () => void }) {
             key={i}
             {...e}
             onClick={onSelect}
-            imageLayoutId={isFirstRaye ? RAYE_EVENT_IMAGE_LAYOUT_ID : undefined}
-            titleLayoutId={isFirstRaye ? RAYE_EVENT_TITLE_LAYOUT_ID : undefined}
+            cardLayoutId={isFirstRaye ? RAYE_EVENT_LAYOUT_ID : undefined}
           />
         )
       })}
