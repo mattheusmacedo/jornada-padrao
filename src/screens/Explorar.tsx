@@ -5,7 +5,7 @@ import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+import { EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 // Use the same hero asset for the RAYE source thumbnail so the morph's
 // source and destination share identical image data — no swap mid-morph.
 import raye from '../assets/evento/hero-raye.png'
@@ -141,8 +141,8 @@ export default function Explorar() {
                 variant="fullbleed"
                 {...e}
                 onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
-                cardLayoutId={isFirstRaye ? RAYE_MORPH_IDS.container : undefined}
-                imageLayoutId={isFirstRaye ? RAYE_MORPH_IDS.image : undefined}
+                cardLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
+                imageLayoutId={isFirstRaye ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
                 suppressContent={isFirstRaye && suppressRayeSourceContent}
               />
             )
@@ -151,7 +151,11 @@ export default function Explorar() {
       </div>
       <AnimatePresence initial={false} mode="sync">
         {selectedEvent === 'raye' && (
-          <EventMorphOverlay key="explorar-raye-overlay" onClose={closeRaye} />
+          <EventMorphOverlay
+            key="explorar-raye-overlay"
+            morphIds={EXPLORAR_RAYE_MORPH_IDS}
+            onClose={closeRaye}
+          />
         )}
       </AnimatePresence>
     </LayoutGroup>

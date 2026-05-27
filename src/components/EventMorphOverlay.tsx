@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
-import { RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+import type { EventMorphIds } from '../motion/eventMorphIds'
 import { detailRevealGroup, detailRevealItem } from '../motion/variants'
 import {
   EventHero,
@@ -14,7 +14,12 @@ import {
   CTAFooter,
 } from './event-detail'
 
-type Props = { onClose: () => void }
+type Props = {
+  onClose: () => void
+  /** Per-tab shared layoutIds. Perfil and Explorar each pass their own set
+   *  so the morph stays scoped to the tab that launched the overlay. */
+  morphIds: EventMorphIds
+}
 
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
@@ -46,7 +51,7 @@ const CTA_REVEAL = {
  * Renders via portal to document.body so the overlay stacks above PhoneFrame
  * chrome (BottomNav, StatusBar) without touching the route.
  */
-export default function EventMorphOverlay({ onClose }: Props) {
+export default function EventMorphOverlay({ onClose, morphIds }: Props) {
   const navigate = useNavigate()
   return createPortal(
     <>
@@ -60,13 +65,13 @@ export default function EventMorphOverlay({ onClose }: Props) {
       />
       <div className="fixed inset-0 z-40 pointer-events-none flex">
         <fmotion.div
-          layoutId={RAYE_MORPH_IDS.container}
+          layoutId={morphIds.container}
           transition={MORPH_TRANSITION}
           style={{ borderRadius: 0 }}
           className="pointer-events-auto h-full w-full flex flex-col bg-white overflow-hidden"
         >
           <div className="flex-1 overflow-y-auto scrollbar-hide">
-            <EventHero onBack={onClose} imageLayoutId={RAYE_MORPH_IDS.image} />
+            <EventHero onBack={onClose} imageLayoutId={morphIds.image} />
 
             {/* One stagger group containing FansPill → Title → rows → about.
                 The title no longer shares a layoutId with the source card —

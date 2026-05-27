@@ -5,7 +5,7 @@ import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import { RAYE_MORPH_IDS } from '../motion/eventMorphIds'
+import { PERFIL_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 import avatar from '../assets/perfil/avatar-quinn.png'
 // Use the same hero asset for the RAYE thumbnail so the source and
 // destination of the morph share identical image data — no swap mid-morph.
@@ -153,8 +153,8 @@ function EventList({
             key={i}
             {...e}
             onClick={isFirstRaye ? onSelectRaye : onSelectOther}
-            cardLayoutId={isFirstRaye ? RAYE_MORPH_IDS.container : undefined}
-            imageLayoutId={isFirstRaye ? RAYE_MORPH_IDS.image : undefined}
+            cardLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.container : undefined}
+            imageLayoutId={isFirstRaye ? PERFIL_RAYE_MORPH_IDS.image : undefined}
             suppressContent={isFirstRaye && suppressRayeSourceContent}
           />
         )
@@ -225,7 +225,11 @@ export default function Perfil() {
           A safety reset on unmount lives in the useEffect above. */}
       <AnimatePresence initial={false} mode="sync">
         {selectedEvent === 'raye' && (
-          <EventMorphOverlay key="event-raye-overlay" onClose={closeRaye} />
+          <EventMorphOverlay
+            key="perfil-raye-overlay"
+            morphIds={PERFIL_RAYE_MORPH_IDS}
+            onClose={closeRaye}
+          />
         )}
       </AnimatePresence>
     </LayoutGroup>
