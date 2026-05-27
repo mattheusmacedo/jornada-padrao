@@ -98,6 +98,7 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
+            boxShadow: '0 7px 24px rgba(64, 64, 64, 0.10)',
           }}
           animate={{
             x: 0,
@@ -105,6 +106,7 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             width: sourceRect.targetWidth,
             height: sourceRect.targetHeight,
             borderRadius: 0,
+            boxShadow: '0 18px 60px rgba(15, 23, 42, 0.16)',
           }}
           exit={{
             x: sourceRect.x,
@@ -112,15 +114,18 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             width: sourceRect.width,
             height: sourceRect.height,
             borderRadius: 16,
+            // Drop the shell's own elevation as it lands so the source
+            // face / real card is the only thing carrying shadow at the
+            // final frame — no double-shadow pop on handoff.
+            boxShadow: '0 0px 0px rgba(15, 23, 42, 0)',
           }}
           transition={MORPH_TRANSITION}
           style={{
             position: 'absolute',
             left: 0,
             top: 0,
-            boxShadow: '0 18px 60px rgba(15, 23, 42, 0.16)',
           }}
-          className="pointer-events-auto overflow-hidden ring-1 ring-black/[0.04]"
+          className="pointer-events-auto overflow-hidden"
         >
           {/* Source face — what the user sees at open start and at close end. */}
           <fmotion.div
