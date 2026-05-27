@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
@@ -84,17 +84,39 @@ const events = [
 export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  // Mirrors Perfil's pattern: keep the source text hidden through the whole
-  // open→close cycle. AnimatePresence.onExitComplete restores it once the
-  // reverse morph has fully landed.
+  // Mirrors Perfil's pattern. Source text hides for the whole open→close
+  // cycle; on close a calibrated 260ms timer restores it AS the reverse
+  // morph is landing (waiting for AnimatePresence.onExitComplete feels laggy
+  // because that fires only after every exit animation in the overlay tree
+  // has finished, not when the card has visually returned).
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
+  const closeTimerRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current)
+      }
+    }
+  }, [])
 
   const openRaye = () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
     setSuppressRayeSourceContent(true)
     setSelectedEvent('raye')
   }
   const closeRaye = () => {
     setSelectedEvent(null)
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current)
+    }
+    closeTimerRef.current = window.setTimeout(() => {
+      setSuppressRayeSourceContent(false)
+      closeTimerRef.current = null
+    }, 260)
   }
 
   // Explorar intentionally does NOT wrap in PageTransition: the morph from
@@ -127,11 +149,7 @@ export default function Explorar() {
           })}
         </fmotion.div>
       </div>
-      <AnimatePresence
-        initial={false}
-        mode="sync"
-        onExitComplete={() => setSuppressRayeSourceContent(false)}
-      >
+      <AnimatePresence initial={false} mode="sync">
         {selectedEvent === 'raye' && (
           <EventMorphOverlay key="explorar-raye-overlay" onClose={closeRaye} />
         )}

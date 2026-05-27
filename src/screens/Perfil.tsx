@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
@@ -169,17 +169,39 @@ export default function Perfil() {
   // suppressRayeSourceContent stays true for the entire open→close cycle so
   // the source card's title/badge/date/venue never become visible while the
   // shared layoutId container is mid-transform (forward OR reverse).
-  // AnimatePresence.onExitComplete flips it back to false once the close
-  // morph has fully landed and the card is back at its rest geometry.
+  // On close we use a calibrated timer to restore visibility AS the reverse
+  // morph is mostly landing — waiting for AnimatePresence.onExitComplete
+  // makes the text return feel laggy because that fires after every exit
+  // animation on the overlay tree has finished.
   const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
+  const closeTimerRef = useRef<number | null>(null)
   const navigate = useNavigate()
 
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current)
+      }
+    }
+  }, [])
+
   const openRaye = () => {
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
     setSuppressRayeSourceContent(true)
     setSelectedEvent('raye')
   }
   const closeRaye = () => {
     setSelectedEvent(null)
+    if (closeTimerRef.current) {
+      window.clearTimeout(closeTimerRef.current)
+    }
+    closeTimerRef.current = window.setTimeout(() => {
+      setSuppressRayeSourceContent(false)
+      closeTimerRef.current = null
+    }, 260)
   }
 
   return (
@@ -198,11 +220,10 @@ export default function Perfil() {
           suppressRayeSourceContent={suppressRayeSourceContent}
         />
       </div>
-      <AnimatePresence
-        initial={false}
-        mode="sync"
-        onExitComplete={() => setSuppressRayeSourceContent(false)}
-      >
+      {/* No onExitComplete here: the calibrated closeTimer in closeRaye
+          restores source visibility as the reverse morph is mostly landing.
+          A safety reset on unmount lives in the useEffect above. */}
+      <AnimatePresence initial={false} mode="sync">
         {selectedEvent === 'raye' && (
           <EventMorphOverlay key="event-raye-overlay" onClose={closeRaye} />
         )}
