@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion as fmotion } from 'framer-motion'
@@ -109,10 +110,22 @@ export default function Explorar() {
   }
 
   const openRaye = () => {
+    // Release PhoneFrame chrome (BottomNav fade + bottom-inset = 0) BEFORE
+    // measuring. flushSync forces React to commit the chrome release in the
+    // same tick so getBoundingClientRect() sees the final full-height root,
+    // not the old root that still reserves the BottomNav area. Otherwise
+    // targetHeight is short by ~108px and the close FLIP lands wrong.
+    flushSync(() => {
+      setEventOverlayOpen(true)
+    })
+
     const rect = measureRayeCard()
-    if (!rect) return
+    if (!rect) {
+      setEventOverlayOpen(false)
+      return
+    }
+
     setMorphRect(rect)
-    setEventOverlayOpen(true)
     setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
   }
