@@ -24,8 +24,12 @@ import ticketmaster from '../assets/evento/ticketmaster.png'
 
 function HeroImage() {
   const navigate = useNavigate()
+  // No negative margin here. The full-bleed top is achieved at the
+  // PhoneFrame level (noTopInset=true on /evento) so the morphing layoutId
+  // image's destination box has a clean viewport position without parent
+  // offset hacks.
   return (
-    <div className="relative h-[300px] w-full shrink-0 -mt-[44px]">
+    <div className="relative h-[300px] w-full shrink-0">
       {/* Hero image is the destination half of the image shared element —
           shares a layoutId with the card thumbnail on Perfil so FM morphs
           one image element across routes (no duplicate hero pop-in). */}

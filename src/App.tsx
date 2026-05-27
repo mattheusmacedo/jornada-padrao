@@ -26,7 +26,12 @@ function AnimatedPhoneRoutes() {
   const showBottomNav = ROUTES_WITH_NAV.has(path)
 
   return (
-    <PhoneFrame bgColor={bgColor} statusBarStyle={statusBarStyle} showBottomNav={showBottomNav}>
+    <PhoneFrame
+      bgColor={bgColor}
+      statusBarStyle={statusBarStyle}
+      showBottomNav={showBottomNav}
+      noTopInset={isEvento}
+    >
       {/* mode="popLayout" keeps the exiting page mounted briefly so shared-
           element morphs (layoutId-tagged) can measure both source and
           destination positions for the cross-route interpolation. */}

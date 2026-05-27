@@ -49,7 +49,11 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
       onClick={onClick}
       layoutId={cardLayoutId}
       variants={listItemVariants}
-      whileTap={pressCardStandard}
+      // Press feedback (scale 0.985) is disabled on the morph source card —
+      // it would otherwise pollute FM's layout measurement (the source box
+      // would be captured at the pressed/scaled state) and produce a small
+      // dip at the start of the morph.
+      whileTap={isMorphing ? undefined : pressCardStandard}
       transition={isMorphing ? containerMorphTransition : pressTransition}
       style={isMorphing ? { borderRadius: 16 } : undefined}
       className={`w-full text-left bg-[var(--color-grey-light)] px-[17.413px] py-[12.438px] flex gap-[9.95px] items-center shadow-[0_7.843px_24.508px_rgba(64,64,64,0.1)] overflow-hidden ${isMorphing ? '' : 'rounded-2xl'}`}
