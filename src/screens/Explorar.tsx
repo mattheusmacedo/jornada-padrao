@@ -153,44 +153,49 @@ export default function Explorar() {
   // the RAYE card to the detail overlay needs the source's parent to be
   // transform-stable.
   return (
+    // The screen root is `relative h-full` so EventMorphOverlay's absolute
+    // inset-0 covers exactly this screen and the source card lives in the
+    // same LayoutGroup subtree as the overlay (no portal across boundaries).
     <LayoutGroup id="explorar-raye-morph">
-      <div className="bg-white pb-[20px]">
-        <Header />
-        <SearchBar />
-        <fmotion.div
-          variants={listVariants}
-          initial="initial"
-          animate="animate"
-          className="mt-5 px-[23px] flex flex-col gap-[14px]"
-        >
-          {events.map((e, i) => {
-            const isFirstRaye = i === 0 && e.title === 'RAYE'
-            return (
-              <EventCard
-                key={i}
-                variant="fullbleed"
-                {...e}
-                onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
-                cardLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
-                imageLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
-                suppressContent={isFirstRaye && suppressRayeSourceContent}
-                disablePress={isFirstRaye}
-              />
-            )
-          })}
-        </fmotion.div>
+      <div className="relative h-full bg-white">
+        <div className="pb-[20px]">
+          <Header />
+          <SearchBar />
+          <fmotion.div
+            variants={listVariants}
+            initial="initial"
+            animate="animate"
+            className="mt-5 px-[23px] flex flex-col gap-[14px]"
+          >
+            {events.map((e, i) => {
+              const isFirstRaye = i === 0 && e.title === 'RAYE'
+              return (
+                <EventCard
+                  key={i}
+                  variant="fullbleed"
+                  {...e}
+                  onClick={isFirstRaye ? openRaye : () => navigate('/evento')}
+                  cardLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.container : undefined}
+                  imageLayoutId={isFirstRaye && morphArmed ? EXPLORAR_RAYE_MORPH_IDS.image : undefined}
+                  suppressContent={isFirstRaye && suppressRayeSourceContent}
+                  disablePress={isFirstRaye}
+                />
+              )
+            })}
+          </fmotion.div>
+        </div>
+        {/* No onExitComplete: morphArmed stays true so the second open can
+            morph again. layoutIds drop only on screen unmount. */}
+        <AnimatePresence initial={false} mode="sync">
+          {selectedEvent === 'raye' && (
+            <EventMorphOverlay
+              key="explorar-raye-overlay"
+              morphIds={EXPLORAR_RAYE_MORPH_IDS}
+              onClose={closeRaye}
+            />
+          )}
+        </AnimatePresence>
       </div>
-      {/* No onExitComplete: morphArmed stays true so the second open can
-          morph again. layoutIds drop only on screen unmount. */}
-      <AnimatePresence initial={false} mode="sync">
-        {selectedEvent === 'raye' && (
-          <EventMorphOverlay
-            key="explorar-raye-overlay"
-            morphIds={EXPLORAR_RAYE_MORPH_IDS}
-            onClose={closeRaye}
-          />
-        )}
-      </AnimatePresence>
     </LayoutGroup>
   )
 }

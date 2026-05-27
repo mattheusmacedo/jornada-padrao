@@ -243,31 +243,36 @@ export default function Perfil() {
     // The first RAYE card opens via an in-screen overlay morph (not a route
     // change), so Perfil stays mounted underneath. Other cards still
     // navigate to /evento (a regular route).
+    // The screen root is `relative h-full` so EventMorphOverlay's absolute
+    // inset-0 covers exactly this screen and the source card lives in the
+    // same LayoutGroup subtree as the overlay (no portal across boundaries).
     <LayoutGroup id="event-raye-morph">
-      <div className="pb-[20px]">
-        <Header />
-        <ProfileBlock />
-        <ActionButtons />
-        <TabBar active={tab} onChange={setTab} />
-        <EventList
-          onSelectRaye={openRaye}
-          onSelectOther={() => navigate('/evento')}
-          suppressRayeSourceContent={suppressRayeSourceContent}
-          morphArmed={morphArmed}
-        />
-      </div>
-      {/* No onExitComplete: morphArmed stays true after close so the next
-          open can morph again. The layoutId is only removed when the screen
-          unmounts (route change). */}
-      <AnimatePresence initial={false} mode="sync">
-        {selectedEvent === 'raye' && (
-          <EventMorphOverlay
-            key="perfil-raye-overlay"
-            morphIds={PERFIL_RAYE_MORPH_IDS}
-            onClose={closeRaye}
+      <div className="relative h-full">
+        <div className="pb-[20px]">
+          <Header />
+          <ProfileBlock />
+          <ActionButtons />
+          <TabBar active={tab} onChange={setTab} />
+          <EventList
+            onSelectRaye={openRaye}
+            onSelectOther={() => navigate('/evento')}
+            suppressRayeSourceContent={suppressRayeSourceContent}
+            morphArmed={morphArmed}
           />
-        )}
-      </AnimatePresence>
+        </div>
+        {/* No onExitComplete: morphArmed stays true after close so the next
+            open can morph again. The layoutId is only removed when the screen
+            unmounts (route change). */}
+        <AnimatePresence initial={false} mode="sync">
+          {selectedEvent === 'raye' && (
+            <EventMorphOverlay
+              key="perfil-raye-overlay"
+              morphIds={PERFIL_RAYE_MORPH_IDS}
+              onClose={closeRaye}
+            />
+          )}
+        </AnimatePresence>
+      </div>
     </LayoutGroup>
   )
 }

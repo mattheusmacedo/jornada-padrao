@@ -1,4 +1,3 @@
-import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion as fmotion } from 'framer-motion'
 import type { EventMorphIds } from '../motion/eventMorphIds'
@@ -42,28 +41,32 @@ const CTA_REVEAL = {
 }
 
 /**
- * RAYE detail overlay launched from Perfil. Three shared layoutIds (container,
- * hero image, title) handle the cross-route morph; destination-only content
- * (FansPill, the three info rows, AboutBlock, CTA) reveals AFTER the morph
- * via the detailRevealGroup stagger so icons/text don't deform during the
- * container scale.
+ * RAYE detail overlay launched from Perfil/Explorar. Two shared layoutIds
+ * (container, hero image) handle the card → page morph; destination-only
+ * content (FansPill, title, the three info rows, AboutBlock, CTA) reveals
+ * AFTER the morph via the detailRevealGroup stagger.
  *
- * Renders via portal to document.body so the overlay stacks above PhoneFrame
- * chrome (BottomNav, StatusBar) without touching the route.
+ * Rendered INLINE inside each screen's LayoutGroup — no portal — so the
+ * source card and the morph destination are siblings within the same
+ * layout context. Portaling to document.body broke FM's projection
+ * relationship across the boundary, especially with morph IDs that
+ * arm/disarm after mount. The trade-off: the overlay no longer covers
+ * PhoneFrame chrome (BottomNav) by default. If needed, expose an overlay
+ * slot on PhoneFrame in a follow-up — do NOT re-portal.
  */
 export default function EventMorphOverlay({ onClose, morphIds }: Props) {
   const navigate = useNavigate()
-  return createPortal(
+  return (
     <>
       <fmotion.div
-        className="fixed inset-0 z-30 bg-white/40"
+        className="absolute inset-0 z-30 bg-white/40"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         onClick={onClose}
       />
-      <div className="fixed inset-0 z-40 pointer-events-none flex">
+      <div className="absolute inset-0 z-40 pointer-events-none flex">
         <fmotion.div
           layoutId={morphIds.container}
           transition={MORPH_TRANSITION}
@@ -120,7 +123,6 @@ export default function EventMorphOverlay({ onClose, morphIds }: Props) {
           </fmotion.div>
         </fmotion.div>
       </div>
-    </>,
-    document.body
+    </>
   )
 }
