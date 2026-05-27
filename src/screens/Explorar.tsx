@@ -130,6 +130,13 @@ export default function Explorar() {
     setSelectedEvent('raye')
   }
   const closeRaye = () => {
+    // Reveal the source card at the START of close so the real image is
+    // already painted underneath the shrinking overlay. Otherwise the
+    // overlay unmounts on top of a still-hidden source and we get one
+    // frame of white-blank card before hideSourceVisual flips back.
+    // The overlay is z-indexed above the card, so revealing early doesn't
+    // duplicate. PhoneFrame chrome still restores in onExitComplete.
+    setHideRayeSourceVisual(false)
     setSelectedEvent(null)
   }
 
@@ -164,7 +171,6 @@ export default function Explorar() {
         initial={false}
         mode="sync"
         onExitComplete={() => {
-          setHideRayeSourceVisual(false)
           setEventOverlayOpen(false)
           setMorphRect(null)
         }}
