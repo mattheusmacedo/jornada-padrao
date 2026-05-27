@@ -60,6 +60,45 @@ export const heroVariants: Variants = {
   },
 }
 
+// Stagger group + item for revealing destination-only content AFTER a
+// shared-element morph has mostly settled. Used by EventMorphOverlay (and
+// Evento on direct load) so icons/text don't visibly deform while the
+// morphing container is mid-scale. Pure opacity + y — no scale, no width.
+export const detailRevealGroup: Variants = {
+  initial: {},
+  animate: {
+    transition: {
+      delayChildren: 0.32,
+      staggerChildren: 0.05,
+    },
+  },
+  exit: {
+    transition: {
+      staggerChildren: 0.03,
+      staggerDirection: -1,
+    },
+  },
+}
+export const detailRevealItem: Variants = {
+  initial: { opacity: 0, y: 10 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: motionTokens.duration.reveal / 1000,
+      ease: motionTokens.easing.out,
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: 6,
+    transition: {
+      duration: 0.12,
+      ease: motionTokens.easing.out,
+    },
+  },
+}
+
 // Container morph (shared-element layoutId) transition — 500ms ease-out.
 // Used by motion elements that share a layoutId across routes (e.g. card image
 // morphing into hero image). NOT spring — spring would feel wobbly on an

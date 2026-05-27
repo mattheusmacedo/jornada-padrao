@@ -2,20 +2,20 @@
 //   - src/screens/Evento.tsx        (direct /evento route)
 //   - src/components/EventMorphOverlay.tsx  (in-Perfil overlay morph)
 //
-// Both renders share the SAME structure here so the post-morph composition
-// matches the direct route pixel-for-pixel. The only differences are the
-// optional layoutId props on the hero image and title (overlay only) and the
-// onBack / onCta handlers (close-overlay vs. navigate-back).
+// Destination-only content (FansPill, the three info rows, AboutBlock, CTA)
+// is plain DOM with no built-in entrance motion. Callers wrap each piece in
+// motion.div + detailRevealItem so the stagger group can choreograph them
+// after any morph has settled.
+//
+// Only EventHero's hero image and EventTitle's title text optionally take
+// shared-element layoutIds — those are the true cross-route shared elements.
+// The hero header controls (back/title/bookmark) have their own short
+// delayed fade-in so they don't deform during a morph.
 
 import type { ReactNode } from 'react'
 import { ArrowLeft, Bookmark, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { motion as fmotion } from 'framer-motion'
-import {
-  pressButton,
-  pressTransition,
-  revealVariants,
-  revealTransition,
-} from '../motion/variants'
+import { pressButton, pressTransition } from '../motion/variants'
 import rayeHero from '../assets/evento/hero-raye.png'
 import avatar1 from '../assets/evento/avatar-1.png'
 import avatar2 from '../assets/evento/avatar-2.png'
@@ -26,6 +26,14 @@ export const RAYE_HERO_SRC = rayeHero
 
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
+// Hero header controls reveal — delayed past the first beat of any morph so
+// the back/title/bookmark don't visibly distort during the container scale.
+const HEADER_REVEAL_TRANSITION = {
+  delay: 0.22,
+  duration: 0.18,
+  ease: [0, 0, 0.2, 1] as [number, number, number, number],
+}
+
 type EventHeroProps = {
   onBack: () => void
   /** Set in the overlay context to bridge the source thumbnail's layoutId. */
@@ -33,20 +41,26 @@ type EventHeroProps = {
 }
 
 export function EventHero({ onBack, imageLayoutId }: EventHeroProps) {
-  const ImgComponent: typeof fmotion.img | 'img' = imageLayoutId ? fmotion.img : 'img'
-  const imgProps = imageLayoutId
-    ? { layoutId: imageLayoutId, transition: MORPH_TRANSITION }
-    : {}
   return (
     <div className="relative h-[300px] w-full shrink-0">
-      <ImgComponent
-        {...imgProps}
-        src={rayeHero}
-        alt=""
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {imageLayoutId ? (
+        <fmotion.img
+          layoutId={imageLayoutId}
+          transition={MORPH_TRANSITION}
+          src={rayeHero}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        <img src={rayeHero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      )}
       <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-black/60 to-transparent" />
-      <div className="relative flex items-center gap-3 px-[18px] pt-[52px]">
+      <fmotion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={HEADER_REVEAL_TRANSITION}
+        className="relative flex items-center gap-3 px-[18px] pt-[52px]"
+      >
         <fmotion.button
           type="button"
           aria-label="Voltar"
@@ -69,20 +83,14 @@ export function EventHero({ onBack, imageLayoutId }: EventHeroProps) {
         >
           <Bookmark size={18} strokeWidth={2} className="text-[var(--color-orange-normal)]" fill="currentColor" />
         </fmotion.button>
-      </div>
+      </fmotion.div>
     </div>
   )
 }
 
 export function FansPill() {
   return (
-    <fmotion.div
-      variants={revealVariants}
-      initial="initial"
-      animate="animate"
-      transition={revealTransition}
-      className="mx-auto -mt-[30px] w-[328px] h-[60px] bg-white rounded-[15px] shadow-[0_19.7px_9.8px_rgba(90,90,90,0.1)] flex items-center px-[14px] gap-[13.5px] relative z-10 shrink-0"
-    >
+    <div className="mx-auto -mt-[30px] w-[328px] h-[60px] bg-white rounded-[15px] shadow-[0_19.7px_9.8px_rgba(90,90,90,0.1)] flex items-center px-[14px] gap-[13.5px] relative z-10 shrink-0">
       <div className="flex">
         <img src={avatar1} alt="" className="w-[34px] h-[34px] rounded-full ring-2 ring-white" />
         <img src={avatar2} alt="" className="w-[34px] h-[34px] rounded-full ring-2 ring-white -ml-[12px]" />
@@ -97,7 +105,7 @@ export function FansPill() {
       >
         Convidar amigos
       </fmotion.button>
-    </fmotion.div>
+    </div>
   )
 }
 
@@ -157,44 +165,53 @@ function InfoRow({
   )
 }
 
-export function InfoRows() {
+// Individual info rows — exported so callers can wrap each in its own stagger item.
+export function DateRow() {
   return (
-    <div className="mt-6 flex flex-col gap-[16px] shrink-0">
-      <InfoRow
-        icon={<Calendar size={22} strokeWidth={2} className="text-[var(--color-pink-normal)]" />}
-        iconBg="var(--color-pink-light)"
-        title="12 de julho de 2026"
-        subtitle="Domingo, 20:00"
-      />
-      <InfoRow
-        icon={<MapPin size={22} strokeWidth={2} className="text-[var(--color-pink-normal)]" />}
-        iconBg="var(--color-pink-light)"
-        title="Audio Club"
-        subtitle="Av. Francisco Matarazzo, 694 - Água Branca, São Paulo - SP"
-      />
-      <InfoRow
-        icon={<img src={ticketmaster} alt="" className="w-[35px] h-[35px] rounded-[8px] object-cover" />}
-        iconBg="transparent"
-        title="Ticketmaster"
-        subtitle="Organizador"
-        trailing={
-          <fmotion.button
-            type="button"
-            whileTap={pressButton}
-            transition={pressTransition}
-            className="bg-[var(--color-pink-light-hover)] text-[var(--color-pink-normal)] text-[11.8px] rounded-[7px] px-[14px] py-[6px]"
-          >
-            Seguir
-          </fmotion.button>
-        }
-      />
-    </div>
+    <InfoRow
+      icon={<Calendar size={22} strokeWidth={2} className="text-[var(--color-pink-normal)]" />}
+      iconBg="var(--color-pink-light)"
+      title="12 de julho de 2026"
+      subtitle="Domingo, 20:00"
+    />
+  )
+}
+
+export function VenueRow() {
+  return (
+    <InfoRow
+      icon={<MapPin size={22} strokeWidth={2} className="text-[var(--color-pink-normal)]" />}
+      iconBg="var(--color-pink-light)"
+      title="Audio Club"
+      subtitle="Av. Francisco Matarazzo, 694 - Água Branca, São Paulo - SP"
+    />
+  )
+}
+
+export function OrganizerRow() {
+  return (
+    <InfoRow
+      icon={<img src={ticketmaster} alt="" className="w-[35px] h-[35px] rounded-[8px] object-cover" />}
+      iconBg="transparent"
+      title="Ticketmaster"
+      subtitle="Organizador"
+      trailing={
+        <fmotion.button
+          type="button"
+          whileTap={pressButton}
+          transition={pressTransition}
+          className="bg-[var(--color-pink-light-hover)] text-[var(--color-pink-normal)] text-[11.8px] rounded-[7px] px-[14px] py-[6px]"
+        >
+          Seguir
+        </fmotion.button>
+      }
+    />
   )
 }
 
 export function AboutBlock() {
   return (
-    <div className="mt-6 px-[20px] shrink-0">
+    <div className="px-[20px] shrink-0">
       <h3 className="text-[var(--color-grey-darker)] text-[17.7px] font-medium">Sobre o evento</h3>
       <p className="mt-3 text-[15.8px] leading-[27px] text-[var(--color-grey-darker)]">
         Raye, artista britânica de 28 anos, fã de bossa nova, principalmente de João Gilberto, desembarca no Brasil este mês para uma apresentação única.{' '}

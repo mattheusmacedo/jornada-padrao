@@ -3,7 +3,9 @@ import {
   EventHero,
   FansPill,
   EventTitle,
-  InfoRows,
+  DateRow,
+  VenueRow,
+  OrganizerRow,
   AboutBlock,
   CTAFooter,
 } from '../components/event-detail'
@@ -20,8 +22,14 @@ export default function Evento() {
         <EventHero onBack={() => navigate(-1)} />
         <FansPill />
         <EventTitle />
-        <InfoRows />
-        <AboutBlock />
+        <div className="mt-6 flex flex-col gap-[16px] shrink-0">
+          <DateRow />
+          <VenueRow />
+          <OrganizerRow />
+        </div>
+        <div className="mt-6">
+          <AboutBlock />
+        </div>
         <div className="h-[20px]" />
       </div>
       <CTAFooter onClick={() => navigate('/ramificacao')} />
