@@ -88,7 +88,10 @@ export const detailRevealGroup: Variants = {
   initial: {},
   animate: {
     transition: {
-      delayChildren: 0.32,
+      // Bumped from 0.32 → 0.42 so the morph shell + hero image are clearly
+      // established before detail content starts cascading in. Lets the
+      // "card becomes page" beat land before any text/icons appear.
+      delayChildren: 0.42,
       staggerChildren: 0.05,
     },
   },

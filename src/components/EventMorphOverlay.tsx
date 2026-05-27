@@ -31,7 +31,7 @@ const CTA_REVEAL = {
   animate: {
     opacity: 1,
     y: 0,
-    transition: { delay: 0.5, duration: 0.2, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
+    transition: { delay: 0.6, duration: 0.2, ease: [0, 0, 0.2, 1] as [number, number, number, number] },
   },
   exit: {
     opacity: 0,
@@ -58,8 +58,11 @@ export default function EventMorphOverlay({ onClose, morphIds }: Props) {
   const navigate = useNavigate()
   return (
     <>
+      {/* Subtle app-dimming scrim. Pure white at 40% was washing out the
+          morph shell against the light background — a soft black tint
+          recedes the page underneath without modal-darkening it. */}
       <fmotion.div
-        className="absolute inset-0 z-30 bg-white/40"
+        className="absolute inset-0 z-30 bg-black/[0.04]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -67,11 +70,17 @@ export default function EventMorphOverlay({ onClose, morphIds }: Props) {
         onClick={onClose}
       />
       <div className="absolute inset-0 z-40 pointer-events-none flex">
+        {/* Visible shell: soft drop shadow + 1px ring so the user reads
+            "card surface expanding into page" instead of "white-on-white
+            hero image appearing". The same element carries the layoutId. */}
         <fmotion.div
           layoutId={morphIds.container}
           transition={MORPH_TRANSITION}
-          style={{ borderRadius: 0 }}
-          className="pointer-events-auto h-full w-full flex flex-col bg-white overflow-hidden"
+          style={{
+            borderRadius: 0,
+            boxShadow: '0 18px 60px rgba(15, 23, 42, 0.16)',
+          }}
+          className="pointer-events-auto h-full w-full flex flex-col bg-white overflow-hidden ring-1 ring-black/[0.04]"
         >
           <div className="flex-1 overflow-y-auto scrollbar-hide">
             <EventHero onBack={onClose} imageLayoutId={morphIds.image} />

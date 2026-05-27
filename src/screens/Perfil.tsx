@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
+import { usePhoneFrameChrome } from '../components/PhoneFrameChromeContext'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
 import { PERFIL_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 import avatar from '../assets/perfil/avatar-quinn.png'
@@ -170,14 +171,23 @@ export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
   // hideRayeSourceVisual flips the source card to `visibility: hidden` while
-  // the overlay owns the screen. The DOM node stays mounted so FM can still
-  // measure the source rect, but paint goes away → no duplicate card visible
-  // behind the morph. Restored via AnimatePresence onExitComplete after the
-  // overlay's reverse morph has fully landed.
+  // the overlay owns the screen. DOM stays mounted so FM can still measure
+  // the source rect. setEventOverlayOpen(true) tells PhoneFrame to release
+  // the BottomNav area + fade the nav so the overlay can own the viewport.
+  // Both flags restore in AnimatePresence.onExitComplete after the reverse
+  // morph has fully landed.
   const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
+  const { setEventOverlayOpen } = usePhoneFrameChrome()
   const navigate = useNavigate()
 
+  // Safety: if Perfil unmounts mid-overlay (route change, refresh), release
+  // the chrome lock so the next screen's BottomNav doesn't stay hidden.
+  useEffect(() => {
+    return () => setEventOverlayOpen(false)
+  }, [setEventOverlayOpen])
+
   const openRaye = () => {
+    setEventOverlayOpen(true)
     setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
   }
@@ -208,7 +218,10 @@ export default function Perfil() {
         <AnimatePresence
           initial={false}
           mode="sync"
-          onExitComplete={() => setHideRayeSourceVisual(false)}
+          onExitComplete={() => {
+            setHideRayeSourceVisual(false)
+            setEventOverlayOpen(false)
+          }}
         >
           {selectedEvent === 'raye' && (
             <EventMorphOverlay

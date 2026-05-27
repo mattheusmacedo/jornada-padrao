@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, MoreVertical, Search, SlidersHorizontal } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, LayoutGroup, motion as fmotion } from 'framer-motion'
 import EventCard from '../components/EventCard'
 import EventMorphOverlay from '../components/EventMorphOverlay'
+import { usePhoneFrameChrome } from '../components/PhoneFrameChromeContext'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
 import { EXPLORAR_RAYE_MORPH_IDS } from '../motion/eventMorphIds'
 // Use the same hero asset for the RAYE source thumbnail so the morph's
@@ -85,12 +86,18 @@ export default function Explorar() {
   const navigate = useNavigate()
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
   // hideRayeSourceVisual flips the source card to `visibility: hidden` while
-  // the overlay owns the screen. The DOM stays mounted so FM can still
-  // measure the source rect. Restored on AnimatePresence.onExitComplete
-  // once the reverse morph has fully landed.
+  // the overlay owns the screen. setEventOverlayOpen(true) tells PhoneFrame
+  // to release the BottomNav area + fade the nav so the overlay can own the
+  // viewport. Both flags restore in AnimatePresence.onExitComplete.
   const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
+  const { setEventOverlayOpen } = usePhoneFrameChrome()
+
+  useEffect(() => {
+    return () => setEventOverlayOpen(false)
+  }, [setEventOverlayOpen])
 
   const openRaye = () => {
+    setEventOverlayOpen(true)
     setHideRayeSourceVisual(true)
     setSelectedEvent('raye')
   }
@@ -136,7 +143,10 @@ export default function Explorar() {
         <AnimatePresence
           initial={false}
           mode="sync"
-          onExitComplete={() => setHideRayeSourceVisual(false)}
+          onExitComplete={() => {
+            setHideRayeSourceVisual(false)
+            setEventOverlayOpen(false)
+          }}
         >
           {selectedEvent === 'raye' && (
             <EventMorphOverlay
