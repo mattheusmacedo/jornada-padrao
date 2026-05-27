@@ -133,9 +133,11 @@ const events = [
 function EventList({
   onSelectRaye,
   onSelectOther,
+  suppressRayeSourceContent,
 }: {
   onSelectRaye: () => void
   onSelectOther: () => void
+  suppressRayeSourceContent: boolean
 }) {
   return (
     <fmotion.div
@@ -153,6 +155,7 @@ function EventList({
             onClick={isFirstRaye ? onSelectRaye : onSelectOther}
             cardLayoutId={isFirstRaye ? RAYE_MORPH_IDS.container : undefined}
             imageLayoutId={isFirstRaye ? RAYE_MORPH_IDS.image : undefined}
+            suppressContent={isFirstRaye && suppressRayeSourceContent}
           />
         )
       })}
@@ -163,7 +166,22 @@ function EventList({
 export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
+  // suppressRayeSourceContent stays true for the entire open→close cycle so
+  // the source card's title/badge/date/venue never become visible while the
+  // shared layoutId container is mid-transform (forward OR reverse).
+  // AnimatePresence.onExitComplete flips it back to false once the close
+  // morph has fully landed and the card is back at its rest geometry.
+  const [suppressRayeSourceContent, setSuppressRayeSourceContent] = useState(false)
   const navigate = useNavigate()
+
+  const openRaye = () => {
+    setSuppressRayeSourceContent(true)
+    setSelectedEvent('raye')
+  }
+  const closeRaye = () => {
+    setSelectedEvent(null)
+  }
+
   return (
     // The first RAYE card opens via an in-screen overlay morph (not a route
     // change), so Perfil stays mounted underneath. Other cards still
@@ -175,13 +193,18 @@ export default function Perfil() {
         <ActionButtons />
         <TabBar active={tab} onChange={setTab} />
         <EventList
-          onSelectRaye={() => setSelectedEvent('raye')}
+          onSelectRaye={openRaye}
           onSelectOther={() => navigate('/evento')}
+          suppressRayeSourceContent={suppressRayeSourceContent}
         />
       </div>
-      <AnimatePresence initial={false} mode="sync">
+      <AnimatePresence
+        initial={false}
+        mode="sync"
+        onExitComplete={() => setSuppressRayeSourceContent(false)}
+      >
         {selectedEvent === 'raye' && (
-          <EventMorphOverlay key="event-raye-overlay" onClose={() => setSelectedEvent(null)} />
+          <EventMorphOverlay key="event-raye-overlay" onClose={closeRaye} />
         )}
       </AnimatePresence>
     </LayoutGroup>

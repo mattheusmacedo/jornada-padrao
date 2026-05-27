@@ -22,6 +22,11 @@ type CommonProps = {
    *  reveals separately via the stagger group on the overlay. */
   cardLayoutId?: string
   imageLayoutId?: string
+  /** When true, the source-only content (title, badge, date/venue) fades
+   *  to opacity 0. Used by Perfil to hide the card's text during both the
+   *  open and close morph so it never visually deforms inside the shrinking
+   *  container. The image stays visible — it's the shared morph element. */
+  suppressContent?: boolean
 }
 
 type Props = CommonProps & { variant?: 'compact' | 'fullbleed' }
@@ -39,7 +44,7 @@ function Badge({ count }: { count: number }) {
   )
 }
 
-function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId }: CommonProps) {
+function CompactCard({ image, title, date, venue, location, badgeCount = 1, onClick, cardLayoutId, imageLayoutId, suppressContent = false }: CommonProps) {
   const isMorphing = Boolean(cardLayoutId)
   return (
     <fmotion.button
@@ -63,11 +68,16 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
         alt=""
         className="w-[83.582px] h-[57.214px] rounded-lg object-cover shrink-0"
       />
-      <div className="flex-1 min-w-0">
+      {/* Source-only content (title, badge, date/venue). Opacity-only fade
+          tied to suppressContent so the text never visually deforms while
+          the shared layoutId container is mid-transform. Image lives outside
+          this wrapper because it's the morph's shared element. */}
+      <fmotion.div
+        animate={{ opacity: suppressContent ? 0 : 1 }}
+        transition={{ duration: 0.12, ease: [0, 0, 0.2, 1] }}
+        className="flex-1 min-w-0"
+      >
         <div className="flex items-center justify-between gap-2">
-          {/* Title is plain text: it disappears with the source card on morph
-              rather than morphing into the large detail title. The destination
-              title reveals separately via the stagger group. */}
           <p className="font-extrabold text-[var(--color-orange-normal)] text-[17px] leading-none truncate">
             {title}
           </p>
@@ -78,7 +88,7 @@ function CompactCard({ image, title, date, venue, location, badgeCount = 1, onCl
           <br />
           <span>{venue} • {location}</span>
         </p>
-      </div>
+      </fmotion.div>
     </fmotion.button>
   )
 }
