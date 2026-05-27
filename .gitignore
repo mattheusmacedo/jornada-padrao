@@ -17,6 +17,12 @@ dist-ssr
 .env.*
 !.env.example
 
+# Stray temp screenshots from verification (contact sheets, frame grabs)
+tmp-*.png
+tmp-*.jpg
+tmp-*.mp4
+tmp-*.webm
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
