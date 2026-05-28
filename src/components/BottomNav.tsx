@@ -42,15 +42,20 @@ export default function BottomNav() {
 
   return (
     <nav className="absolute bottom-0 inset-x-0 h-[86px] bg-white shadow-[0_-2.94px_7.84px_0_rgba(157,178,214,0.13)]">
-      <fmotion.button
-        type="button"
-        aria-label="Criar"
-        whileTap={pressButton}
-        transition={pressTransition}
-        className="absolute left-1/2 -translate-x-1/2 -top-[22px] w-[56px] h-[56px] rounded-full bg-[var(--color-pink-normal)] text-white flex items-center justify-center shadow-[0_6px_14px_rgba(232,23,107,0.4)] z-10"
-      >
-        <Plus size={28} strokeWidth={2.5} />
-      </fmotion.button>
+      {/* Positioning lives on a plain wrapper so the FAB's centering
+          transform (-translate-x-1/2) isn't clobbered by Framer Motion's
+          inline whileTap transform. The button only owns motion + visuals. */}
+      <div className="absolute left-1/2 -translate-x-1/2 -top-[22px] z-10">
+        <fmotion.button
+          type="button"
+          aria-label="Criar"
+          whileTap={pressButton}
+          transition={pressTransition}
+          className="w-[56px] h-[56px] rounded-full bg-[var(--color-pink-normal)] text-white flex items-center justify-center shadow-[0_6px_14px_rgba(232,23,107,0.4)]"
+        >
+          <Plus size={28} strokeWidth={2.5} />
+        </fmotion.button>
+      </div>
 
       <div className="grid grid-cols-4 h-full">
         {items.map(({ key, label, Icon, enabled }, idx) => {
