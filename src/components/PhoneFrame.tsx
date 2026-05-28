@@ -31,8 +31,8 @@ export default function PhoneFrame({
 }: Props) {
   // Screens can flip this via usePhoneFrameChrome() when a takeover overlay
   // (e.g. event-detail morph) is active. While open, the scroll wrapper
-  // extends through the BottomNav area and the nav itself fades/slides out
-  // so the overlay can own the full phone body.
+  // extends through the BottomNav area and the nav itself fades out (no
+  // slide) so the overlay can own the full phone body.
   const [eventOverlayOpen, setEventOverlayOpen] = useState(false)
   const chrome = useMemo(() => ({ setEventOverlayOpen }), [])
 
@@ -52,15 +52,15 @@ export default function PhoneFrame({
         </div>
         <StatusBar style={statusBarStyle} />
         {showBottomNav && (
-          // Wrapper owns the bottom positioning + the fade/slide. Inner
-          // BottomNav's own absolute bottom-0 nests against this wrapper
-          // (transform creates a new containing block) so both shift
-          // together when the overlay flips eventOverlayOpen on.
+          // Wrapper keeps the nav spatially fixed and only fades it while
+          // the overlay owns the full phone body. No translate — the nav
+          // shouldn't slide down and compete with the card-to-detail
+          // morph; it just quietly disappears under the expanding overlay.
           <div
-            className={`absolute left-0 right-0 bottom-0 transition-all duration-200 ease-out ${
+            className={`absolute left-0 right-0 bottom-0 transition-opacity duration-150 ease-out ${
               eventOverlayOpen
-                ? 'pointer-events-none translate-y-4 opacity-0'
-                : 'translate-y-0 opacity-100'
+                ? 'pointer-events-none opacity-0'
+                : 'opacity-100'
             }`}
           >
             <BottomNav />
