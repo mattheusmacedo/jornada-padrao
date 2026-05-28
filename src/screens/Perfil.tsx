@@ -171,17 +171,11 @@ export default function Perfil() {
   const [morphRect, setMorphRect] = useState<MorphRect | null>(null)
   const screenRootRef = useRef<HTMLDivElement | null>(null)
   const rayeCardRef = useRef<HTMLButtonElement | null>(null)
-  const chromeRestoreTimerRef = useRef<number | null>(null)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
   const navigate = useNavigate()
 
   useEffect(() => {
-    return () => {
-      if (chromeRestoreTimerRef.current) {
-        window.clearTimeout(chromeRestoreTimerRef.current)
-      }
-      setEventOverlayOpen(false)
-    }
+    return () => setEventOverlayOpen(false)
   }, [setEventOverlayOpen])
 
   const measureRayeCard = (): MorphRect | null => {
@@ -222,18 +216,10 @@ export default function Perfil() {
   }
   const closeRaye = () => {
     // The overlay renders its own source-card face during exit, so the
-    // real source can stay hidden until unmount. Visibility restore
-    // stays in onExitComplete; BottomNav, however, returns on a short
-    // timer so it's already coming back while the shell is collapsing
-    // rather than popping in after the whole exit lands.
+    // real source can stay hidden until unmount. The nav is already
+    // sitting underneath, so chrome + visibility restore both happen in
+    // onExitComplete — no early nav return needed.
     setSelectedEvent(null)
-    if (chromeRestoreTimerRef.current) {
-      window.clearTimeout(chromeRestoreTimerRef.current)
-    }
-    chromeRestoreTimerRef.current = window.setTimeout(() => {
-      setEventOverlayOpen(false)
-      chromeRestoreTimerRef.current = null
-    }, 180)
   }
 
   return (
@@ -254,10 +240,6 @@ export default function Perfil() {
         initial={false}
         mode="sync"
         onExitComplete={() => {
-          if (chromeRestoreTimerRef.current) {
-            window.clearTimeout(chromeRestoreTimerRef.current)
-            chromeRestoreTimerRef.current = null
-          }
           setEventOverlayOpen(false)
           setHideRayeSourceVisual(false)
           setMorphRect(null)
