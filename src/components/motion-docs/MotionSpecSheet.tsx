@@ -1,6 +1,76 @@
 import type { MotionSpecProperty, MotionSpecSheet as MotionSpecSheetData } from '../../motion/specSheet'
+import type { Locale } from '../../motion/motionDocsCopy'
 
 const ROW_HEIGHT = 'min-h-[132px]'
+
+const SHEET_COPY = {
+  pt: {
+    title: 'Timeline da motion spec sheet',
+    anchor: 'âncora',
+    whilePressed: 'enquanto pressionado',
+  },
+  en: {
+    title: 'Motion spec sheet timeline',
+    anchor: 'anchor',
+    whilePressed: 'while pressed',
+  },
+} as const
+
+const PT_PROPERTY_LABELS: Record<string, string> = {
+  'Fill color': 'Cor de fill',
+  Hold: 'Hold',
+  Opacity: 'Opacidade',
+  Radius: 'Raio',
+  Release: 'Release',
+  Rotation: 'Rotação',
+  Scale: 'Escala',
+  'Press in': 'Press in',
+  'X translation': 'Translação X',
+  'Y translation': 'Translação Y',
+}
+
+const PT_LAYER_LABELS: Record<string, string> = {
+  'Animated element': 'Elemento animado',
+  'Button / icon button': 'Botão / icon button',
+  'Card to detail transition': 'Transição card para detalhe',
+  'Conclusion screen hero': 'Hero da tela de conclusão',
+  'Destination face': 'Destination face',
+  'Event card / list item': 'Event card / list item',
+  'Event list': 'Lista de eventos',
+  'Hero illustration': 'Ilustração hero',
+  'Interactive element': 'Elemento interativo',
+  'Morph shell': 'Morph shell',
+  'Page or modal container': 'Container de página ou modal',
+  'Phone chrome': 'PhoneFrame chrome',
+  'Popup / emphasized content': 'Popup / conteúdo enfatizado',
+  'Radio selection card': 'Radio selection card',
+  'Repeated list item': 'Item repetido da lista',
+  'Selected card': 'Card selecionado',
+  'Sequence item': 'Item da sequência',
+  'Source face': 'Source face',
+  'Title text': 'Texto do título',
+}
+
+const PT_ROLE_LABELS: Record<string, string> = {
+  'Comparison element': 'Elemento de comparação',
+  geometry: 'geometria',
+  illustration: 'ilustração',
+  'phone chrome': 'PhoneFrame chrome',
+  'Primary element': 'Elemento principal',
+  'source visual': 'visual de origem',
+  'destination visual': 'visual de destino',
+  supporting: 'apoio',
+}
+
+const PT_ANCHOR_LABELS: Record<string, string> = {
+  'Card center / dot center': 'Centro do card / centro do dot',
+  Center: 'Centro',
+  'Center bottom': 'Centro inferior',
+  'Each item center': 'Centro de cada item',
+  'Illustration center': 'Centro da ilustração',
+  'Measured source rect': 'Rect de origem medido',
+  'Viewport center': 'Centro do viewport',
+}
 
 function clampPercent(value: number) {
   return Math.max(0, Math.min(100, value))
@@ -29,6 +99,37 @@ function timeTicks(maxMs: number) {
   return ticks
 }
 
+function translateValue(value: string, locale: Locale, dictionary: Record<string, string>) {
+  if (locale === 'en') return value
+  return dictionary[value] ?? value
+}
+
+function translateRole(value: string, locale: Locale) {
+  if (locale === 'en') return value
+  const staggerMatch = value.match(/^(\d+) children, (\d+)ms stagger$/)
+  if (staggerMatch) return `${staggerMatch[1]} itens, stagger de ${staggerMatch[2]}ms`
+  return PT_ROLE_LABELS[value] ?? value
+}
+
+function translateDetail(value: string, locale: Locale) {
+  if (locale === 'en') return value
+  return value
+    .replace('held while pointer is down', 'mantido enquanto o pointer está pressionado')
+    .replace('held', 'mantido')
+}
+
+function timingSummary(row: MotionSpecProperty, locale: Locale) {
+  const copy = SHEET_COPY[locale]
+
+  return row.segments.map((segment) => {
+    const label = translateValue(segment.label, locale, PT_PROPERTY_LABELS)
+    const isPointerHold = segment.type === 'hold' && segment.detail.includes('pointer is down')
+
+    if (isPointerHold) return `${label}: ${copy.whilePressed}`
+    return `${label}: ${segment.durationMs}ms`
+  })
+}
+
 function TimelineLabels({ maxMs }: { maxMs: number }) {
   return (
     <div className="relative h-8 text-[10px] font-semibold uppercase leading-[1.4] tracking-[0.06em] text-[var(--color-grey-dark)]">
@@ -52,10 +153,11 @@ function TimelineLabels({ maxMs }: { maxMs: number }) {
   )
 }
 
-function TimelineSegment({ maxMs, row, segment }: {
+function TimelineSegment({ maxMs, row, segment, locale }: {
   maxMs: number
   row: MotionSpecProperty
   segment: MotionSpecProperty['segments'][number]
+  locale: Locale
 }) {
   const start = clampPercent((segment.startMs / maxMs) * 100)
   const end = clampPercent((segment.endMs / maxMs) * 100)
@@ -70,7 +172,7 @@ function TimelineSegment({ maxMs, row, segment }: {
         style={{ left: `${start}%`, right: `${100 - end}%` }}
       >
         <span className="leading-[1.2]">
-          <span className="block">{segment.label}</span>
+          <span className="block">{translateValue(segment.label, locale, PT_PROPERTY_LABELS)}</span>
           <span className="block">{segment.durationMs}ms</span>
         </span>
       </div>
@@ -103,53 +205,54 @@ function TimelineSegment({ maxMs, row, segment }: {
         className={`absolute top-4 max-w-[170px] text-[10px] font-semibold leading-[1.6] ${labelEndsAtEdge ? 'text-right' : ''}`}
         style={{ color: row.color, ...labelPosition }}
       >
-        <span className="block uppercase tracking-[0.05em]">{segment.label}</span>
-        <span className="block">{segment.detail}</span>
+        <span className="block uppercase tracking-[0.05em]">{translateValue(segment.label, locale, PT_PROPERTY_LABELS)}</span>
+        <span className="block">{translateDetail(segment.detail, locale)}</span>
         <span className="block text-[var(--color-grey-dark)]">{segment.durationMs}ms</span>
       </div>
     </>
   )
 }
 
-function TimelineRow({ maxMs, row }: { maxMs: number; row: MotionSpecProperty }) {
+function TimelineRow({ maxMs, row, locale }: { maxMs: number; row: MotionSpecProperty; locale: Locale }) {
   return (
     <div className={`relative ${ROW_HEIGHT} border-t border-[var(--color-grey-light-active)]`}>
       {row.segments.map((segment) => (
-        <TimelineSegment key={segment.id} maxMs={maxMs} row={row} segment={segment} />
+        <TimelineSegment key={segment.id} maxMs={maxMs} row={row} segment={segment} locale={locale} />
       ))}
     </div>
   )
 }
 
-function RowTimingSummary({ summary }: { summary: string }) {
+function RowTimingSummary({ items }: { items: string[] }) {
   return (
     <div className="mt-3 grid gap-1 text-[10px] leading-[1.55] text-[var(--color-grey-dark-active)]">
-      {summary.split(' | ').map((item) => (
+      {items.map((item) => (
         <span key={item}>{item}</span>
       ))}
     </div>
   )
 }
 
-function RowLabel({ row }: { row: MotionSpecProperty }) {
+function RowLabel({ row, locale }: { row: MotionSpecProperty; locale: Locale }) {
   return (
     <div data-motion-row-label="true" className={`${ROW_HEIGHT} border-t border-[var(--color-grey-light-active)] py-6 pr-5`}>
-      <p className="text-[12px] font-extrabold uppercase leading-[1.35] tracking-[0.05em] text-[var(--color-grey-darker)]">{row.label}</p>
+      <p className="text-[12px] font-extrabold uppercase leading-[1.35] tracking-[0.05em] text-[var(--color-grey-darker)]">{translateValue(row.label, locale, PT_PROPERTY_LABELS)}</p>
       <div className="mt-5">
         <p className="text-[11px] font-semibold leading-[1.65] text-[var(--color-grey-darker)]">{row.valuePath}</p>
-        <RowTimingSummary summary={row.timingSummary} />
+        <RowTimingSummary items={timingSummary(row, locale)} />
       </div>
     </div>
   )
 }
 
-export function MotionSpecSheet({ spec }: { spec: MotionSpecSheetData }) {
+export function MotionSpecSheet({ locale = 'en', spec }: { locale?: Locale; spec: MotionSpecSheetData }) {
+  const copy = SHEET_COPY[locale]
   const maxMs = niceTimeMax(spec)
 
   return (
     <div data-motion-spec-sheet="true" className="h-full overflow-hidden rounded-[8px] border border-[var(--color-grey-light-active)] bg-white text-[var(--color-grey-darker)]">
       <div className="border-b border-[var(--color-grey-light-active)] px-5 py-4">
-        <p className="text-[11px] font-extrabold uppercase leading-[1.25] tracking-[0.14em] text-[var(--color-brand-pink-normal)]">Motion spec sheet timeline</p>
+        <p className="text-[11px] font-extrabold uppercase leading-[1.25] tracking-[0.14em] text-[var(--color-brand-pink-normal)]">{copy.title}</p>
       </div>
 
       <div className="p-5">
@@ -161,22 +264,22 @@ export function MotionSpecSheet({ spec }: { spec: MotionSpecSheetData }) {
               <div key={layer.id} className="contents">
                 <div className="col-span-2 mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[8px] border border-[var(--color-grey-light-active)] bg-[var(--color-grey-light)] px-4 py-3">
                   <span className="inline-flex rounded-[4px] bg-[var(--color-brand-pink-normal)] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.06em] text-white">
-                    {layer.name}
+                    {translateValue(layer.name, locale, PT_LAYER_LABELS)}
                   </span>
                   <span className="text-[11px] leading-[1.5] text-[var(--color-grey-dark-active)]">
-                    {layer.role} / anchor: {layer.anchorPoint}
+                    {translateRole(layer.role, locale)} / {copy.anchor}: {translateValue(layer.anchorPoint, locale, PT_ANCHOR_LABELS)}
                   </span>
                 </div>
                 {layer.rows.map((row) => (
                   <div key={row.id} className="contents">
-                    <RowLabel row={row} />
+                    <RowLabel row={row} locale={locale} />
                     <div
                       className="relative min-w-0"
                       style={{
                         backgroundImage: `repeating-linear-gradient(to right, rgba(64,64,64,0.12) 0, rgba(64,64,64,0.12) 1px, transparent 1px, transparent ${100 / (maxMs / timeStep(maxMs))}%)`,
                       }}
                     >
-                      <TimelineRow maxMs={maxMs} row={row} />
+                      <TimelineRow maxMs={maxMs} row={row} locale={locale} />
                     </div>
                   </div>
                 ))}

@@ -12,7 +12,8 @@ import {
 } from '../components/musicBurstConfig'
 import type { MusicBurstLaneConfig } from '../components/musicBurstConfig'
 import { DEFAULT_MUSIC_NOTE_BURST_SETTINGS } from '../components/musicNotesConfig'
-import { burstLogicHandoff, stateMachineHandoff } from '../motion/handoff'
+import { localizeDemo, motionDocsCopy } from '../motion/motionDocsCopy'
+import type { Locale } from '../motion/motionDocsCopy'
 import { buildMotionSpec } from '../motion/specSheet'
 
 type Keyframe = {
@@ -69,13 +70,6 @@ const EASING_MAP: Record<string, [number, number, number, number]> = {
   out: [0, 0, 0.2, 1],
   spring: [0.22, 1, 0.36, 1],
 }
-
-const DOC_NAV = [
-  { href: '#system', label: 'System rules' },
-  { href: '#demos', label: 'Motion demos' },
-  { href: '#state-machine', label: 'State machine' },
-  { href: '#burst', label: 'Burst lanes' },
-]
 
 const DOC_TYPE = {
   eyebrow: 'text-[11px] font-extrabold uppercase tracking-[0.14em] leading-[1.25]',
@@ -252,12 +246,15 @@ function StaggerDemo({ demo, heading, onTrigger, replayKey }: {
   )
 }
 
-function RadioSelectDemo({ demo, heading, onTrigger, replayKey }: {
+function RadioSelectDemo({ demo, heading, locale, onTrigger, replayKey }: {
   demo: Demo
   heading: string
+  locale: Locale
   onTrigger: () => void
   replayKey: number
 }) {
+  const copy = motionDocsCopy[locale]
+
   return (
     <Canvas heading={heading} onTrigger={onTrigger}>
       <fmotion.div
@@ -277,8 +274,8 @@ function RadioSelectDemo({ demo, heading, onTrigger, replayKey }: {
           />
         </span>
         <div className="flex flex-col">
-          <span className="text-[14px] font-medium leading-[1.35] text-[var(--color-grey-darker)]">Saved shows</span>
-          <span className="text-[10px] leading-[1.5] text-[var(--color-grey-dark)]">Events you do not want to miss</span>
+          <span className="text-[14px] font-medium leading-[1.35] text-[var(--color-grey-darker)]">{copy.radioDemo.title}</span>
+          <span className="text-[10px] leading-[1.5] text-[var(--color-grey-dark)]">{copy.radioDemo.subtitle}</span>
         </div>
       </fmotion.div>
     </Canvas>
@@ -330,14 +327,15 @@ function ConclusionHeroDemo({ demo, heading, onTrigger, replayKey }: {
   )
 }
 
-function DemoPlayer({ demo, heading, onTrigger, replayKey }: {
+function DemoPlayer({ demo, heading, locale, onTrigger, replayKey }: {
   demo: Demo
   heading: string
+  locale: Locale
   onTrigger: () => void
   replayKey: number
 }) {
   if (demo.id === 'sequence-list-stagger') return <StaggerDemo demo={demo} heading={heading} onTrigger={onTrigger} replayKey={replayKey} />
-  if (demo.id === 'sequence-radio-select') return <RadioSelectDemo demo={demo} heading={heading} onTrigger={onTrigger} replayKey={replayKey} />
+  if (demo.id === 'sequence-radio-select') return <RadioSelectDemo demo={demo} heading={heading} locale={locale} onTrigger={onTrigger} replayKey={replayKey} />
   if (demo.id === 'sequence-conclusion-hero') return <ConclusionHeroDemo demo={demo} heading={heading} onTrigger={onTrigger} replayKey={replayKey} />
   return <SingleCircleDemo demo={demo} heading={heading} onTrigger={onTrigger} replayKey={replayKey} />
 }
@@ -353,10 +351,11 @@ function bezierFor(demo: Demo): { curve: CubicBezier; label: string } {
   return { curve, label: `cubic-bezier(${curve.join(', ')})` }
 }
 
-function BezierPanel({ curve, label, durationMs, replayKey, captionPrefix }: {
+function BezierPanel({ curve, label, durationMs, locale, replayKey, captionPrefix }: {
   curve: CubicBezier
   label: string
   durationMs: number
+  locale: Locale
   replayKey: number
   captionPrefix?: string
 }) {
@@ -370,18 +369,20 @@ function BezierPanel({ curve, label, durationMs, replayKey, captionPrefix }: {
       </div>
       <div className="flex items-center justify-between gap-3 px-4 pb-3">
         <code className={`truncate ${DOC_TYPE.monoSmall} text-[var(--color-grey-dark)]`}>{label}</code>
-        <BezierCopyButton values={curve} />
+        <BezierCopyButton locale={locale} values={curve} />
       </div>
     </div>
   )
 }
 
-function DemoCard({ demo, rule, replayKey, onReplay }: {
+function DemoCard({ demo, locale, rule, replayKey, onReplay }: {
   demo: Demo
+  locale: Locale
   rule?: Demo
   replayKey: number
   onReplay: () => void
 }) {
+  const copy = motionDocsCopy[locale]
   const { curve, label } = bezierFor(demo)
   const motionSpec = useMemo(() => buildMotionSpec(demo), [demo])
 
@@ -393,7 +394,7 @@ function DemoCard({ demo, rule, replayKey, onReplay }: {
         className="absolute right-6 top-6 flex h-9 items-center gap-2 rounded-[8px] border border-[var(--color-brand-pink-normal)] px-3 text-[12px] font-semibold leading-[1.2] text-[var(--color-brand-pink-normal)]"
       >
         <Play size={14} fill="currentColor" />
-        Replay
+        {copy.demoCard.replay}
       </button>
 
       <div className="grid gap-4 pr-[128px]">
@@ -407,30 +408,32 @@ function DemoCard({ demo, rule, replayKey, onReplay }: {
         <div className="grid content-stretch gap-4">
           {rule ? (
             <>
-              <DemoPlayer demo={rule} heading={`Rule: ${cleanTitle(rule.title)}`} onTrigger={onReplay} replayKey={replayKey} />
-              <DemoPlayer demo={demo} heading={`Avoid: ${cleanTitle(demo.title)}`} onTrigger={onReplay} replayKey={replayKey} />
+              <DemoPlayer demo={rule} heading={`${copy.demoCard.rule}: ${cleanTitle(rule.title)}`} locale={locale} onTrigger={onReplay} replayKey={replayKey} />
+              <DemoPlayer demo={demo} heading={`${copy.demoCard.avoid}: ${cleanTitle(demo.title)}`} locale={locale} onTrigger={onReplay} replayKey={replayKey} />
             </>
           ) : (
-            <DemoPlayer demo={demo} heading="Interactive example" onTrigger={onReplay} replayKey={replayKey} />
+            <DemoPlayer demo={demo} heading={copy.demoCard.interactiveExample} locale={locale} onTrigger={onReplay} replayKey={replayKey} />
           )}
         </div>
         <BezierPanel
           curve={curve}
           label={label}
           durationMs={demo.duration_ms}
+          locale={locale}
           replayKey={replayKey}
-          captionPrefix={`Bezier curve ${demo.playerOverride?.label ?? demo.easing}`}
+          captionPrefix={`${copy.demoCard.bezierCurve} ${demo.playerOverride?.label ?? demo.easing}`}
         />
-        <MotionSpecSheet spec={motionSpec} />
+        <MotionSpecSheet locale={locale} spec={motionSpec} />
       </div>
     </article>
   )
 }
 
-function DemoSection({ title, demos, demosById, replayKey, bumpReplay }: {
+function DemoSection({ title, demos, demosById, locale, replayKey, bumpReplay }: {
   title: string
   demos: Demo[]
   demosById: Map<string, Demo>
+  locale: Locale
   replayKey: number
   bumpReplay: () => void
 }) {
@@ -445,6 +448,7 @@ function DemoSection({ title, demos, demosById, replayKey, bumpReplay }: {
           <DemoCard
             key={d.id}
             demo={d}
+            locale={locale}
             rule={d.compareWith ? demosById.get(d.compareWith) : undefined}
             replayKey={replayKey}
             onReplay={bumpReplay}
@@ -471,17 +475,18 @@ function SectionHeader({ eyebrow, title, children }: {
   )
 }
 
-function SystemRules({ spec }: { spec: Spec }) {
+function SystemRules({ locale, spec }: { locale: Locale; spec: Spec }) {
+  const copy = motionDocsCopy[locale]
   const durationEntries = Object.entries(spec.tokens.durations)
 
   return (
     <section id="system" className="flex flex-col gap-6">
-      <SectionHeader eyebrow="Foundations" title="System rules before individual animations">
-        The page now follows the same structure expected in a developer handoff: purpose, token, trigger, state, asset, accessibility path, and QA criteria.
+      <SectionHeader eyebrow={copy.system.eyebrow} title={copy.system.title}>
+        {copy.system.intro}
       </SectionHeader>
 
       <div className={`${DOC_PANEL} p-5`}>
-        <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>Token bands</h3>
+        <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>{copy.system.tokenBands}</h3>
         <div className="mt-4 grid gap-2">
           {durationEntries.map(([name, value]) => (
             <div key={name} className="grid grid-cols-[120px_1fr_72px] items-center gap-3 text-[13px] leading-[1.45]">
@@ -501,18 +506,20 @@ function SystemRules({ spec }: { spec: Spec }) {
   )
 }
 
-function StateMachineSection() {
+function StateMachineSection({ locale }: { locale: Locale }) {
+  const copy = motionDocsCopy[locale].stateMachine
+
   return (
     <section id="state-machine" className="flex flex-col gap-6">
-      <SectionHeader eyebrow="Interaction logic" title="State machine rule for the conclusion illustration">
-        {stateMachineHandoff.intent}
+      <SectionHeader eyebrow={copy.eyebrow} title={copy.title}>
+        {copy.intent}
       </SectionHeader>
 
       <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
         <div className={`${DOC_PANEL} p-6`}>
-          <p className={`${DOC_TYPE.eyebrow} text-[var(--color-brand-pink-normal)]`}>State flow</p>
+          <p className={`${DOC_TYPE.eyebrow} text-[var(--color-brand-pink-normal)]`}>{copy.stateFlow}</p>
           <div className="mt-4 grid gap-3">
-            {stateMachineHandoff.states.map((state, index) => (
+            {copy.states.map((state, index) => (
               <div key={state.label} className="grid grid-cols-[34px_1fr] gap-3">
                 <span className="flex h-8 w-8 items-center justify-center rounded-[8px] bg-[var(--color-pink-light)] text-[13px] font-bold text-[var(--color-brand-pink-normal)]">
                   {index + 1}
@@ -527,20 +534,18 @@ function StateMachineSection() {
         </div>
 
         <div className={`${DOC_PANEL} p-6`}>
-          <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>Transition table</h3>
+          <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>{copy.transitionTable}</h3>
           <div className="mt-4 overflow-x-auto">
             <table className={`w-full min-w-[720px] border-collapse text-left ${DOC_TYPE.bodySmall}`}>
               <thead>
                 <tr className="border-b border-[var(--color-grey-light-active)] text-[11px] uppercase tracking-[0.08em] text-[var(--color-grey-dark)]">
-                  <th className="py-2 pr-3">Event</th>
-                  <th className="py-2 pr-3">From</th>
-                  <th className="py-2 pr-3">To</th>
-                  <th className="py-2 pr-3">Guard</th>
-                  <th className="py-2">Action</th>
+                  {copy.columns.map((column) => (
+                    <th key={column} className="py-2 pr-3 last:pr-0">{column}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {stateMachineHandoff.transitions.map((transition) => (
+                {copy.transitions.map((transition) => (
                   <tr key={`${transition.event}-${transition.from}`} className="border-b border-[var(--color-grey-light-active)] align-top">
                     <td className="py-3 pr-3 font-mono font-semibold text-[var(--color-brand-pink-normal)]">{transition.event}</td>
                     <td className="py-3 pr-3 text-[var(--color-grey-dark-active)]">{transition.from}</td>
@@ -553,7 +558,7 @@ function StateMachineSection() {
             </table>
           </div>
           <div className="mt-4 grid gap-2 md:grid-cols-2">
-            {stateMachineHandoff.guardrails.map((guardrail) => (
+            {copy.guardrails.map((guardrail) => (
               <p key={guardrail} className={`rounded-[8px] bg-[var(--color-grey-light)] p-3 ${DOC_TYPE.bodySmall} text-[var(--color-grey-dark-active)]`}>
                 {guardrail}
               </p>
@@ -574,7 +579,8 @@ function LaneMetric({ label, value }: { label: string; value: number }) {
   )
 }
 
-function LaneDetail({ lane }: { lane: MusicBurstLaneConfig }) {
+function LaneDetail({ lane, locale }: { lane: MusicBurstLaneConfig; locale: Locale }) {
+  const copy = motionDocsCopy[locale].burst
   const metrics = [
     ['x', lane.x],
     ['y', lane.y],
@@ -593,11 +599,11 @@ function LaneDetail({ lane }: { lane: MusicBurstLaneConfig }) {
     <div className={`${DOC_PANEL} p-5`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className={`${DOC_TYPE.eyebrow} text-[var(--color-grey-dark)]`}>Selected lane</p>
+          <p className={`${DOC_TYPE.eyebrow} text-[var(--color-grey-dark)]`}>{copy.selectedLane}</p>
           <h3 className="mt-2 text-[20px] font-bold leading-[1.25] text-[var(--color-grey-darker)]">{lane.label}</h3>
         </div>
         <span className="rounded-[8px] bg-[var(--color-pink-light)] px-3 py-2 text-[12px] font-semibold text-[var(--color-brand-pink-normal)]">
-          {lane.enabled ? 'Enabled' : 'Disabled'}
+          {lane.enabled ? copy.enabled : copy.disabled}
         </span>
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
@@ -606,7 +612,7 @@ function LaneDetail({ lane }: { lane: MusicBurstLaneConfig }) {
         ))}
       </div>
       <div className="mt-4">
-        <p className={`${DOC_TYPE.eyebrow} text-[var(--color-grey-dark)]`}>Model cycle</p>
+        <p className={`${DOC_TYPE.eyebrow} text-[var(--color-grey-dark)]`}>{copy.modelCycle}</p>
         <p className={`mt-3 ${DOC_TYPE.body} text-[var(--color-grey-dark-active)]`}>
           {lane.models.map((modelId) => MUSIC_MODEL_LABELS[modelId]).join(', ')}
         </p>
@@ -615,23 +621,24 @@ function LaneDetail({ lane }: { lane: MusicBurstLaneConfig }) {
   )
 }
 
-function BurstLogicSection() {
+function BurstLogicSection({ locale }: { locale: Locale }) {
+  const copy = motionDocsCopy[locale].burst
   const lanes = useMemo(() => cloneMusicBurstLanes(), [])
   const [selectedLaneId, setSelectedLaneId] = useState(() => lanes[0]?.id ?? '')
   const selectedLane = lanes.find((lane) => lane.id === selectedLaneId) ?? lanes[0]
 
   return (
     <section id="burst" className="flex flex-col gap-6">
-      <SectionHeader eyebrow="Expressive layer" title="Burst logic and lane map">
-        The docs now use the same lane-map math as the sandbox, so the handoff can describe the visual lane system and the production algorithm with matching values.
+      <SectionHeader eyebrow={copy.eyebrow} title={copy.title}>
+        {copy.intro}
       </SectionHeader>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(320px,460px)_1fr]">
         <div className="rounded-[8px] bg-[var(--color-grey-darker)] p-5 text-white">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className={`${DOC_TYPE.eyebrow} text-white/62`}>Production lane map</p>
-              <h3 className="mt-2 text-[20px] font-bold leading-[1.25]">12 exits, round-robin</h3>
+              <p className={`${DOC_TYPE.eyebrow} text-white/62`}>{copy.productionMap}</p>
+              <h3 className="mt-2 text-[20px] font-bold leading-[1.25]">{copy.productionSubtitle}</h3>
             </div>
             <Sparkles size={22} />
           </div>
@@ -645,12 +652,12 @@ function BurstLogicSection() {
         </div>
 
         <div className="grid gap-4">
-          <LaneDetail lane={selectedLane} />
+          <LaneDetail lane={selectedLane} locale={locale} />
           <div className={`${DOC_PANEL} p-5`}>
-            <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>Burst contract</h3>
-            <p className={`mt-3 font-mono ${DOC_TYPE.bodySmall} text-[var(--color-grey-dark-active)]`}>{burstLogicHandoff.trigger}</p>
+            <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>{copy.contract}</h3>
+            <p className={`mt-3 font-mono ${DOC_TYPE.bodySmall} text-[var(--color-grey-dark-active)]`}>{copy.trigger}</p>
             <div className="mt-4 grid gap-2 md:grid-cols-2">
-              {burstLogicHandoff.constants.map((constant) => (
+              {copy.constants.map((constant) => (
                 <div key={constant.label} className="rounded-[8px] bg-[var(--color-grey-light)] p-3">
                   <p className={`${DOC_TYPE.body} font-semibold text-[var(--color-grey-darker)]`}>{constant.label}</p>
                   <p className={`mt-2 ${DOC_TYPE.bodySmall} text-[var(--color-grey-dark-active)]`}>{constant.detail}</p>
@@ -671,9 +678,9 @@ function BurstLogicSection() {
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <div className={`${DOC_PANEL} p-5`}>
-          <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>Algorithm notes</h3>
+          <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>{copy.algorithmNotes}</h3>
           <ol className="mt-4 grid gap-2">
-            {burstLogicHandoff.algorithm.map((step, index) => (
+            {copy.algorithm.map((step, index) => (
               <li key={step} className={`grid grid-cols-[28px_1fr] gap-3 ${DOC_TYPE.body} text-[var(--color-grey-dark-active)]`}>
                 <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-[var(--color-pink-light)] font-bold text-[var(--color-brand-pink-normal)]">
                   {index + 1}
@@ -685,9 +692,9 @@ function BurstLogicSection() {
         </div>
 
         <div className={`${DOC_PANEL} p-5`}>
-          <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>Lane inventory</h3>
+          <h3 className={`${DOC_TYPE.cardTitle} text-[var(--color-grey-darker)]`}>{copy.laneInventory}</h3>
           <p className={`mt-3 ${DOC_TYPE.body} text-[var(--color-grey-dark-active)]`}>
-            {lanes.length} lanes rotate through {MUSIC_BURST_MODEL_SPECS.length} FBX model families. Each lane starts with a different model offset so repeated bursts do not feel like a cloned ring.
+            {copy.laneInventorySummary(lanes.length, MUSIC_BURST_MODEL_SPECS.length)}
           </p>
           <div className="mt-4 grid max-h-[360px] gap-2 overflow-y-auto pr-1 scrollbar-hide">
             {lanes.map((lane, index) => (
@@ -699,7 +706,7 @@ function BurstLogicSection() {
               >
                 <span className="flex items-center justify-between gap-3">
                   <span className="text-[12px] font-bold uppercase leading-[1.45] text-[var(--color-grey-darker)]">Lane {index + 1}: {lane.label}</span>
-                  <span className="text-[11px] font-semibold text-[var(--color-grey-dark)]">{lane.enabled ? 'On' : 'Off'}</span>
+                  <span className="text-[11px] font-semibold text-[var(--color-grey-dark)]">{lane.enabled ? copy.on : copy.off}</span>
                 </span>
                 <span className="mt-2 block truncate text-[11px] leading-[1.45] text-[var(--color-grey-dark-active)]">
                   {lane.models.slice(0, 4).map((modelId) => MUSIC_MODEL_LABELS[modelId]).join(', ')}...
@@ -713,9 +720,36 @@ function BurstLogicSection() {
   )
 }
 
+function LanguageToggle({ locale, onChange }: { locale: Locale; onChange: (locale: Locale) => void }) {
+  return (
+    <div className="flex h-11 overflow-hidden rounded-[8px] border border-[var(--color-grey-normal)] bg-white">
+      {(['pt', 'en'] as const).map((option) => {
+        const selected = locale === option
+
+        return (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(option)}
+            className={`min-w-11 px-3 text-[12px] font-extrabold uppercase leading-[1.2] transition-colors duration-150 ease-out ${
+              selected
+                ? 'bg-[var(--color-brand-pink-normal)] text-white'
+                : 'text-[var(--color-grey-dark-active)] hover:bg-[var(--color-grey-light)] hover:text-[var(--color-brand-pink-normal)]'
+            }`}
+          >
+            {option}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function MotionDocs() {
   const [spec, setSpec] = useState<Spec | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [locale, setLocale] = useState<Locale>('pt')
   const [replayKey, setReplayKey] = useState(0)
 
   useEffect(() => {
@@ -728,53 +762,64 @@ export default function MotionDocs() {
       .catch((e: Error) => setError(e.message))
   }, [])
 
+  useEffect(() => {
+    document.documentElement.lang = locale === 'pt' ? 'pt-BR' : 'en'
+  }, [locale])
+
   if (error) {
+    const copy = motionDocsCopy[locale]
+
     return (
       <div className="min-h-screen w-full bg-[var(--color-grey-light)] p-10 text-[var(--color-grey-darker)]">
-        Failed to load motion-system.json: {error}
+        {copy.loadError}: {error}
       </div>
     )
   }
   if (!spec) {
+    const copy = motionDocsCopy[locale]
+
     return (
       <div className="min-h-screen w-full bg-[var(--color-grey-light)] p-10 text-[var(--color-grey-darker)]">
-        Loading motion system spec...
+        {copy.loading}
       </div>
     )
   }
 
-  const demosById = new Map(spec.demos.map((d) => [d.id, d]))
-  const rules = spec.demos.filter((d) => d.category === 'rule')
-  const antipatterns = spec.demos.filter((d) => d.category === 'antipattern')
-  const sequences = spec.demos.filter((d) => d.category === 'sequence')
+  const copy = motionDocsCopy[locale]
+  const localizedDemos = spec.demos.map((demo) => localizeDemo(demo, locale))
+  const demosById = new Map(localizedDemos.map((d) => [d.id, d]))
+  const rules = localizedDemos.filter((d) => d.category === 'rule')
+  const antipatterns = localizedDemos.filter((d) => d.category === 'antipattern')
+  const sequences = localizedDemos.filter((d) => d.category === 'sequence')
 
   return (
-    <div className="min-h-screen w-full bg-[var(--color-grey-light)]">
+    <div lang={locale === 'pt' ? 'pt-BR' : 'en'} className="min-h-screen w-full bg-[var(--color-grey-light)]">
       <div className="mx-auto flex max-w-[1600px] flex-col gap-14 px-5 py-10 md:px-8">
         <header className="flex flex-col gap-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <p className={`${DOC_TYPE.eyebrow} text-[var(--color-brand-pink-normal)]`}>Motion design system</p>
+              <p className={`${DOC_TYPE.eyebrow} text-[var(--color-brand-pink-normal)]`}>{copy.header.eyebrow}</p>
               <h1 className={`mt-3 max-w-[760px] ${DOC_TYPE.pageTitle} text-[var(--color-grey-darker)]`}>
-                Developer handoff reference
+                {copy.header.title}
               </h1>
               <p className={`mt-4 max-w-[820px] ${DOC_TYPE.bodyLarge} text-[var(--color-grey-dark-active)]`}>
-                Spec v{spec.version} | {spec.composition.width}x{spec.composition.height} @ {spec.composition.fps}fps | {spec.demos.length} demos. This page documents reusable motion specs, production state-machine rules, and the burst lane system from a motion designer perspective.
+                {copy.header.summary(spec.version, spec.composition.width, spec.composition.height, spec.composition.fps, spec.demos.length)}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <LanguageToggle locale={locale} onChange={setLocale} />
               <a
                 href="/burst-sandbox"
                 className="flex h-11 items-center gap-2 rounded-[8px] border border-[var(--color-grey-normal)] bg-white px-4 text-[13px] font-bold text-[var(--color-grey-darker)]"
               >
                 <Sparkles size={16} />
-                Burst sandbox
+                {copy.header.burstSandbox}
               </a>
             </div>
           </div>
 
           <nav className="flex flex-wrap gap-2 border-y border-[var(--color-grey-light-active)] py-3">
-            {DOC_NAV.map((item) => (
+            {copy.nav.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
@@ -786,19 +831,19 @@ export default function MotionDocs() {
           </nav>
         </header>
 
-        <SystemRules spec={spec} />
+        <SystemRules locale={locale} spec={spec} />
 
         <section id="demos" className="flex flex-col gap-9">
-          <SectionHeader eyebrow="Spec demos" title="Reusable motion examples">
-            Each demo remains connected to the JSON spec so durations, easing curves, and keyframes can become exportable artifacts later.
+          <SectionHeader eyebrow={copy.demos.eyebrow} title={copy.demos.title}>
+            {copy.demos.intro}
           </SectionHeader>
-          <DemoSection title="Rules" demos={rules} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
-          <DemoSection title="Anti-patterns" demos={antipatterns} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
-          <DemoSection title="Sequences" demos={sequences} demosById={demosById} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
+          <DemoSection title={copy.demos.groups.rule} demos={rules} demosById={demosById} locale={locale} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
+          <DemoSection title={copy.demos.groups.antipattern} demos={antipatterns} demosById={demosById} locale={locale} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
+          <DemoSection title={copy.demos.groups.sequence} demos={sequences} demosById={demosById} locale={locale} replayKey={replayKey} bumpReplay={() => setReplayKey((k) => k + 1)} />
         </section>
 
-        <StateMachineSection />
-        <BurstLogicSection />
+        <StateMachineSection locale={locale} />
+        <BurstLogicSection locale={locale} />
       </div>
     </div>
   )

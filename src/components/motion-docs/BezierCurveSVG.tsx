@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
 import { Copy, Check } from 'lucide-react'
+import type { Locale } from '../../motion/motionDocsCopy'
 
 type Props = {
   cubicBezier: [number, number, number, number]
@@ -141,9 +142,12 @@ export default function BezierCurveSVG({
   )
 }
 
-export function BezierCopyButton({ values }: { values: number[] }) {
+export function BezierCopyButton({ locale = 'en', values }: { locale?: Locale; values: number[] }) {
   const [copied, setCopied] = useState(false)
   const text = values.join(', ')
+  const label = copied
+    ? locale === 'pt' ? 'Copiado!' : 'Copied!'
+    : locale === 'pt' ? 'Copiar' : 'Copy'
 
   const handle = async () => {
     try {
@@ -169,7 +173,7 @@ export function BezierCopyButton({ values }: { values: number[] }) {
       className="flex items-center gap-1 text-[11px] text-[var(--color-grey-dark)] transition-none hover:text-[var(--color-brand-pink-normal)]"
     >
       {copied ? <Check size={12} /> : <Copy size={12} />}
-      <span>{copied ? 'Copiado!' : 'Copy'}</span>
+      <span>{label}</span>
     </button>
   )
 }
