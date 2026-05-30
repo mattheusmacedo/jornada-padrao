@@ -208,8 +208,9 @@ export default function MusicModelPreview({ className, model }: Props) {
     void import('three').then(async (THREE) => {
       if (disposed) return
 
-      const [{ FBXLoader }] = await Promise.all([
-        import('three/examples/jsm/loaders/FBXLoader.js'),
+      const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
+        import('three/examples/jsm/loaders/GLTFLoader.js'),
+        import('three/examples/jsm/libs/meshopt_decoder.module.js'),
       ])
       if (disposed) return
 
@@ -245,13 +246,14 @@ export default function MusicModelPreview({ className, model }: Props) {
       resizeObserver.observe(canvas)
       resizeRenderer(renderer, camera, canvas)
 
-      const loader = new FBXLoader()
+      const loader = new GLTFLoader()
+      loader.setMeshoptDecoder(MeshoptDecoder)
       const textureLoader = new THREE.TextureLoader()
       const [object, textures] = await Promise.all([
         new Promise<Group | null>((resolve) => {
           loader.load(
             model.path,
-            (loadedObject) => resolve(loadedObject),
+            (gltf) => resolve(gltf.scene),
             undefined,
             () => resolve(null),
           )

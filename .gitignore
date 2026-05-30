@@ -17,6 +17,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Third-party converter binaries (FBX2glTF, etc.) fetched on demand
+scripts/bin/
+
 # Stray temp screenshots from verification (contact sheets, frame grabs)
 tmp-*.png
 tmp-*.jpg

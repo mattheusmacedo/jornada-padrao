@@ -615,17 +615,21 @@ const MusicNotesOverlay = forwardRef<MusicNotesOverlayHandle, Props>(function Mu
       overlayRef.current = overlay
       resizeOverlay(overlay, canvas)
 
-      void import('three/examples/jsm/loaders/FBXLoader.js').then(({ FBXLoader }) => {
+      void Promise.all([
+        import('three/examples/jsm/loaders/GLTFLoader.js'),
+        import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+      ]).then(([{ GLTFLoader }, { MeshoptDecoder }]) => {
         if (disposed) return
 
-        const loader = new FBXLoader()
+        const loader = new GLTFLoader()
+        loader.setMeshoptDecoder(MeshoptDecoder)
         const textureLoader = new THREE.TextureLoader()
         const modelLoads = MUSIC_BURST_MODEL_SPECS.map(async (spec) => {
           const [object, textures] = await Promise.all([
             new Promise<Group | null>((resolve) => {
               loader.load(
                 spec.path,
-                (loadedObject) => resolve(loadedObject),
+                (gltf) => resolve(gltf.scene),
                 undefined,
                 () => resolve(null),
               )

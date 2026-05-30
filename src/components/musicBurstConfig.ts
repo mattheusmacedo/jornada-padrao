@@ -76,41 +76,41 @@ function createModelSpec(
 }
 
 export const MUSIC_BURST_MODEL_SPECS: BurstModelSpec[] = [
-  createModelSpec('musical-note', 'Musical note', 'musical-note-icon-fbx', 'musical-note-icon.fbx', 'musical-note-icon-005', {
+  createModelSpec('musical-note', 'Musical note', 'musical-note-icon-fbx', 'musical-note-icon.glb', 'musical-note-icon-005', {
     colorMap: '/models/musical-note-icon-fbx/textures/musical-note-icon-005-col-brand-preview.png',
   }),
-  createModelSpec('trumpet', 'Trumpet', 'trumpet-icon-fbx', 'trumpet-icon.fbx', 'trumpet-icon-001', {
+  createModelSpec('trumpet', 'Trumpet', 'trumpet-icon-fbx', 'trumpet-icon.glb', 'trumpet-icon-001', {
     colorMap: '/models/trumpet-icon-fbx/textures/trumpet-icon-001-col-brand-preview.png',
   }),
-  createModelSpec('loudspeaker', 'Loudspeaker', 'loudspeaker-textures-fbx', 'loudspeaker.fbx', 'loudspeaker-010', { alpha: true }),
-  createModelSpec('bj-mixer', 'Mixer', 'bj-mixer-icon-fbx', 'bj-mixer-icon.fbx', 'bj-mixer-icon-002', {
+  createModelSpec('loudspeaker', 'Loudspeaker', 'loudspeaker-textures-fbx', 'loudspeaker.glb', 'loudspeaker-010', { alpha: true }),
+  createModelSpec('bj-mixer', 'Mixer', 'bj-mixer-icon-fbx', 'bj-mixer-icon.glb', 'bj-mixer-icon-002', {
     colorMap: '/models/bj-mixer-icon-fbx/textures/bj-mixer-icon-002-col-brand-preview.png',
     emissive: true,
     emissiveMap: '/models/bj-mixer-icon-fbx/textures/bj-mixer-icon-002-emissive-brand-preview.png',
   }),
-  createModelSpec('headphones2', 'Headphones', 'headphones-icon2-fbx', 'headphones-icon.fbx', 'headphones-icon-013', {
+  createModelSpec('headphones2', 'Headphones', 'headphones-icon2-fbx', 'headphones-icon.glb', 'headphones-icon-013', {
     colorMap: '/models/headphones-icon2-fbx/textures/headphones-icon-013-col-brand-preview.png',
     metalness: false,
   }),
-  createModelSpec('clarinet', 'Clarinet', 'clarinet-icon-fbx', 'clarinet-icon.fbx', 'clarinet-icon-001', {
+  createModelSpec('clarinet', 'Clarinet', 'clarinet-icon-fbx', 'clarinet-icon.glb', 'clarinet-icon-001', {
     colorMap: '/models/clarinet-icon-fbx/textures/clarinet-icon-001-col-brand-preview-2.png',
   }),
-  createModelSpec('guitar', 'Guitar', 'guitar-icon-fbx', 'guitar-icon.fbx', 'guitar-icon-001', {
+  createModelSpec('guitar', 'Guitar', 'guitar-icon-fbx', 'guitar-icon.glb', 'guitar-icon-001', {
     colorMap: '/models/guitar-icon-fbx/textures/guitar-icon-001-col-brand-preview.png',
   }),
-  createModelSpec('microphone', 'Microphone', 'microphone-icon-fbx', 'microphone-icon.fbx', 'microphone-icon-003', {
+  createModelSpec('microphone', 'Microphone', 'microphone-icon-fbx', 'microphone-icon.glb', 'microphone-icon-003', {
     colorMap: '/models/microphone-icon-fbx/textures/microphone-icon-003-col-brand-preview.png',
   }),
-  createModelSpec('accordion', 'Accordion', 'accordion-icon-fbx', 'accordion-icon.fbx', 'accordion-icon-001', {
+  createModelSpec('accordion', 'Accordion', 'accordion-icon-fbx', 'accordion-icon.glb', 'accordion-icon-001', {
     colorMap: '/models/accordion-icon-fbx/textures/accordion-icon-001-col-brand-preview-3.png',
   }),
-  createModelSpec('conga', 'Conga', 'conga-icon-fbx', 'conga-icon.fbx', 'conga-icon-001', {
+  createModelSpec('conga', 'Conga', 'conga-icon-fbx', 'conga-icon.glb', 'conga-icon-001', {
     colorMap: '/models/conga-icon-fbx/textures/conga-icon-001-col-brand-preview.png',
   }),
-  createModelSpec('drum', 'Drum', 'drum-icon-fbx', 'drum-icon.fbx', 'drum-icon-004', {
+  createModelSpec('drum', 'Drum', 'drum-icon-fbx', 'drum-icon.glb', 'drum-icon-004', {
     colorMap: '/models/drum-icon-fbx/textures/drum-icon-004-col-brand-preview.png',
   }),
-  createModelSpec('electric-guitar', 'Electric guitar', 'electric-guitar-icon-fbx', 'electric-guitar-icon.fbx', 'electric-guitar-icon-002', {
+  createModelSpec('electric-guitar', 'Electric guitar', 'electric-guitar-icon-fbx', 'electric-guitar-icon.glb', 'electric-guitar-icon-002', {
     colorMap: '/models/electric-guitar-icon-fbx/textures/electric-guitar-icon-002-col-brand-preview.png',
   }),
 ]
