@@ -2,7 +2,20 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import type { CSSProperties } from 'react'
 
 const VIDEO_ASSET_VERSION = '20260529-shared-idle-60'
+const WEBP_ALPHA_ASSET_VERSION = '20260530-safari-webp-alpha-60'
 const END_LEAD_SECONDS = 0.055
+
+const ALPHA_CLIP_DURATIONS: Record<string, number> = {
+  '/videos/state-machine/idle': 1.208333,
+  '/videos/state-machine/idle-phone': 4.833333,
+  '/videos/state-machine/idle-phone-2': 7.458333,
+  '/videos/state-machine/idle-bands': 4.375,
+  '/videos/state-machine/conclusao-dance': 7.291667,
+  '/videos/state-machine/conclusao-character-cowgirl': 5.458333,
+  '/videos/state-machine/conclusao-character-glam': 7.458333,
+  '/videos/state-machine/conclusao-character-pop': 5.458333,
+  '/videos/state-machine/conclusao-character-raver': 5.458333,
+}
 
 type Props = {
   /** Base path without extension, e.g. "/videos/state-machine/idle". */
@@ -29,14 +42,85 @@ type VideoSlot = {
 
 type VideoSlots = [VideoSlot, VideoSlot]
 
+function shouldUseWebpAlphaFallback() {
+  if (typeof navigator === 'undefined') return false
+
+  const ua = navigator.userAgent
+  const vendor = navigator.vendor
+  const isIOS = /iPad|iPhone|iPod/.test(ua)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const isAppleSafari = vendor.includes('Apple')
+    && /Safari/.test(ua)
+    && !/Chrome|Chromium|CriOS|FxiOS|Edg|EdgiOS|OPR|OPT\//.test(ua)
+
+  return isIOS || isAppleSafari
+}
+
+function getClipDuration(src: string, playbackStart: number, playbackEnd?: number) {
+  const endAt = playbackEnd ?? ALPHA_CLIP_DURATIONS[src] ?? 1.2
+  return Math.max(0.1, endAt - playbackStart)
+}
+
 function playVideo(video: HTMLVideoElement) {
   video.play().catch(() => {
     // Muted inline videos should autoplay; ignore the rare rejection.
   })
 }
 
+function AlphaImageFallback({
+  src,
+  onEnded,
+  onClick,
+  className,
+  style,
+  playbackStart = 0,
+  playbackEnd,
+  loopWhenSameSrc = true,
+}: Props) {
+  const [restartToken, setRestartToken] = useState(0)
+  const onEndedRef = useRef(onEnded)
+  const durationMs = getClipDuration(src, playbackStart, playbackEnd) * 1000
+
+  useEffect(() => {
+    onEndedRef.current = onEnded
+  }, [onEnded])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const shouldLoopSameSrc = onEndedRef.current?.() !== false
+      if (shouldLoopSameSrc && loopWhenSameSrc) {
+        setRestartToken((token) => token + 1)
+      }
+    }, durationMs)
+
+    return () => window.clearTimeout(timer)
+  }, [src, restartToken, durationMs, loopWhenSameSrc])
+
+  return (
+    <div
+      onClick={onClick}
+      className={className}
+      style={{ position: 'relative' }}
+    >
+      <img
+        key={`${restartToken}-${src}`}
+        src={`${src}.webp?v=${WEBP_ALPHA_ASSET_VERSION}`}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        className="absolute inset-0 h-full w-full"
+        style={{
+          ...style,
+          pointerEvents: 'none',
+          transition: 'none',
+        }}
+      />
+    </div>
+  )
+}
+
 /**
- * Alpha-channel video element using a dual-format <source> chain.
+ * Alpha-channel video element using a dual-format runtime strategy.
  *
  * LOOPING POLICY:
  * - Same `src` after onEnded: preload a fresh copy in the hidden slot, then
@@ -44,7 +128,7 @@ function playVideo(video: HTMLVideoElement) {
  * - Different `src` after onEnded: preload the next clip in the hidden slot,
  *   then hard-swap it in only after the decoder has a frame ready.
  */
-export default function AlphaVideo({
+function AlphaVideoElement({
   src,
   onEnded,
   onClick,
@@ -270,9 +354,18 @@ export default function AlphaVideo({
           }}
         >
           <source src={`${slot.src}.webm?v=${VIDEO_ASSET_VERSION}`} type="video/webm; codecs=vp9" />
-          {/* <source src={`${slot.src}.mp4?v=${VIDEO_ASSET_VERSION}`} type="video/mp4; codecs=hvc1" /> */}
         </video>
       ))}
     </div>
+  )
+}
+
+export default function AlphaVideo(props: Props) {
+  const [useWebpFallback] = useState(shouldUseWebpAlphaFallback)
+
+  return useWebpFallback ? (
+    <AlphaImageFallback {...props} />
+  ) : (
+    <AlphaVideoElement {...props} />
   )
 }

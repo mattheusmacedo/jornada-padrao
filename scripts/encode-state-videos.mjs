@@ -1,16 +1,17 @@
-// Encodes ProRes 4444 .mov sources (with alpha) into web-friendly WebM VP9
-// with alpha (yuva420p) — works in Chrome / Firefox / Edge / Safari 18+.
+// Encodes ProRes 4444 .mov sources with alpha into:
+// - WebM VP9 alpha for Chromium / Firefox / Edge.
+// - animated WebP alpha for Safari / iOS fallback rendering.
 //
 // Path 2 (parked): HEVC MP4 alpha for older Safari requires Apple's
 // hevc_videotoolbox encoder (macOS-only). When that's available, run:
 //   ffmpeg -i input.mov -c:v hevc_videotoolbox -alpha_quality 0.75 \
 //     -pix_fmt yuva420p -tag:v hvc1 -b:v 1M output.mp4
-// …and drop the .mp4 siblings into the same VIDEO/ folder. The sync script
-// already copies *.mp4 alongside *.webm; AlphaVideo's <source> chain needs
-// one line uncommented to pick them up.
+// and drop the .mp4 siblings into the same VIDEO/ folder. The sync script
+// already copies *.mp4 alongside *.webm and *.webp.
 //
 // Source:  D:/05_MotionDesignParaProdutoDigital/2_SOURCE/footages/renders/StateMachine_v2/POS/*.mov
 // Output:  D:/05_MotionDesignParaProdutoDigital/2_SOURCE/footages/VIDEO/{name}.webm
+//          D:/05_MotionDesignParaProdutoDigital/2_SOURCE/footages/VIDEO/{name}.webp
 //
 // Usage:
 //   node scripts/encode-state-videos.mjs              # encode all states
@@ -32,7 +33,7 @@ const FFMPEG_BIN =
 const SRC_DIR = resolve(__dirname, '../../2_SOURCE/footages/renders/StateMachine_v2/POS')
 const OUT_DIR = resolve(__dirname, '../../2_SOURCE/footages/VIDEO')
 
-// Source MOV → output basename (distinct paths even when the source clip is shared)
+// Source MOV -> output basename.
 const STATES = [
   { src: 'idle_pos.mov', out: 'idle' },
   { src: 'Ramification_Phone_pos.mov', out: 'idle-phone' },
@@ -47,6 +48,8 @@ const STATES = [
 
 const VIDEO_CRF = process.env.VIDEO_CRF || '18'
 const TARGET_FPS = process.env.VIDEO_FPS || '60'
+const WEBP_Q = process.env.WEBP_Q || '74'
+const WEBP_FPS = process.env.WEBP_FPS || TARGET_FPS
 
 const args = process.argv.slice(2)
 const onlyIdx = args.indexOf('--only')
@@ -83,24 +86,15 @@ function runFfmpeg(label, ffmpegArgs) {
   return elapsed
 }
 
-function encodeState({ src, out }) {
-  const srcPath = resolve(SRC_DIR, src)
-  if (!existsSync(srcPath)) {
-    console.warn(`[encode-state-videos] WARN: source missing, skipping: ${srcPath}`)
-    return null
-  }
-  const srcSize = statSync(srcPath).size
-
-  // WebM VP9 with alpha. Convert color and alpha to the target FPS separately,
-  // then merge them back. Use fps instead of framerate so FFmpeg duplicates
-  // frames rather than blending/interpolating the alpha matte.
+function encodeWebm(srcPath, out) {
   const webmOut = resolve(OUT_DIR, `${out}.webm`)
   const filterComplex =
     `[0:v]format=rgba,split=2[color][alpha];` +
     `[color]format=rgb24,fps=fps=${TARGET_FPS}[color60];` +
     `[alpha]alphaextract,fps=fps=${TARGET_FPS}[alpha60];` +
     `[color60][alpha60]alphamerge,format=yuva420p[v]`
-  const webmTime = runFfmpeg(`${out}.webm`, [
+
+  const time = runFfmpeg(`${out}.webm`, [
     '-y',
     '-i', srcPath,
     '-filter_complex', filterComplex,
@@ -115,9 +109,40 @@ function encodeState({ src, out }) {
     '-an',
     webmOut,
   ])
-  const webmSize = statSync(webmOut).size
 
-  return { out, srcPath, srcSize, webmSize, webmTime }
+  return { path: webmOut, size: statSync(webmOut).size, time }
+}
+
+function encodeWebp(srcPath, out) {
+  const webpOut = resolve(OUT_DIR, `${out}.webp`)
+  const time = runFfmpeg(`${out}.webp`, [
+    '-y',
+    '-i', srcPath,
+    '-vf', `fps=fps=${WEBP_FPS},scale=iw:ih:flags=lanczos,format=yuva420p`,
+    '-c:v', 'libwebp_anim',
+    '-lossless', '0',
+    '-q:v', WEBP_Q,
+    '-compression_level', '5',
+    '-loop', '0',
+    '-an',
+    webpOut,
+  ])
+
+  return { path: webpOut, size: statSync(webpOut).size, time }
+}
+
+function encodeState({ src, out }) {
+  const srcPath = resolve(SRC_DIR, src)
+  if (!existsSync(srcPath)) {
+    console.warn(`[encode-state-videos] WARN: source missing, skipping: ${srcPath}`)
+    return null
+  }
+
+  const srcSize = statSync(srcPath).size
+  const webm = encodeWebm(srcPath, out)
+  const webp = encodeWebp(srcPath, out)
+
+  return { out, srcPath, srcSize, webm, webp }
 }
 
 const targets = onlyName ? STATES.filter((s) => s.out === onlyName) : STATES
@@ -129,22 +154,29 @@ if (onlyName && targets.length === 0) {
 
 const results = []
 for (const state of targets) {
-  console.log(`[encode-state-videos] encoding ${state.out} from ${state.src}…`)
-  const r = encodeState(state)
-  if (r) results.push(r)
+  console.log(`[encode-state-videos] encoding ${state.out} from ${state.src}...`)
+  const result = encodeState(state)
+  if (result) results.push(result)
 }
 
 console.log('\n[encode-state-videos] summary')
-console.log('state                source (MOV)   →   WebM (VP9 + alpha)')
-let totalSrc = 0, totalWebm = 0
-for (const r of results) {
-  const ratio = (r.srcSize / r.webmSize).toFixed(1)
+console.log('state                source (MOV)   ->   WebM 60fps alpha      WebP 60fps Safari alpha')
+let totalSrc = 0
+let totalWebm = 0
+let totalWebp = 0
+
+for (const result of results) {
+  const ratio = (result.srcSize / result.webm.size).toFixed(1)
   console.log(
-    `${r.out.padEnd(20)} ${fmtBytes(r.srcSize).padEnd(11)}     ` +
-    `${fmtBytes(r.webmSize).padEnd(10)} (${r.webmTime}s, ${ratio}× smaller)`
+    `${result.out.padEnd(20)} ${fmtBytes(result.srcSize).padEnd(11)}     ` +
+    `${fmtBytes(result.webm.size).padEnd(10)} (${result.webm.time}s, ${ratio}x smaller)     ` +
+    `${fmtBytes(result.webp.size).padEnd(10)} (${result.webp.time}s)`
   )
-  totalSrc += r.srcSize
-  totalWebm += r.webmSize
+  totalSrc += result.srcSize
+  totalWebm += result.webm.size
+  totalWebp += result.webp.size
 }
-console.log(`${'TOTAL'.padEnd(20)} ${fmtBytes(totalSrc).padEnd(11)}     ${fmtBytes(totalWebm)}`)
+
+console.log(`${'TOTAL'.padEnd(20)} ${fmtBytes(totalSrc).padEnd(11)}     ${fmtBytes(totalWebm).padEnd(10)}     ${fmtBytes(totalWebp)}`)
 console.log(`\nWebM payload (combined): ${fmtBytes(totalWebm)}`)
+console.log(`WebP payload (combined): ${fmtBytes(totalWebp)}`)

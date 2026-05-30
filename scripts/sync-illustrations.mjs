@@ -28,9 +28,10 @@ const ILLUSTRATIONS = [
   // here as new vector Lotties land.)
 ]
 
-// Alpha-video state machine clips. WebM VP9 with alpha for now; MP4 HEVC alpha
-// can be dropped into the same VIDEO/ folder later (Path 2, requires macOS
-// encoding) and this script will pick them up automatically.
+// Alpha-video state machine clips. WebM VP9 with alpha is used by Chromium;
+// animated WebP with alpha is the Safari/iOS fallback. MP4 HEVC alpha can be
+// dropped into the same VIDEO/ folder later (requires macOS encoding) and this
+// script will pick it up automatically.
 const VIDEO_NAMES = [
   'idle',
   'idle-phone',
@@ -42,7 +43,7 @@ const VIDEO_NAMES = [
   'conclusao-character-pop',
   'conclusao-character-raver',
 ]
-const VIDEO_EXTS = ['.webm', '.mp4']
+const VIDEO_EXTS = ['.webm', '.webp', '.mp4']
 
 mkdirSync(ILLUSTRATIONS_DEST, { recursive: true })
 mkdirSync(VIDEOS_DEST, { recursive: true })
