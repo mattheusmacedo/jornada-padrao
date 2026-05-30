@@ -63,55 +63,55 @@ function createModelSpec(
     label,
     path: `/models/${folder}/${fileName}`,
     textures: {
-      color: options.colorMap ?? `${textureBase}-col-metalness-4k.png`,
-      ao: `${textureBase}-ao-metalness-4k.png`,
-      ...(options.alpha ? { alpha: `${textureBase}-trans-metalness-4k.png` } : {}),
-      height: `${textureBase}-height-metalness-4k.png`,
-      normal: `${textureBase}-nrm-metalness-4k.png`,
-      roughness: `${textureBase}-roughness-metalness-4k.png`,
-      ...(options.metalness === false ? {} : { metalness: `${textureBase}-metalness-metalness-4k.png` }),
-      ...(options.emissive ? { emissive: options.emissiveMap ?? `${textureBase}-emissive-metalness-4k.png` } : {}),
+      color: options.colorMap ?? `${textureBase}-col-metalness-4k.webp`,
+      ao: `${textureBase}-ao-metalness-4k.webp`,
+      ...(options.alpha ? { alpha: `${textureBase}-trans-metalness-4k.webp` } : {}),
+      height: `${textureBase}-height-metalness-4k.webp`,
+      normal: `${textureBase}-nrm-metalness-4k.webp`,
+      roughness: `${textureBase}-roughness-metalness-4k.webp`,
+      ...(options.metalness === false ? {} : { metalness: `${textureBase}-metalness-metalness-4k.webp` }),
+      ...(options.emissive ? { emissive: options.emissiveMap ?? `${textureBase}-emissive-metalness-4k.webp` } : {}),
     },
   }
 }
 
 export const MUSIC_BURST_MODEL_SPECS: BurstModelSpec[] = [
   createModelSpec('musical-note', 'Musical note', 'musical-note-icon-fbx', 'musical-note-icon.glb', 'musical-note-icon-005', {
-    colorMap: '/models/musical-note-icon-fbx/textures/musical-note-icon-005-col-brand-preview.png',
+    colorMap: '/models/musical-note-icon-fbx/textures/musical-note-icon-005-col-brand-preview.webp',
   }),
   createModelSpec('trumpet', 'Trumpet', 'trumpet-icon-fbx', 'trumpet-icon.glb', 'trumpet-icon-001', {
-    colorMap: '/models/trumpet-icon-fbx/textures/trumpet-icon-001-col-brand-preview.png',
+    colorMap: '/models/trumpet-icon-fbx/textures/trumpet-icon-001-col-brand-preview.webp',
   }),
   createModelSpec('loudspeaker', 'Loudspeaker', 'loudspeaker-textures-fbx', 'loudspeaker.glb', 'loudspeaker-010', { alpha: true }),
   createModelSpec('bj-mixer', 'Mixer', 'bj-mixer-icon-fbx', 'bj-mixer-icon.glb', 'bj-mixer-icon-002', {
-    colorMap: '/models/bj-mixer-icon-fbx/textures/bj-mixer-icon-002-col-brand-preview.png',
+    colorMap: '/models/bj-mixer-icon-fbx/textures/bj-mixer-icon-002-col-brand-preview.webp',
     emissive: true,
-    emissiveMap: '/models/bj-mixer-icon-fbx/textures/bj-mixer-icon-002-emissive-brand-preview.png',
+    emissiveMap: '/models/bj-mixer-icon-fbx/textures/bj-mixer-icon-002-emissive-brand-preview.webp',
   }),
   createModelSpec('headphones2', 'Headphones', 'headphones-icon2-fbx', 'headphones-icon.glb', 'headphones-icon-013', {
-    colorMap: '/models/headphones-icon2-fbx/textures/headphones-icon-013-col-brand-preview.png',
+    colorMap: '/models/headphones-icon2-fbx/textures/headphones-icon-013-col-brand-preview.webp',
     metalness: false,
   }),
   createModelSpec('clarinet', 'Clarinet', 'clarinet-icon-fbx', 'clarinet-icon.glb', 'clarinet-icon-001', {
-    colorMap: '/models/clarinet-icon-fbx/textures/clarinet-icon-001-col-brand-preview-2.png',
+    colorMap: '/models/clarinet-icon-fbx/textures/clarinet-icon-001-col-brand-preview-2.webp',
   }),
   createModelSpec('guitar', 'Guitar', 'guitar-icon-fbx', 'guitar-icon.glb', 'guitar-icon-001', {
-    colorMap: '/models/guitar-icon-fbx/textures/guitar-icon-001-col-brand-preview.png',
+    colorMap: '/models/guitar-icon-fbx/textures/guitar-icon-001-col-brand-preview.webp',
   }),
   createModelSpec('microphone', 'Microphone', 'microphone-icon-fbx', 'microphone-icon.glb', 'microphone-icon-003', {
-    colorMap: '/models/microphone-icon-fbx/textures/microphone-icon-003-col-brand-preview.png',
+    colorMap: '/models/microphone-icon-fbx/textures/microphone-icon-003-col-brand-preview.webp',
   }),
   createModelSpec('accordion', 'Accordion', 'accordion-icon-fbx', 'accordion-icon.glb', 'accordion-icon-001', {
-    colorMap: '/models/accordion-icon-fbx/textures/accordion-icon-001-col-brand-preview-3.png',
+    colorMap: '/models/accordion-icon-fbx/textures/accordion-icon-001-col-brand-preview-3.webp',
   }),
   createModelSpec('conga', 'Conga', 'conga-icon-fbx', 'conga-icon.glb', 'conga-icon-001', {
-    colorMap: '/models/conga-icon-fbx/textures/conga-icon-001-col-brand-preview.png',
+    colorMap: '/models/conga-icon-fbx/textures/conga-icon-001-col-brand-preview.webp',
   }),
   createModelSpec('drum', 'Drum', 'drum-icon-fbx', 'drum-icon.glb', 'drum-icon-004', {
-    colorMap: '/models/drum-icon-fbx/textures/drum-icon-004-col-brand-preview.png',
+    colorMap: '/models/drum-icon-fbx/textures/drum-icon-004-col-brand-preview.webp',
   }),
   createModelSpec('electric-guitar', 'Electric guitar', 'electric-guitar-icon-fbx', 'electric-guitar-icon.glb', 'electric-guitar-icon-002', {
-    colorMap: '/models/electric-guitar-icon-fbx/textures/electric-guitar-icon-002-col-brand-preview.png',
+    colorMap: '/models/electric-guitar-icon-fbx/textures/electric-guitar-icon-002-col-brand-preview.webp',
   }),
 ]
 
