@@ -39,27 +39,29 @@ export default function PhoneFrame({
 
   return (
     <PhoneFrameChromeContext.Provider value={chrome}>
-      <div
-        className="relative mx-auto h-[100dvh] w-full max-w-[430px] overflow-hidden md:shadow-[0_18px_60px_rgba(15,23,42,0.18)]"
-        style={{ background: bgColor }}
-      >
+      <div className="phone-frame-shell">
         <div
-          className={`absolute top-0 left-0 right-0 overflow-y-auto overflow-x-hidden scrollbar-hide ${noTopInset ? '' : 'pt-[44px]'}`}
-          style={{
-            bottom: showBottomNav && !eventOverlayOpen ? NAV_RESERVED_HEIGHT : 0,
-          }}
+          className="phone-frame relative mx-auto h-[100dvh] w-full max-w-[440px] overflow-hidden md:shadow-[0_18px_60px_rgba(15,23,42,0.18)]"
+          style={{ background: bgColor }}
         >
-          {children}
-        </div>
-        <StatusBar style={statusBarStyle} />
-        {showBottomNav && (
-          // Static wrapper — the nav never animates. The expanding event
-          // overlay (z-40) simply covers it on open and uncovers it on
-          // close, so the only spatial motion is the card-to-detail morph.
-          <div className="absolute left-0 right-0 bottom-0 z-10">
-            <BottomNav />
+          <div
+            className={`absolute top-0 left-0 right-0 overflow-y-auto overflow-x-hidden scrollbar-hide ${noTopInset ? '' : 'pt-[44px]'}`}
+            style={{
+              bottom: showBottomNav && !eventOverlayOpen ? NAV_RESERVED_HEIGHT : 0,
+            }}
+          >
+            {children}
           </div>
-        )}
+          <StatusBar style={statusBarStyle} />
+          {showBottomNav && (
+            // Static wrapper - the nav never animates. The expanding event
+            // overlay (z-40) simply covers it on open and uncovers it on
+            // close, so the only spatial motion is the card-to-detail morph.
+            <div className="absolute left-0 right-0 bottom-0 z-10">
+              <BottomNav />
+            </div>
+          )}
+        </div>
       </div>
     </PhoneFrameChromeContext.Provider>
   )
