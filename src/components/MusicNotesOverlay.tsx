@@ -169,7 +169,7 @@ function createBurstMaterial(THREE: ThreeModule, intensity: number) {
   })
 }
 
-function createTexturedBurstMaterial(THREE: ThreeModule, textures: BurstTextureMaps) {
+function createTexturedBurstMaterial(THREE: ThreeModule, textures: BurstTextureMaps, doubleSided = false) {
   const material = new THREE.MeshStandardMaterial({
     color: '#ffffff',
     map: textures.color ?? null,
@@ -187,6 +187,7 @@ function createTexturedBurstMaterial(THREE: ThreeModule, textures: BurstTextureM
     normalMap: textures.normal ?? null,
     roughness: textures.roughness ? 0.72 : 0.38,
     roughnessMap: textures.roughness ?? null,
+    side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
     transparent: Boolean(textures.alpha),
   })
 
@@ -217,8 +218,8 @@ function ensureAmbientOcclusionUv(mesh: Mesh) {
   }
 }
 
-function applyTexturedMaterial(THREE: ThreeModule, object: Object3D, textures: BurstTextureMaps) {
-  const material = createTexturedBurstMaterial(THREE, textures)
+function applyTexturedMaterial(THREE: ThreeModule, object: Object3D, textures: BurstTextureMaps, modelId: MusicModelId) {
+  const material = createTexturedBurstMaterial(THREE, textures, modelId === 'drum')
 
   object.traverse((child) => {
     if (!isMesh(child)) return
@@ -640,7 +641,7 @@ const MusicNotesOverlay = forwardRef<MusicNotesOverlayHandle, Props>(function Mu
           if (!object) return null
 
           repairMusicModel(spec.id, object)
-          applyTexturedMaterial(THREE, object, textures)
+          applyTexturedMaterial(THREE, object, textures, spec.id)
 
           return {
             id: spec.id,

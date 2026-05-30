@@ -95,7 +95,7 @@ async function loadTextureMaps(
   return textures
 }
 
-function createTexturedMaterial(THREE: ThreeModule, textures: TextureMaps) {
+function createTexturedMaterial(THREE: ThreeModule, textures: TextureMaps, doubleSided = false) {
   const material = new THREE.MeshStandardMaterial({
     color: '#ffffff',
     map: textures.color ?? null,
@@ -113,6 +113,7 @@ function createTexturedMaterial(THREE: ThreeModule, textures: TextureMaps) {
     normalMap: textures.normal ?? null,
     roughness: textures.roughness ? 0.72 : 0.38,
     roughnessMap: textures.roughness ?? null,
+    side: doubleSided ? THREE.DoubleSide : THREE.FrontSide,
     transparent: Boolean(textures.alpha),
   })
 
@@ -128,8 +129,8 @@ function ensureAmbientOcclusionUv(mesh: Mesh) {
   }
 }
 
-function preparePreviewModel(THREE: ThreeModule, object: Group, textures: TextureMaps) {
-  const material = createTexturedMaterial(THREE, textures)
+function preparePreviewModel(THREE: ThreeModule, object: Group, textures: TextureMaps, doubleSided = false) {
+  const material = createTexturedMaterial(THREE, textures, doubleSided)
 
   object.traverse((child) => {
     if (!isMesh(child)) return
@@ -345,7 +346,7 @@ export default function MusicModelPreview({ className, model, pathOverride, text
       }
 
       repairMusicModel(model.id, object)
-      previewModel = preparePreviewModel(THREE, object, textures)
+      previewModel = preparePreviewModel(THREE, object, textures, model.id === 'drum')
       scene.add(previewModel)
       renderPreview(renderer, scene, camera)
 
