@@ -29,9 +29,8 @@ const ILLUSTRATIONS = [
 ]
 
 // Alpha-video state machine clips. WebM VP9 with alpha is used by Chromium;
-// animated WebP with alpha is the Safari/iOS fallback. MP4 HEVC alpha can be
-// dropped into the same VIDEO/ folder later (requires macOS encoding) and this
-// script will pick it up automatically.
+// HEVC alpha MOV is the Safari/iOS-first path; animated WebP remains the
+// Safari fallback if HEVC cannot load.
 const VIDEO_NAMES = [
   'idle',
   'idle-phone',
@@ -43,7 +42,7 @@ const VIDEO_NAMES = [
   'conclusao-character-pop',
   'conclusao-character-raver',
 ]
-const VIDEO_EXTS = ['.webm', '.webp', '.mp4']
+const VIDEO_EXTS = ['.webm', '.webp', '.mov', '.mp4']
 
 mkdirSync(ILLUSTRATIONS_DEST, { recursive: true })
 mkdirSync(VIDEOS_DEST, { recursive: true })

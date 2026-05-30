@@ -49,7 +49,7 @@ const STATES = [
 const VIDEO_CRF = process.env.VIDEO_CRF || '18'
 const TARGET_FPS = process.env.VIDEO_FPS || '60'
 const WEBP_Q = process.env.WEBP_Q || '74'
-const WEBP_FPS = process.env.WEBP_FPS || TARGET_FPS
+const WEBP_FPS = process.env.WEBP_FPS || '30'
 
 const args = process.argv.slice(2)
 const onlyIdx = args.indexOf('--only')
@@ -160,7 +160,7 @@ for (const state of targets) {
 }
 
 console.log('\n[encode-state-videos] summary')
-console.log('state                source (MOV)   ->   WebM 60fps alpha      WebP 60fps Safari alpha')
+console.log(`state                source (MOV)   ->   WebM ${TARGET_FPS}fps alpha      WebP ${WEBP_FPS}fps Safari alpha`)
 let totalSrc = 0
 let totalWebm = 0
 let totalWebp = 0

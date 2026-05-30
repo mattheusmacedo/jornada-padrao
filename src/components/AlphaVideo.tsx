@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 
-const VIDEO_ASSET_VERSION = '20260529-shared-idle-60'
-const WEBP_ALPHA_ASSET_VERSION = '20260530-safari-webp-alpha-60'
+const WEBM_ALPHA_ASSET_VERSION = '20260529-shared-idle-60'
+const HEVC_ALPHA_ASSET_VERSION = '20260530-safari-hevc-alpha-24'
+const WEBP_ALPHA_ASSET_VERSION = '20260530-safari-webp-alpha-30'
 const END_LEAD_SECONDS = 0.055
 
 const ALPHA_CLIP_DURATIONS: Record<string, number> = {
@@ -45,9 +46,32 @@ type ImageSlot = {
   src: string
   token: number
 }
+type AlphaMode = 'webm' | 'hevc' | 'webp'
+type VideoFormat = {
+  extension: '.webm' | '.mov'
+  type: string
+  version: string
+}
 
-function shouldUseWebpAlphaFallback() {
-  if (typeof navigator === 'undefined') return false
+const WEBM_ALPHA_FORMAT: VideoFormat = {
+  extension: '.webm',
+  type: 'video/webm; codecs=vp9',
+  version: WEBM_ALPHA_ASSET_VERSION,
+}
+
+const HEVC_ALPHA_FORMAT: VideoFormat = {
+  extension: '.mov',
+  type: 'video/quicktime; codecs="hvc1"',
+  version: HEVC_ALPHA_ASSET_VERSION,
+}
+
+function getAlphaVideoMode(): AlphaMode {
+  if (typeof navigator === 'undefined') return 'webm'
+
+  const forcedMode = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('alphaVideo')
+    : null
+  if (forcedMode === 'webp' || forcedMode === 'webm' || forcedMode === 'hevc') return forcedMode
 
   const ua = navigator.userAgent
   const vendor = navigator.vendor
@@ -57,7 +81,7 @@ function shouldUseWebpAlphaFallback() {
     && /Safari/.test(ua)
     && !/Chrome|Chromium|CriOS|FxiOS|Edg|EdgiOS|OPR|OPT\//.test(ua)
 
-  return isIOS || isAppleSafari
+  return isIOS || isAppleSafari ? 'hevc' : 'webm'
 }
 
 function getClipDuration(src: string, playbackStart: number, playbackEnd?: number) {
@@ -67,6 +91,10 @@ function getClipDuration(src: string, playbackStart: number, playbackEnd?: numbe
 
 function getWebpAlphaSrc(src: string) {
   return `${src}.webp?v=${WEBP_ALPHA_ASSET_VERSION}`
+}
+
+function getVideoAlphaSrc(src: string, format: VideoFormat) {
+  return `${src}${format.extension}?v=${format.version}`
 }
 
 function preloadImage(src: string) {
@@ -214,7 +242,12 @@ function AlphaVideoElement({
   visibleStart,
   visibleEnd,
   loopWhenSameSrc = true,
-}: Props) {
+  format,
+  onSourceError,
+}: Props & {
+  format: VideoFormat
+  onSourceError?: () => void
+}) {
   const [slots, setSlots] = useState<VideoSlots>(() => [
     { src, token: 0 },
     { src: null, token: 1 },
@@ -420,6 +453,7 @@ function AlphaVideoElement({
           onSeeked={() => activatePendingSlot(index)}
           onTimeUpdate={() => handleTimeUpdate(index)}
           onEnded={() => completeActiveSlot(index)}
+          onError={onSourceError}
           className="absolute inset-0 h-full w-full"
           style={{
             ...style,
@@ -428,7 +462,7 @@ function AlphaVideoElement({
             transition: 'none',
           }}
         >
-          <source src={`${slot.src}.webm?v=${VIDEO_ASSET_VERSION}`} type="video/webm; codecs=vp9" />
+          <source src={getVideoAlphaSrc(slot.src, format)} type={format.type} />
         </video>
       ))}
     </div>
@@ -436,11 +470,22 @@ function AlphaVideoElement({
 }
 
 export default function AlphaVideo(props: Props) {
-  const [useWebpFallback] = useState(shouldUseWebpAlphaFallback)
+  const [mode, setMode] = useState<AlphaMode>(getAlphaVideoMode)
 
-  return useWebpFallback ? (
-    <AlphaImageFallback {...props} />
-  ) : (
-    <AlphaVideoElement {...props} />
+  if (mode === 'webp') {
+    return <AlphaImageFallback {...props} />
+  }
+
+  const format = mode === 'hevc' ? HEVC_ALPHA_FORMAT : WEBM_ALPHA_FORMAT
+  const handleSourceError = mode === 'hevc'
+    ? () => setMode('webp')
+    : undefined
+
+  return (
+    <AlphaVideoElement
+      {...props}
+      format={format}
+      onSourceError={handleSourceError}
+    />
   )
 }
