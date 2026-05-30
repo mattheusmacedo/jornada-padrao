@@ -1,5 +1,23 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/models/(.*)\\.glb",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/models/(.*)\\.(png|webp|jpg|jpeg)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/videos/(.*)\\.(webm|webp|mp4)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/(.*)\\.json",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }]
+    }
   ]
 }

@@ -11,6 +11,7 @@ import {
 } from '../motion/variants'
 import { motion as motionTokens } from '../motion/tokens'
 import AlphaVideo from '../components/AlphaVideo'
+import PrefetchConclusaoAssets from '../components/PrefetchConclusaoAssets'
 import { pickRandom } from '../utils/random'
 
 type Choice = 'salvos' | 'favoritos'
@@ -143,6 +144,7 @@ export default function Ramificacao() {
 
   return (
     <PageTransition>
+      <PrefetchConclusaoAssets />
       <div className="relative h-full bg-white overflow-hidden">
         {/* Back layer: alpha-video character. pointer-events-none so it doesn't
             intercept taps on the radio cards / CONCLUIR. */}
