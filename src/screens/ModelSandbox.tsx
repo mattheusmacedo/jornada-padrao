@@ -52,6 +52,7 @@ function geometryPathFor(modelPath: string, format: Format) {
     return modelPath.replace('/models/', '/models-prebrand/').replace(/\.glb$/i, '.fbx')
   }
   if (format === 'fbx') return modelPath.replace(/\.glb$/i, '.fbx')
+  if (format === GLB_VERSIONS[GLB_VERSIONS.length - 1]) return modelPath
   return modelPath.replace(/\.glb$/i, `.${format}.glb`)
 }
 
