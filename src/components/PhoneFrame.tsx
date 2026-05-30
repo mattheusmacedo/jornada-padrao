@@ -40,7 +40,7 @@ export default function PhoneFrame({
   return (
     <PhoneFrameChromeContext.Provider value={chrome}>
       <div
-        className="relative w-full h-screen overflow-hidden"
+        className="relative mx-auto h-[100dvh] w-full max-w-[430px] overflow-hidden md:shadow-[0_18px_60px_rgba(15,23,42,0.18)]"
         style={{ background: bgColor }}
       >
         <div

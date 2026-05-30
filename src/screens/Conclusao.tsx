@@ -41,17 +41,17 @@ const SPECIAL_BURST_TAP_WINDOW_MS = 560
 const SPECIAL_BURST_STAGGER_MS = 52
 const SPECIAL_BURST_INTENSITY = 0.86
 
-function getVideoBurstOrigin(videoRect?: DOMRect) {
+function getVideoBurstOrigin(videoRect?: DOMRect, frameRect?: DOMRect) {
   if (!videoRect) {
     return {
-      x: window.innerWidth * 0.5,
-      y: window.innerHeight * 0.5,
+      x: frameRect ? frameRect.width * 0.5 : window.innerWidth * 0.5,
+      y: frameRect ? frameRect.height * 0.5 : window.innerHeight * 0.5,
     }
   }
 
   return {
-    x: videoRect.left + videoRect.width * 0.5,
-    y: videoRect.top + videoRect.height * 0.5,
+    x: videoRect.left - (frameRect?.left ?? 0) + videoRect.width * 0.5,
+    y: videoRect.top - (frameRect?.top ?? 0) + videoRect.height * 0.5,
   }
 }
 
@@ -153,6 +153,7 @@ export default function Conclusao() {
   const tapPulseIdRef = useRef(0)
   const lastIllustrationTapAtRef = useRef<number | null>(null)
   const tapBurstIntensityRef = useRef(0)
+  const screenRootRef = useRef<HTMLDivElement>(null)
   const illustrationRef = useRef<HTMLDivElement>(null)
   const musicNotesRef = useRef<MusicNotesOverlayHandle>(null)
   const videoFeedbackControls = useAnimationControls()
@@ -218,7 +219,7 @@ export default function Conclusao() {
     tapBurstIntensityRef.current = burstIntensity
 
     const rect = event.currentTarget.getBoundingClientRect()
-    const videoBurstOrigin = getVideoBurstOrigin(rect)
+    const videoBurstOrigin = getVideoBurstOrigin(rect, screenRootRef.current?.getBoundingClientRect())
     const tapPulse: TapPulse = {
       id: tapPulseIdRef.current,
       x: event.clientX - rect.left,
@@ -280,7 +281,10 @@ export default function Conclusao() {
 
   const testNoteBurst = () => {
     musicNotesRef.current?.burst(
-      getVideoBurstOrigin(illustrationRef.current?.getBoundingClientRect()),
+      getVideoBurstOrigin(
+        illustrationRef.current?.getBoundingClientRect(),
+        screenRootRef.current?.getBoundingClientRect(),
+      ),
       {
         intensity: SPECIAL_BURST_INTENSITY,
         laneStaggerMs: SPECIAL_BURST_STAGGER_MS,
@@ -291,11 +295,11 @@ export default function Conclusao() {
 
   return (
     <PageTransition>
-      <div className="relative h-full flex flex-col items-center overflow-hidden px-6 pt-[56px]">
+      <div ref={screenRootRef} className="relative h-full flex flex-col items-center overflow-hidden px-6 pt-[56px]">
         <MusicNotesOverlay
           ref={musicNotesRef}
           settings={noteBurstSettings}
-          className="pointer-events-none fixed inset-0 z-20 h-screen w-screen"
+          className="pointer-events-none absolute inset-0 z-20 h-full w-full"
         />
         <fmotion.button
           type="button"

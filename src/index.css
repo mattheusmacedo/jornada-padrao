@@ -35,6 +35,11 @@ html, body, #root {
   min-height: 100vh;
 }
 
+body {
+  background: #eef0f4;
+  overflow-x: hidden;
+}
+
 .scrollbar-hide {
   scrollbar-width: none;
   -ms-overflow-style: none;
