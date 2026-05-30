@@ -33,3 +33,5 @@ tmp-*.webm
 *.njsproj
 *.sln
 *.sw?
+
+.vercel
