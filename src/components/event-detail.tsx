@@ -1,6 +1,6 @@
-// Shared presentational pieces for the RAYE event detail. Used in two places:
+// Shared presentational pieces for event detail screens. Used in two places:
 //   - src/screens/Evento.tsx        (direct /evento route)
-//   - src/components/EventMorphOverlay.tsx  (in-Perfil overlay morph)
+//   - src/components/EventMorphOverlay.tsx  (in-list overlay morph)
 //
 // Destination-only content (FansPill, the three info rows, AboutBlock, CTA)
 // is plain DOM with no built-in entrance motion. Callers wrap each piece in
@@ -16,11 +16,11 @@ import type { ReactNode } from 'react'
 import { ArrowLeft, Bookmark, Calendar, MapPin, ArrowRight } from 'lucide-react'
 import { motion as fmotion } from 'framer-motion'
 import { pressButton, pressTransition } from '../motion/variants'
-import rayeHero from '../assets/evento/hero-raye.png'
-import avatar1 from '../assets/evento/avatar-1.png'
-import avatar2 from '../assets/evento/avatar-2.png'
-import avatar3 from '../assets/evento/avatar-3.png'
-import ticketmaster from '../assets/evento/ticketmaster.png'
+import rayeHero from '../assets/evento/hero-raye.webp'
+import avatar1 from '../assets/evento/avatar-1.webp'
+import avatar2 from '../assets/evento/avatar-2.webp'
+import avatar3 from '../assets/evento/avatar-3.webp'
+import ticketmaster from '../assets/evento/ticketmaster.webp'
 
 export const RAYE_HERO_SRC = rayeHero
 
@@ -36,15 +36,17 @@ const HEADER_REVEAL_TRANSITION = {
 
 type EventHeroProps = {
   onBack: () => void
+  image?: string
+  title?: string
 }
 
-export function EventHero({ onBack }: EventHeroProps) {
+export function EventHero({ onBack, image = rayeHero, title = 'RAYE' }: EventHeroProps) {
   return (
     <div className="relative h-[300px] w-full shrink-0">
       {/* Plain img — the parent shell owns the morph. No layout/layoutId here. */}
       <img
-        src={rayeHero}
-        alt=""
+        src={image}
+        alt={title}
         className="absolute inset-0 w-full h-full object-cover"
       />
       <div className="absolute inset-x-0 top-0 h-[120px] bg-gradient-to-b from-black/60 to-transparent" />
@@ -103,10 +105,11 @@ export function FansPill() {
 }
 
 type EventTitleProps = {
+  title?: string
   titleLayoutId?: string
 }
 
-export function EventTitle({ titleLayoutId }: EventTitleProps) {
+export function EventTitle({ title = 'RAYE', titleLayoutId }: EventTitleProps) {
   if (titleLayoutId) {
     return (
       <fmotion.h2
@@ -114,13 +117,13 @@ export function EventTitle({ titleLayoutId }: EventTitleProps) {
         transition={MORPH_TRANSITION}
         className="mt-[16px] px-[24px] text-[var(--color-typography-title)] text-[34.5px] font-extrabold leading-none shrink-0"
       >
-        RAYE
+        {title}
       </fmotion.h2>
     )
   }
   return (
     <h2 className="mt-[16px] px-[24px] text-[var(--color-typography-title)] text-[34.5px] font-extrabold leading-none shrink-0">
-      RAYE
+      {title}
     </h2>
   )
 }
@@ -159,24 +162,36 @@ function InfoRow({
 }
 
 // Individual info rows — exported so callers can wrap each in its own stagger item.
-export function DateRow() {
+export function DateRow({
+  date = '12 de julho de 2026',
+  subtitle = 'Domingo, 20:00',
+}: {
+  date?: string
+  subtitle?: string
+}) {
   return (
     <InfoRow
       icon={<Calendar size={22} strokeWidth={2} className="text-[var(--color-pink-normal)]" />}
       iconBg="var(--color-pink-light)"
-      title="12 de julho de 2026"
-      subtitle="Domingo, 20:00"
+      title={date}
+      subtitle={subtitle}
     />
   )
 }
 
-export function VenueRow() {
+export function VenueRow({
+  venue = 'Audio Club',
+  subtitle = 'Av. Francisco Matarazzo, 694 - Água Branca, São Paulo - SP',
+}: {
+  venue?: string
+  subtitle?: string
+}) {
   return (
     <InfoRow
       icon={<MapPin size={22} strokeWidth={2} className="text-[var(--color-pink-normal)]" />}
       iconBg="var(--color-pink-light)"
-      title="Audio Club"
-      subtitle="Av. Francisco Matarazzo, 694 - Água Branca, São Paulo - SP"
+      title={venue}
+      subtitle={subtitle}
     />
   )
 }
@@ -202,12 +217,28 @@ export function OrganizerRow() {
   )
 }
 
-export function AboutBlock() {
+export function AboutBlock({
+  title = 'Raye',
+  venue = 'Audio Club',
+  location = 'São Paulo',
+  description,
+}: {
+  title?: string
+  venue?: string
+  location?: string
+  description?: string
+}) {
+  const copy =
+    description ??
+    (title.toUpperCase() === 'RAYE'
+      ? 'Raye, artista britânica de 28 anos, fã de bossa nova, principalmente de João Gilberto, desembarca no Brasil este mês para uma apresentação única.'
+      : `${title} chega a ${location} para uma apresentação especial em ${venue}, reunindo fãs para uma noite única de música ao vivo.`)
+
   return (
     <div className="px-[20px] shrink-0">
       <h3 className="text-[var(--color-grey-darker)] text-[17.7px] font-medium">Sobre o evento</h3>
       <p className="mt-3 text-[15.8px] leading-[27px] text-[var(--color-grey-darker)]">
-        Raye, artista britânica de 28 anos, fã de bossa nova, principalmente de João Gilberto, desembarca no Brasil este mês para uma apresentação única.{' '}
+        {copy}{' '}
         <fmotion.button
           type="button"
           whileTap={pressButton}

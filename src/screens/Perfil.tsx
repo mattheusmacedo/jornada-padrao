@@ -3,15 +3,22 @@ import { flushSync } from 'react-dom'
 import { ArrowLeft, MoreVertical, Pencil, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, motion as fmotion } from 'framer-motion'
-import EventCard from '../components/EventCard'
+import EventCard, { type EventCardSurfaceProps } from '../components/EventCard'
 import EventMorphOverlay, { type MorphRect } from '../components/EventMorphOverlay'
 import { usePhoneFrameChrome } from '../components/PhoneFrameChromeContext'
 import { listVariants, pressButton, pressTransition } from '../motion/variants'
-import avatar from '../assets/perfil/avatar-quinn.png'
-import eventRaye from '../assets/evento/hero-raye.png'
-import eventLuan from '../assets/perfil/event-luan-santana.png'
+import avatar from '../assets/perfil/avatar-quinn.webp'
+import eventRaye from '../assets/evento/hero-raye.webp'
+import badBunny from '../assets/explorar/bad-bunny.webp'
+import titas from '../assets/explorar/titas.webp'
+import deadFish from '../assets/explorar/dead-fish.webp'
+import primavera from '../assets/explorar/primavera-sound.webp'
+import anitta from '../assets/explorar/anitta.webp'
+import spiritbox from '../assets/explorar/spiritbox.webp'
+import lauraPasini from '../assets/explorar/laura-pasini.webp'
 
-type SelectedEvent = 'raye' | null
+type EventItem = Omit<EventCardSurfaceProps, 'suppressShadow' | 'variant'>
+type SelectedEvent = number | null
 
 function Header() {
   const navigate = useNavigate()
@@ -121,24 +128,25 @@ function TabBar({ active, onChange }: { active: Tab; onChange: (t: Tab) => void 
   )
 }
 
-const events = [
+const events: EventItem[] = [
   { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
-  { image: eventLuan, title: 'Luan Santana', date: '08 de agosto de 2026', venue: 'Allianz Parque', location: 'São Paulo', badgeCount: 2 },
-  { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
-  { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
-  { image: eventRaye, title: 'RAYE', date: '12 de julho de 2026', venue: 'Audio Club', location: 'São Paulo', badgeCount: 1 },
+  { image: badBunny, title: 'Bad Bunny', date: '12 de outubro de 2026', venue: 'MorumBIS', location: 'São Paulo', badgeCount: 1 },
+  { image: titas, title: 'Titãs', date: '15 de outubro de 2026', venue: 'BeFly Hall', location: 'Belo Horizonte', badgeCount: 1 },
+  { image: deadFish, title: 'Dead Fish', date: '02 de novembro de 2026', venue: 'Fradique Club', location: 'São Paulo', badgeCount: 1 },
+  { image: primavera, title: 'Primavera Sound', date: '05 e 06 de dezembro de 2026', venue: 'Autódromo de Interlagos', location: 'São Paulo', badgeCount: 1 },
+  { image: anitta, title: 'Ensaios da Anitta', date: '02 de fevereiro de 2027', venue: 'Pedreira Paulo Leminski', location: 'Curitiba', badgeCount: 1 },
+  { image: spiritbox, title: 'Spiritbox', date: '23 de fevereiro de 2027', venue: 'Jai Club', location: 'São Paulo', badgeCount: 1 },
+  { image: lauraPasini, title: 'Laura Pasini', date: '27 de fevereiro de 2027', venue: 'Mercado Livre Arena Pacaembu', location: 'São Paulo', badgeCount: 1 },
 ]
 
 function EventList({
-  onSelectRaye,
-  onSelectOther,
-  hideRayeSourceVisual,
-  rayeCardRef,
+  onSelectEvent,
+  hiddenEventIndex,
+  eventCardRefs,
 }: {
-  onSelectRaye: () => void
-  onSelectOther: () => void
-  hideRayeSourceVisual: boolean
-  rayeCardRef: React.Ref<HTMLButtonElement>
+  onSelectEvent: (index: number) => void
+  hiddenEventIndex: number | null
+  eventCardRefs: React.MutableRefObject<(HTMLButtonElement | null)[]>
 }) {
   return (
     <fmotion.div
@@ -147,19 +155,18 @@ function EventList({
       animate="animate"
       className="mt-5 px-[23px] pb-[120px] flex flex-col gap-[14px]"
     >
-      {events.map((e, i) => {
-        const isFirstRaye = i === 0 && e.title === 'RAYE'
-        return (
-          <EventCard
-            key={i}
-            ref={isFirstRaye ? rayeCardRef : undefined}
-            {...e}
-            onClick={isFirstRaye ? onSelectRaye : onSelectOther}
-            hideSourceVisual={isFirstRaye && hideRayeSourceVisual}
-            disablePress={isFirstRaye}
-          />
-        )
-      })}
+      {events.map((e, i) => (
+        <EventCard
+          key={i}
+          ref={(node) => {
+            eventCardRefs.current[i] = node
+          }}
+          {...e}
+          onClick={() => onSelectEvent(i)}
+          hideSourceVisual={hiddenEventIndex === i}
+          disablePress
+        />
+      ))}
     </fmotion.div>
   )
 }
@@ -167,22 +174,24 @@ function EventList({
 export default function Perfil() {
   const [tab, setTab] = useState<Tab>('eventos')
   const [selectedEvent, setSelectedEvent] = useState<SelectedEvent>(null)
-  const [hideRayeSourceVisual, setHideRayeSourceVisual] = useState(false)
+  const [hiddenEventIndex, setHiddenEventIndex] = useState<number | null>(null)
   const [morphRect, setMorphRect] = useState<MorphRect | null>(null)
   const screenRootRef = useRef<HTMLDivElement | null>(null)
-  const rayeCardRef = useRef<HTMLButtonElement | null>(null)
+  const eventCardRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const scrollTopBeforeOpenRef = useRef<number | null>(null)
   const { setEventOverlayOpen } = usePhoneFrameChrome()
-  const navigate = useNavigate()
 
   useEffect(() => {
     return () => setEventOverlayOpen(false)
   }, [setEventOverlayOpen])
 
-  const measureRayeCard = (): MorphRect | null => {
-    const card = rayeCardRef.current
+  const getScrollContainer = () => screenRootRef.current?.parentElement ?? null
+
+  const measureEventCard = (index: number, sourceBox?: DOMRect): MorphRect | null => {
+    const card = eventCardRefs.current[index]
     const root = screenRootRef.current
     if (!card || !root) return null
-    const cardBox = card.getBoundingClientRect()
+    const cardBox = sourceBox ?? card.getBoundingClientRect()
     const rootBox = root.getBoundingClientRect()
     const frameBox = root.closest('.phone-frame')?.getBoundingClientRect() ?? rootBox
     return {
@@ -197,8 +206,15 @@ export default function Perfil() {
     }
   }
 
-  const openRaye = () => {
-    // Release PhoneFrame chrome (BottomNav fade + bottom-inset = 0) BEFORE
+  const openEvent = (index: number) => {
+    const card = eventCardRefs.current[index]
+    const root = screenRootRef.current
+    if (!card || !root) return
+
+    const sourceBox = card.getBoundingClientRect()
+    scrollTopBeforeOpenRef.current = getScrollContainer()?.scrollTop ?? null
+
+    // Release PhoneFrame chrome (bottom-inset = 0) BEFORE
     // measuring. flushSync forces React to commit the chrome release in the
     // same tick so getBoundingClientRect() sees the final full-height root,
     // not the old root that still reserves the BottomNav area. Otherwise
@@ -207,17 +223,17 @@ export default function Perfil() {
       setEventOverlayOpen(true)
     })
 
-    const rect = measureRayeCard()
+    const rect = measureEventCard(index, sourceBox)
     if (!rect) {
       setEventOverlayOpen(false)
       return
     }
 
     setMorphRect(rect)
-    setHideRayeSourceVisual(true)
-    setSelectedEvent('raye')
+    setHiddenEventIndex(index)
+    setSelectedEvent(index)
   }
-  const closeRaye = () => {
+  const closeEvent = () => {
     // The overlay renders its own source-card face during exit, so the
     // real source can stay hidden until unmount. The nav is already
     // sitting underneath, so chrome + visibility restore both happen in
@@ -233,35 +249,38 @@ export default function Perfil() {
         <ActionButtons />
         <TabBar active={tab} onChange={setTab} />
         <EventList
-          onSelectRaye={openRaye}
-          onSelectOther={() => navigate('/evento')}
-          hideRayeSourceVisual={hideRayeSourceVisual}
-          rayeCardRef={rayeCardRef}
+          onSelectEvent={openEvent}
+          hiddenEventIndex={hiddenEventIndex}
+          eventCardRefs={eventCardRefs}
         />
       </div>
       <AnimatePresence
         initial={false}
         mode="sync"
         onExitComplete={() => {
-          setEventOverlayOpen(false)
-          setHideRayeSourceVisual(false)
+          flushSync(() => {
+            setEventOverlayOpen(false)
+          })
+
+          const scrollTop = scrollTopBeforeOpenRef.current
+          const scrollContainer = getScrollContainer()
+          if (scrollContainer && scrollTop !== null) {
+            scrollContainer.scrollTop = scrollTop
+          }
+          scrollTopBeforeOpenRef.current = null
+          setHiddenEventIndex(null)
           setMorphRect(null)
         }}
       >
-        {selectedEvent === 'raye' && morphRect && (
+        {selectedEvent !== null && morphRect && (
           <EventMorphOverlay
-            key="perfil-raye-overlay"
+            key={`perfil-event-overlay-${selectedEvent}`}
             sourceRect={morphRect}
             sourceCard={{
               variant: 'compact',
-              image: eventRaye,
-              title: 'RAYE',
-              date: '12 de julho de 2026',
-              venue: 'Audio Club',
-              location: 'São Paulo',
-              badgeCount: 1,
+              ...events[selectedEvent],
             }}
-            onClose={closeRaye}
+            onClose={closeEvent}
           />
         )}
       </AnimatePresence>
