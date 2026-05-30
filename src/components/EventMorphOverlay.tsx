@@ -18,6 +18,8 @@ export type MorphRect = {
   y: number
   width: number
   height: number
+  targetX: number
+  targetY: number
   targetWidth: number
   targetHeight: number
 }
@@ -83,11 +85,17 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
   return (
     <>
       <fmotion.div
-        className="absolute inset-0 z-30 bg-black/[0.04]"
+        className="absolute z-30 bg-black/[0.04]"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
+        style={{
+          left: sourceRect.targetX,
+          top: sourceRect.targetY,
+          width: sourceRect.targetWidth,
+          height: sourceRect.targetHeight,
+        }}
         onClick={onClose}
       />
       <div className="absolute inset-0 z-40 pointer-events-none">
@@ -101,8 +109,8 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             boxShadow: '0 7px 24px rgba(64, 64, 64, 0.10)',
           }}
           animate={{
-            x: 0,
-            y: 0,
+            x: sourceRect.targetX,
+            y: sourceRect.targetY,
             width: sourceRect.targetWidth,
             height: sourceRect.targetHeight,
             borderRadius: 0,

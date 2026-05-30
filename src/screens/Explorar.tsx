@@ -99,13 +99,16 @@ export default function Explorar() {
     if (!card || !root) return null
     const cardBox = card.getBoundingClientRect()
     const rootBox = root.getBoundingClientRect()
+    const frameBox = root.closest('.phone-frame')?.getBoundingClientRect() ?? rootBox
     return {
       x: cardBox.left - rootBox.left,
       y: cardBox.top - rootBox.top,
       width: cardBox.width,
       height: cardBox.height,
-      targetWidth: rootBox.width,
-      targetHeight: rootBox.height,
+      targetX: frameBox.left - rootBox.left,
+      targetY: frameBox.top - rootBox.top,
+      targetWidth: frameBox.width,
+      targetHeight: frameBox.height,
     }
   }
 
