@@ -143,7 +143,7 @@ export default function Ramificacao() {
 
   return (
     <PageTransition>
-      <div className="relative h-[calc(100vh-44px)] bg-white overflow-hidden">
+      <div className="relative h-full bg-white overflow-hidden">
         {/* Back layer: alpha-video character. pointer-events-none so it doesn't
             intercept taps on the radio cards / CONCLUIR. */}
         <div className="absolute inset-0 pointer-events-none z-0">
