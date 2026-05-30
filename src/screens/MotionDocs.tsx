@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { motion as fmotion } from 'framer-motion'
-import { Play, Sparkles } from 'lucide-react'
+import { Box, Play, Sparkles } from 'lucide-react'
 import { BurstLaneMap } from '../components/BurstLaneMap'
 import BezierCurveSVG, { BezierCopyButton } from '../components/motion-docs/BezierCurveSVG'
 import { MotionSpecSheet } from '../components/motion-docs/MotionSpecSheet'
@@ -814,6 +814,13 @@ export default function MotionDocs() {
               >
                 <Sparkles size={16} />
                 {copy.header.burstSandbox}
+              </a>
+              <a
+                href="/model-sandbox"
+                className="flex h-11 items-center gap-2 rounded-[8px] border border-[var(--color-grey-normal)] bg-white px-4 text-[13px] font-bold text-[var(--color-grey-darker)]"
+              >
+                <Box size={16} />
+                {copy.header.modelSandbox}
               </a>
             </div>
           </div>

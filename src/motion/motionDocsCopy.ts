@@ -29,6 +29,7 @@ export const motionDocsCopy = {
       summary: (version: string, width: number, height: number, fps: number, total: number) =>
         `Spec v${version} | ${width}x${height} @ ${fps}fps | ${total} demos. Esta página documenta motion specs reutilizáveis, regras de state machine em produção e o sistema de burst lanes pela perspectiva de motion design.`,
       burstSandbox: 'Burst sandbox',
+      modelSandbox: 'Model sandbox',
     },
     system: {
       eyebrow: 'Fundamentos',
@@ -165,6 +166,7 @@ export const motionDocsCopy = {
       summary: (version: string, width: number, height: number, fps: number, total: number) =>
         `Spec v${version} | ${width}x${height} @ ${fps}fps | ${total} demos. This page documents reusable motion specs, production state-machine rules, and the burst lane system from a motion designer perspective.`,
       burstSandbox: 'Burst sandbox',
+      modelSandbox: 'Model sandbox',
     },
     system: {
       eyebrow: 'Foundations',

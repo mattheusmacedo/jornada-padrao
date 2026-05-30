@@ -20,6 +20,17 @@ type TextureMaps = Partial<Record<keyof BurstTextureSpec, Texture>>
 type Props = {
   className?: string
   model: BurstModelSpec
+  /** Override the geometry file path. Used by /model-sandbox to swap
+   *  between .fbx and versioned .v{N}.glb for visual comparison while
+   *  the runtime app keeps loading the canonical .glb. Loader is picked
+   *  from the file extension. */
+  pathOverride?: string
+  /** Spins the model on Y axis at a constant rate. Used by the model
+   *  sandbox to inspect texture mapping from all sides. Default off so
+   *  the burst lane previews stay static. */
+  autoRotate?: boolean
+  /** Radians per second when autoRotate is on. */
+  rotateSpeed?: number
 }
 
 const MATERIAL_TEXTURE_KEYS = [
@@ -191,7 +202,7 @@ function renderPreview(
   renderer.render(scene, camera)
 }
 
-export default function MusicModelPreview({ className, model }: Props) {
+export default function MusicModelPreview({ className, model, pathOverride, autoRotate = false, rotateSpeed = 0.8 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -204,14 +215,75 @@ export default function MusicModelPreview({ className, model }: Props) {
     let camera: PerspectiveCamera | null = null
     let previewModel: Group | null = null
     let resizeObserver: ResizeObserver | null = null
+    let rafId: number | null = null
+
+    // Drag-to-orbit state. Pointer down on the canvas starts a drag; the
+    // RAF tick reads pendingDelta and applies it as a Y (yaw) + X (pitch)
+    // rotation on the model holder. Auto-rotate is suspended while
+    // dragging so user-driven motion isn't fighting it. Pitch is clamped
+    // to ±85° to avoid the gimbal-lock flip-over.
+    const DRAG_SENSITIVITY = 0.008
+    const PITCH_LIMIT = Math.PI * 0.47
+    let dragging = false
+    let activePointerId: number | null = null
+    let lastClientX = 0
+    let lastClientY = 0
+    const pendingDelta = { x: 0, y: 0 }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.button !== undefined && event.button !== 0) return
+      dragging = true
+      activePointerId = event.pointerId
+      lastClientX = event.clientX
+      lastClientY = event.clientY
+      canvas.setPointerCapture(event.pointerId)
+      canvas.classList.add('cursor-grabbing')
+      canvas.classList.remove('cursor-grab')
+    }
+    const handlePointerMove = (event: PointerEvent) => {
+      if (!dragging || event.pointerId !== activePointerId) return
+      pendingDelta.x += event.clientX - lastClientX
+      pendingDelta.y += event.clientY - lastClientY
+      lastClientX = event.clientX
+      lastClientY = event.clientY
+    }
+    const handlePointerEnd = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId) return
+      dragging = false
+      activePointerId = null
+      if (canvas.hasPointerCapture(event.pointerId)) {
+        canvas.releasePointerCapture(event.pointerId)
+      }
+      canvas.classList.add('cursor-grab')
+      canvas.classList.remove('cursor-grabbing')
+    }
+
+    // Interactive controls (drag-to-orbit + grab cursor) are only attached
+    // when the preview is also auto-rotating. The BurstSandbox renders
+    // static thumbnails (autoRotate=false) and shouldn't pay for either
+    // pointer handling or a perpetual RAF render loop.
+    if (autoRotate) {
+      canvas.addEventListener('pointerdown', handlePointerDown)
+      canvas.addEventListener('pointermove', handlePointerMove)
+      canvas.addEventListener('pointerup', handlePointerEnd)
+      canvas.addEventListener('pointercancel', handlePointerEnd)
+      canvas.addEventListener('lostpointercapture', handlePointerEnd)
+      canvas.classList.add('cursor-grab')
+      canvas.style.touchAction = 'none'
+    }
+
+    const geometryPath = pathOverride ?? model.path
+    const useFbx = geometryPath.toLowerCase().endsWith('.fbx')
 
     void import('three').then(async (THREE) => {
       if (disposed) return
 
-      const [{ GLTFLoader }, { MeshoptDecoder }] = await Promise.all([
-        import('three/examples/jsm/loaders/GLTFLoader.js'),
-        import('three/examples/jsm/libs/meshopt_decoder.module.js'),
-      ])
+      const loaderModules = useFbx
+        ? await import('three/examples/jsm/loaders/FBXLoader.js').then((m) => ({ kind: 'fbx' as const, FBXLoader: m.FBXLoader }))
+        : await Promise.all([
+            import('three/examples/jsm/loaders/GLTFLoader.js'),
+            import('three/examples/jsm/libs/meshopt_decoder.module.js'),
+          ]).then(([gl, md]) => ({ kind: 'gltf' as const, GLTFLoader: gl.GLTFLoader, MeshoptDecoder: md.MeshoptDecoder }))
       if (disposed) return
 
       scene = new THREE.Scene()
@@ -246,18 +318,19 @@ export default function MusicModelPreview({ className, model }: Props) {
       resizeObserver.observe(canvas)
       resizeRenderer(renderer, camera, canvas)
 
-      const loader = new GLTFLoader()
-      loader.setMeshoptDecoder(MeshoptDecoder)
       const textureLoader = new THREE.TextureLoader()
+      const loadGeometry = new Promise<Group | null>((resolve) => {
+        if (loaderModules.kind === 'fbx') {
+          const fbxLoader = new loaderModules.FBXLoader()
+          fbxLoader.load(geometryPath, (obj) => resolve(obj), undefined, () => resolve(null))
+        } else {
+          const gltfLoader = new loaderModules.GLTFLoader()
+          gltfLoader.setMeshoptDecoder(loaderModules.MeshoptDecoder)
+          gltfLoader.load(geometryPath, (gltf) => resolve(gltf.scene), undefined, () => resolve(null))
+        }
+      })
       const [object, textures] = await Promise.all([
-        new Promise<Group | null>((resolve) => {
-          loader.load(
-            model.path,
-            (gltf) => resolve(gltf.scene),
-            undefined,
-            () => resolve(null),
-          )
-        }),
+        loadGeometry,
         loadTextureMaps(THREE, textureLoader, model.textures),
       ])
 
@@ -270,16 +343,54 @@ export default function MusicModelPreview({ className, model }: Props) {
       previewModel = preparePreviewModel(THREE, object, textures)
       scene.add(previewModel)
       renderPreview(renderer, scene, camera)
+
+      if (autoRotate) {
+        // RAF loop drives BOTH auto-rotate and drag-to-orbit rendering.
+        // Flushed drag deltas are applied each tick and consumed; while
+        // the user is dragging, auto-rotate is suspended so the two
+        // don't fight each other.
+        let lastTime = performance.now()
+        const tick = (now: number) => {
+          if (disposed || !previewModel || !renderer || !scene || !camera) return
+          const deltaSeconds = Math.min(0.05, (now - lastTime) / 1000)
+          lastTime = now
+
+          if (pendingDelta.x !== 0 || pendingDelta.y !== 0) {
+            previewModel.rotation.y += pendingDelta.x * DRAG_SENSITIVITY
+            previewModel.rotation.x += pendingDelta.y * DRAG_SENSITIVITY
+            if (previewModel.rotation.x > PITCH_LIMIT) previewModel.rotation.x = PITCH_LIMIT
+            if (previewModel.rotation.x < -PITCH_LIMIT) previewModel.rotation.x = -PITCH_LIMIT
+            pendingDelta.x = 0
+            pendingDelta.y = 0
+          } else if (!dragging) {
+            previewModel.rotation.y += rotateSpeed * deltaSeconds
+          }
+
+          renderer.render(scene, camera)
+          rafId = requestAnimationFrame(tick)
+        }
+        rafId = requestAnimationFrame(tick)
+      }
     })
 
     return () => {
       disposed = true
+      if (rafId !== null) cancelAnimationFrame(rafId)
+      if (autoRotate) {
+        canvas.removeEventListener('pointerdown', handlePointerDown)
+        canvas.removeEventListener('pointermove', handlePointerMove)
+        canvas.removeEventListener('pointerup', handlePointerEnd)
+        canvas.removeEventListener('pointercancel', handlePointerEnd)
+        canvas.removeEventListener('lostpointercapture', handlePointerEnd)
+        canvas.classList.remove('cursor-grab', 'cursor-grabbing')
+        canvas.style.touchAction = ''
+      }
       resizeObserver?.disconnect()
       if (scene && previewModel) scene.remove(previewModel)
       disposeObject(previewModel)
       renderer?.dispose()
     }
-  }, [model])
+  }, [model, pathOverride, autoRotate, rotateSpeed])
 
   return (
     <canvas
