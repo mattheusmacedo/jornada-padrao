@@ -22,8 +22,6 @@ import avatar2 from '../assets/evento/avatar-2.webp'
 import avatar3 from '../assets/evento/avatar-3.webp'
 import ticketmaster from '../assets/evento/ticketmaster.webp'
 
-export const RAYE_HERO_SRC = rayeHero
-
 const MORPH_TRANSITION = { type: 'spring', stiffness: 200, damping: 24 } as const
 
 // Hero header controls reveal — delayed past the first beat of any morph so

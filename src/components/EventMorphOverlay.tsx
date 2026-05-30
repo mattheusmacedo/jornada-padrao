@@ -82,6 +82,12 @@ const CTA_REVEAL = {
  */
 export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: Props) {
   const navigate = useNavigate()
+  const dateSubtitle = sourceCard.title === 'RAYE' ? 'Domingo, 20:00' : '20:00'
+  const venueSubtitle =
+    sourceCard.title === 'RAYE'
+      ? 'Av. Francisco Matarazzo, 694 - Água Branca, São Paulo - SP'
+      : sourceCard.location
+
   return (
     <>
       <fmotion.div
@@ -164,7 +170,11 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
             exit={DEST_FACE.exit}
           >
             <div className="flex-1 overflow-y-auto scrollbar-hide">
-              <EventHero onBack={onClose} />
+              <EventHero
+                onBack={onClose}
+                image={sourceCard.image}
+                title={sourceCard.title}
+              />
 
               <fmotion.div
                 variants={detailRevealGroup}
@@ -176,19 +186,23 @@ export default function EventMorphOverlay({ onClose, sourceRect, sourceCard }: P
                   <FansPill />
                 </fmotion.div>
                 <fmotion.div variants={detailRevealItem}>
-                  <EventTitle />
+                  <EventTitle title={sourceCard.title} />
                 </fmotion.div>
                 <fmotion.div variants={detailRevealItem} className="mt-6">
-                  <DateRow />
+                  <DateRow date={sourceCard.date} subtitle={dateSubtitle} />
                 </fmotion.div>
                 <fmotion.div variants={detailRevealItem} className="mt-4">
-                  <VenueRow />
+                  <VenueRow venue={sourceCard.venue} subtitle={venueSubtitle} />
                 </fmotion.div>
                 <fmotion.div variants={detailRevealItem} className="mt-4">
                   <OrganizerRow />
                 </fmotion.div>
                 <fmotion.div variants={detailRevealItem} className="mt-6">
-                  <AboutBlock />
+                  <AboutBlock
+                    title={sourceCard.title}
+                    venue={sourceCard.venue}
+                    location={sourceCard.location}
+                  />
                 </fmotion.div>
               </fmotion.div>
               <div className="h-[20px]" />

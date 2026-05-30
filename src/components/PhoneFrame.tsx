@@ -17,10 +17,10 @@ type Props = {
   noTopInset?: boolean
 }
 
-// Nav body is 86px; the FAB lifts ~22px above the body. Reserving the full
-// 108px ensures scrolled content stops at the FAB's top edge so the lifted
-// half of the FAB never has scrolling content visible around it.
-const NAV_RESERVED_HEIGHT = 86 + 22
+// Reserve the visible BottomNav body only. The floating FAB intentionally
+// overlaps content space; reserving its lift creates a visible dead strip
+// above the nav.
+const NAV_RESERVED_HEIGHT = 86
 
 export default function PhoneFrame({
   children,
