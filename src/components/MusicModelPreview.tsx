@@ -12,6 +12,7 @@ import type {
   WebGLRenderer,
 } from 'three'
 import type { BurstModelSpec, BurstTextureSpec } from './musicBurstConfig'
+export type { BurstTextureSpec } from './musicBurstConfig'
 import { repairMusicModel } from './musicModelTransforms'
 
 type ThreeModule = typeof import('three')
@@ -25,6 +26,10 @@ type Props = {
    *  the runtime app keeps loading the canonical .glb. Loader is picked
    *  from the file extension. */
   pathOverride?: string
+  /** Override the texture spec entirely. Used by /model-sandbox when
+   *  inspecting the prebrand FBX (textures live under /models-prebrand/
+   *  with original PNG extensions, not the rebrand WebPs). */
+  texturesOverride?: BurstTextureSpec
   /** Spins the model on Y axis at a constant rate. Used by the model
    *  sandbox to inspect texture mapping from all sides. Default off so
    *  the burst lane previews stay static. */
@@ -202,7 +207,7 @@ function renderPreview(
   renderer.render(scene, camera)
 }
 
-export default function MusicModelPreview({ className, model, pathOverride, autoRotate = false, rotateSpeed = 0.8 }: Props) {
+export default function MusicModelPreview({ className, model, pathOverride, texturesOverride, autoRotate = false, rotateSpeed = 0.8 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -331,7 +336,7 @@ export default function MusicModelPreview({ className, model, pathOverride, auto
       })
       const [object, textures] = await Promise.all([
         loadGeometry,
-        loadTextureMaps(THREE, textureLoader, model.textures),
+        loadTextureMaps(THREE, textureLoader, texturesOverride ?? model.textures),
       ])
 
       if (disposed || !object || !scene || !camera || !renderer) {
@@ -390,7 +395,7 @@ export default function MusicModelPreview({ className, model, pathOverride, auto
       disposeObject(previewModel)
       renderer?.dispose()
     }
-  }, [model, pathOverride, autoRotate, rotateSpeed])
+  }, [model, pathOverride, texturesOverride, autoRotate, rotateSpeed])
 
   return (
     <canvas
