@@ -73,7 +73,7 @@ export default function BezierCurveSVG({
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="rounded-2xl bg-white border border-[var(--color-grey-light-active)]"
+      className="rounded-[8px] border border-[var(--color-grey-light-active)] bg-white"
     >
       {/* Faint outline of the inner math area */}
       <rect
@@ -102,7 +102,7 @@ export default function BezierCurveSVG({
         y1={startY}
         x2={c1x}
         y2={c1y}
-        stroke="var(--color-pink-normal)"
+        stroke="var(--color-brand-pink-normal)"
         strokeOpacity={0.5}
         strokeWidth={1.5}
       />
@@ -111,7 +111,7 @@ export default function BezierCurveSVG({
         y1={endY}
         x2={c2x}
         y2={c2y}
-        stroke="var(--color-pink-normal)"
+        stroke="var(--color-brand-pink-normal)"
         strokeOpacity={0.5}
         strokeWidth={1.5}
       />
@@ -119,21 +119,21 @@ export default function BezierCurveSVG({
       <path
         d={`M ${startX} ${startY} C ${c1x} ${c1y} ${c2x} ${c2y} ${endX} ${endY}`}
         fill="none"
-        stroke="var(--color-pink-normal)"
+        stroke="var(--color-brand-pink-normal)"
         strokeWidth={2.5}
         strokeLinecap="round"
       />
       {/* Endpoints + control points */}
-      <circle cx={startX} cy={startY} r={4} fill="var(--color-pink-normal)" />
-      <circle cx={endX} cy={endY} r={4} fill="var(--color-pink-normal)" />
-      <circle cx={c1x} cy={c1y} r={6} fill="var(--color-pink-normal)" />
-      <circle cx={c2x} cy={c2y} r={6} fill="var(--color-pink-normal)" />
+      <circle cx={startX} cy={startY} r={4} fill="var(--color-brand-pink-normal)" />
+      <circle cx={endX} cy={endY} r={4} fill="var(--color-brand-pink-normal)" />
+      <circle cx={c1x} cy={c1y} r={6} fill="var(--color-brand-pink-normal)" />
+      <circle cx={c2x} cy={c2y} r={6} fill="var(--color-brand-pink-normal)" />
       {/* Tracer — parked at start by default, animates on Replay */}
       <motion.circle
         cx={tracerX}
         cy={tracerY}
         r={7}
-        fill="var(--color-pink-normal)"
+        fill="var(--color-brand-pink-normal)"
         stroke="white"
         strokeWidth={2}
       />
@@ -166,7 +166,7 @@ export function BezierCopyButton({ values }: { values: number[] }) {
     <button
       type="button"
       onClick={handle}
-      className="flex items-center gap-1 text-[11px] text-[var(--color-grey-dark)] hover:text-[var(--color-pink-normal)] transition-none"
+      className="flex items-center gap-1 text-[11px] text-[var(--color-grey-dark)] transition-none hover:text-[var(--color-brand-pink-normal)]"
     >
       {copied ? <Check size={12} /> : <Copy size={12} />}
       <span>{copied ? 'Copiado!' : 'Copy'}</span>

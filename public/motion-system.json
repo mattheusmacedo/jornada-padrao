@@ -1,28 +1,28 @@
 {
   "_comments": {
-    "purpose": "Spec source-of-truth do sistema de motion do app. Lida em runtime pela rota /motion-docs e traduzível para arquivos Lottie .json via script de export futuro.",
-    "lottie_translation": "Cada keyframe do demo corresponde a uma animação de transform em uma layer a 60fps durante duration_ms. Número do frame = duration_ms * fps / 1000 * t. Nomes de easing mapeiam para control points de bezier padrão do Lottie (arrays in/out).",
-    "composition_note": "Todos os demos renderizam em uma composição 1080x1080 @ 60fps com o referenceShape centralizado. Valores translateX/translateY nos keyframes estão em pixels da composição, proporcionalmente reduzidos quando o preview é em tamanho menor (o player divide por composition.width / preview.width).",
-    "scale_opacity_note": "scale e opacity são scale-invariant. Se aplicam igualmente em qualquer tamanho de preview."
+    "purpose": "Source-of-truth for the app motion system. The /motion-docs route reads this file at runtime, and future export scripts can translate it into Lottie .json files.",
+    "lottie_translation": "Each demo keyframe maps to a transform animation on one layer at 60fps for duration_ms. Frame number = duration_ms * fps / 1000 * t. Easing names map to standard Lottie bezier control points (in/out arrays).",
+    "composition_note": "All demos render in a 1080x1080 composition at 60fps with the referenceShape centered. translateX and translateY values are composition pixels, then scaled down for smaller previews by dividing composition.width by preview.width.",
+    "scale_opacity_note": "Scale and opacity are scale-invariant. They apply the same way at any preview size."
   },
-  "version": "1.0.0",
+  "version": "1.1.0",
   "composition": { "width": 1080, "height": 1080, "fps": 60 },
   "referenceShape": { "type": "circle", "radius": 200, "color": "#E8176B" },
   "background": "#F8F8F8",
   "tokens": {
-    "durations": { "tap": 150, "reveal": 200, "container": 300, "hero": 800 },
+    "durations": { "tap": 150, "reveal": 200, "container": 300, "containerMorph": 500, "hero": 800 },
     "easings": {
-      "out": { "name": "ease-out (UI visível)", "cubicBezier": [0, 0, 0.2, 1] },
-      "spring": { "name": "spring (só em containers)", "cubicBezier": [0.22, 1, 0.36, 1] }
+      "out": { "name": "ease-out (visible UI)", "cubicBezier": [0, 0, 0.2, 1] },
+      "spring": { "name": "spring (containers only)", "cubicBezier": [0.22, 1, 0.36, 1] }
     }
   },
   "demos": [
     {
       "id": "tap-button",
       "category": "rule",
-      "title": "Feedback de toque: botão",
-      "subtitle": "150ms · ease-out · scale 0.96",
-      "description": "Botões e icon buttons escalam para 0.96 no press. Rápido, responsivo, imediato. Usado em qualquer CTA primário/secundário, controles de ícone, FAB.",
+      "title": "Tap feedback: button",
+      "subtitle": "150ms | ease-out | scale 0.96",
+      "description": "Buttons and icon buttons scale down to 0.96 on press. This feedback is fast, responsive, and immediate. Use it for primary and secondary CTAs, icon controls, and FABs.",
       "duration_ms": 150,
       "easing": "out",
       "keyframes": [
@@ -34,9 +34,9 @@
     {
       "id": "press-card-standard",
       "category": "rule",
-      "title": "Feedback de pressão: card padrão",
-      "subtitle": "200ms · ease-out · scale 0.985",
-      "description": "Cards padrão (cards de evento, list items) recebem um press scale bem mais sutil do que botões. Usado nos cards de evento em Perfil e Explorar, e nos radio cards não-selecionados.",
+      "title": "Press feedback: standard card",
+      "subtitle": "200ms | ease-out | scale 0.985",
+      "description": "Standard cards use a subtler press scale than buttons. Use this for event cards, list items, and unselected radio cards.",
       "duration_ms": 200,
       "easing": "out",
       "keyframes": [
@@ -48,9 +48,9 @@
     {
       "id": "press-card-selected",
       "category": "rule",
-      "title": "Feedback de pressão: card selecionado",
-      "subtitle": "200ms · ease-out · scale 0.99",
-      "description": "Cards já elevados (estado selecionado) têm press ainda menor, já estão elevados, então a affordance é reduzida. Usado em radio cards selecionados.",
+      "title": "Press feedback: selected card",
+      "subtitle": "200ms | ease-out | scale 0.99",
+      "description": "Selected cards already have emphasis, so their press feedback should be even smaller. Use this for selected radio cards.",
       "duration_ms": 200,
       "easing": "out",
       "keyframes": [
@@ -62,9 +62,9 @@
     {
       "id": "reveal-popup",
       "category": "rule",
-      "title": "Reveal: popup/ênfase",
-      "subtitle": "200ms · ease-out · y:32→0, scale 0.98→1, opacity 0→1",
-      "description": "Usado na entrada do FansPill, ênfase em card selecionado, conteúdo de popup/sheet. Entrada suave com leve translação para cima.",
+      "title": "Reveal: popup emphasis",
+      "subtitle": "200ms | ease-out | y:32->0, scale 0.98->1, opacity 0->1",
+      "description": "Use this for FansPill entry, selected-card emphasis, and popup or sheet content. The element enters softly with a small upward translation.",
       "duration_ms": 200,
       "easing": "out",
       "keyframes": [
@@ -75,9 +75,9 @@
     {
       "id": "container-transition",
       "category": "rule",
-      "title": "Transição de container: página/modal",
-      "subtitle": "300ms · curva spring · x:48→0, opacity 0→1",
-      "description": "Transições de página e enter/exit de modal. A curva spring (0.22, 1, 0.36, 1) é a ÚNICA easing que usa overshoot leve. Só em containers, nunca em controles interativos.",
+      "title": "Container transition: page or modal",
+      "subtitle": "300ms | spring curve | x:48->0, opacity 0->1",
+      "description": "Use this for page transitions and modal enter or exit. The spring curve (0.22, 1, 0.36, 1) is the only easing with a light overshoot. Use it only for containers, never for interactive controls.",
       "duration_ms": 300,
       "easing": "spring",
       "keyframes": [
@@ -88,9 +88,9 @@
     {
       "id": "hero-lottie",
       "category": "rule",
-      "title": "Momento hero: entrada da ilustração",
-      "subtitle": "800ms · ease-out · scale 0.7→1.05→1, opacity 0→1",
-      "description": "Reservado para ilustrações Lottie em Ramificação e Conclusão. A duração mais longa carrega peso emocional, do tipo que um flyTo de mapa carregaria em um app baseado em mapa.",
+      "title": "Hero moment: illustration entry",
+      "subtitle": "800ms | ease-out | scale 0.7->1.05->1, opacity 0->1",
+      "description": "Reserve this longer motion for expressive Lottie illustrations. It carries emotional weight, similar to a map fly-to moment in a location-based app.",
       "duration_ms": 800,
       "easing": "out",
       "keyframes": [
@@ -103,9 +103,9 @@
       "id": "anti-easeinout",
       "category": "antipattern",
       "compareWith": "tap-button",
-      "title": "❌ ease-in-out em controle interativo",
-      "subtitle": "Parece pesado no início, arrasta no fim",
-      "description": "A rampa simétrica deixa o toque com sensação mole. Sempre use ease-out para UI visível.",
+      "title": "Anti-pattern: ease-in-out on an interactive control",
+      "subtitle": "Feels slow at the start and heavy at the end",
+      "description": "A symmetrical ramp makes tap feedback feel soft and delayed. Use ease-out for visible UI feedback.",
       "duration_ms": 150,
       "easing": "out",
       "playerOverride": { "cubicBezier": [0.42, 0, 0.58, 1], "label": "ease-in-out" },
@@ -119,9 +119,9 @@
       "id": "anti-scale-aggressive",
       "category": "antipattern",
       "compareWith": "press-card-standard",
-      "title": "❌ scale 0.94 em cards",
-      "subtitle": "Agressivo demais, parece barato, não premium",
-      "description": "Qualquer valor abaixo de 0.96 em botões ou 0.97 em cards parece barato. Premium = restrição.",
+      "title": "Anti-pattern: scale 0.94 on cards",
+      "subtitle": "Too aggressive for a premium interface",
+      "description": "Any value below 0.96 for buttons or 0.97 for cards feels too heavy. Premium motion should feel restrained.",
       "duration_ms": 200,
       "easing": "out",
       "keyframes": [
@@ -134,9 +134,9 @@
       "id": "anti-no-duration",
       "category": "antipattern",
       "compareWith": "tap-button",
-      "title": "❌ transition-colors sem duração definida",
-      "subtitle": "Cai no default de 150ms ease-in-out, errado nos dois eixos",
-      "description": "transition-colors do Tailwind sem duração usa o default ease-in-out de 150ms. Sempre defina os dois.",
+      "title": "Anti-pattern: transition-colors without an explicit duration",
+      "subtitle": "Falls back to the wrong default timing and curve",
+      "description": "Tailwind transition-colors without a duration uses the default 150ms ease-in-out. Always define both duration and easing.",
       "duration_ms": 150,
       "easing": "out",
       "playerOverride": { "cubicBezier": [0.42, 0, 0.58, 1], "label": "ease-in-out (default)" },
@@ -149,9 +149,9 @@
       "id": "anti-spring-on-button",
       "category": "antipattern",
       "compareWith": "tap-button",
-      "title": "❌ curva spring em controle interativo",
-      "subtitle": "Overshoot em um toque parece trêmulo, não responsivo",
-      "description": "A curva spring é só para containers. Em botões, deixa a pressão com sensação de instabilidade.",
+      "title": "Anti-pattern: spring curve on an interactive control",
+      "subtitle": "Overshoot makes tap feedback feel unstable",
+      "description": "The spring curve is only for containers. On buttons, it makes press feedback feel shaky instead of responsive.",
       "duration_ms": 150,
       "easing": "spring",
       "keyframes": [
@@ -163,9 +163,9 @@
     {
       "id": "sequence-list-stagger",
       "category": "sequence",
-      "title": "Stagger de lista: entrada dos cards",
-      "subtitle": "5 cards · stagger de 50ms · delay de 100ms · cada um com 200ms ease-out",
-      "description": "Listas de cards de eventos em Perfil e Explorar entram em cascata no mount. Cascata, não rajada: o stagger cria uma sequência intencional.",
+      "title": "List stagger: card entry",
+      "subtitle": "5 cards | 50ms stagger | 100ms delay | each card uses 200ms ease-out",
+      "description": "Event-card lists enter as a cascade on mount. This is a sequence, not a burst: the stagger creates a clear reading order.",
       "duration_ms": 600,
       "easing": "out",
       "sequence": {
@@ -181,9 +181,9 @@
     {
       "id": "sequence-radio-select",
       "category": "sequence",
-      "title": "Seleção de radio: mudança de estado",
-      "subtitle": "Morph de background 200ms + preenchimento do dot 200ms, síncrono",
-      "description": "Estado de seleção na Ramificação. Duas coisas mudam ao mesmo tempo: cor de background E preenchimento do dot interno. Ambos com 200ms ease-out, ambos disparam de forma síncrona no handler.",
+      "title": "Radio selection: state change",
+      "subtitle": "200ms background morph + 200ms dot fill, synchronized",
+      "description": "Use this for radio-card selection. Two things change together: the card background and the inner dot fill. Both use 200ms ease-out and fire from the same handler.",
       "duration_ms": 200,
       "easing": "out",
       "keyframes": [
@@ -194,9 +194,9 @@
     {
       "id": "sequence-conclusion-hero",
       "category": "sequence",
-      "title": "Hero da conclusão: coreografado",
-      "subtitle": "Ilustração com hero de 800ms + reveal de título de 200ms (delay de 400ms entre eles)",
-      "description": "Tela de Conclusão: o Lottie hero toca 800ms; o texto do título faz reveal 400ms depois do início do hero, não depois do fim. Uma motion dominante com uma camada de suporte, não sequencial.",
+      "title": "Conclusion hero: choreographed entry",
+      "subtitle": "800ms hero illustration + 200ms title reveal with a 400ms delay",
+      "description": "On the conclusion screen, the hero animation runs for 800ms. The title reveal starts 400ms after the hero begins, not after it ends. Treat this as one dominant motion with a supporting layer.",
       "duration_ms": 1200,
       "easing": "out",
       "layers": [
@@ -231,9 +231,9 @@
     {
       "id": "sequence-card-detail-flip",
       "category": "sequence",
-      "title": "Card → detalhe: FLIP medido com duas faces",
-      "subtitle": "Shell geométrico + face de origem + face de destino",
-      "description": "Use este padrão quando o card de origem e a tela de destino não têm a mesma estrutura visual. O shell externo anima apenas geometria medida (x, y, width, height, borderRadius) a partir do rect do card até o viewport do PhoneFrame. Dentro dele, duas faces fazem a troca visual: a face do card de origem e a face da tela de destino, ambas em absolute inset-0. Isso evita deformação de texto/ícones, evita estado branco intermediário e mantém o retorno visualmente contínuo. Não misture este padrão com layoutId para o mesmo morph. Regras de implementação: meça depois de liberar o chrome do PhoneFrame (flushSync); mantenha o card real escondido (visibility:hidden) até onExitComplete; o overlay desenha sua própria face de origem durante o close; o shell é dono apenas de geometria; sombra deve ter um único dono por fase (não empilhe shell shadow + source shadow + card shadow).",
+      "title": "Card to detail: measured FLIP with two faces",
+      "subtitle": "Geometry shell + source face + destination face",
+      "description": "Use this pattern when the source card and destination screen do not share the same visual structure. The outer shell owns only measured geometry: x, y, width, height, and borderRadius from the card rect to the PhoneFrame viewport. Inside the shell, two absolute inset-0 faces handle the visual swap: the source card face and the destination screen face. This prevents text and icon distortion, avoids a white intermediate state, and keeps the return motion continuous. Do not mix this pattern with layoutId for the same morph. Implementation rules: measure after releasing the PhoneFrame chrome with flushSync; keep the real card hidden with visibility:hidden until onExitComplete; let the overlay draw its own source face during close; keep the shell responsible only for geometry; use one shadow owner per phase, not stacked shell, source, and card shadows.",
       "duration_ms": 500,
       "easing": "spring",
       "layers": [
@@ -289,9 +289,9 @@
       "id": "anti-mixed-morph-ownership",
       "category": "antipattern",
       "compareWith": "sequence-card-detail-flip",
-      "title": "❌ Não misturar layoutId + FLIP + crossfade corretivo",
-      "subtitle": "Três donos da mesma transição criam bugs fantasma",
-      "description": "Evite usar layoutId, medição manual FLIP e crossfade corretivo para resolver o mesmo morph. layoutId quer que Framer Motion seja dono da medição; FLIP manual quer que o app seja dono da medição; crossfade corretivo esconde diferenças depois do fato. Misturar os três gera projection stale, medidas erradas quando o chrome muda, flashes brancos, sombras duplicadas e handoffs frágeis. Escolha um modelo primário por transição.",
+      "title": "Anti-pattern: mixing layoutId, FLIP, and corrective crossfade",
+      "subtitle": "Three owners for one transition create fragile behavior",
+      "description": "Avoid using layoutId, manual FLIP measurement, and corrective crossfade to solve the same morph. layoutId expects Framer Motion to own measurement. Manual FLIP expects the app to own measurement. Corrective crossfade hides visual differences after the fact. Mixing all three creates stale projections, wrong measurements when chrome changes, white flashes, duplicate shadows, and fragile handoffs. Choose one primary model for each transition.",
       "duration_ms": 500,
       "easing": "spring",
       "keyframes": [

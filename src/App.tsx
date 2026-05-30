@@ -7,6 +7,7 @@ import Evento from './screens/Evento'
 import Ramificacao from './screens/Ramificacao'
 import Conclusao from './screens/Conclusao'
 import MotionDocs from './screens/MotionDocs'
+import BurstSandbox from './screens/BurstSandbox'
 
 const ROUTES_WITH_NAV = new Set(['/', '/explorar'])
 
@@ -53,6 +54,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/motion-docs" element={<MotionDocs />} />
+        <Route path="/burst-sandbox" element={<BurstSandbox />} />
         <Route path="/*" element={<AnimatedPhoneRoutes />} />
       </Routes>
     </BrowserRouter>

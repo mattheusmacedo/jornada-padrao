@@ -11,14 +11,14 @@ import {
 } from '../motion/variants'
 import { motion as motionTokens } from '../motion/tokens'
 import AlphaVideo from '../components/AlphaVideo'
+import { pickRandom } from '../utils/random'
 
 type Choice = 'salvos' | 'favoritos'
-type VideoState = 'idle' | 'idle-phone' | 'idle-bands'
+type PhoneVideoState = 'idle-phone' | 'idle-phone-2'
+type VideoState = 'idle' | PhoneVideoState | 'idle-bands'
+type VariationVideoState = Exclude<VideoState, 'idle'>
 
-const VARIATION_FOR_CHOICE: Record<Choice, Exclude<VideoState, 'idle'>> = {
-  salvos: 'idle-phone',
-  favoritos: 'idle-bands',
-}
+const PHONE_VARIATIONS = ['idle-phone', 'idle-phone-2'] as const
 
 function Header() {
   const navigate = useNavigate()
@@ -97,41 +97,53 @@ function RadioCard({
 export default function Ramificacao() {
   const [choice, setChoice] = useState<Choice | null>(null)
   const [currentVideo, setCurrentVideo] = useState<VideoState>('idle')
-  // pendingVideo (a ref because the onEnded callback reads it asynchronously
-  // and we don't want a stale-closure re-render dance — last tap wins, set
-  // synchronously in the click handler).
-  const pendingVideoRef = useRef<VideoState | null>(null)
-  // lastTapped persists across cycles so once the user has expressed a
-  // preference, the variation alternates with idle forever.
-  const lastTappedRef = useRef<Choice | null>(null)
+  // pendingVideo is set synchronously in the click handler and consumed at the
+  // next idle boundary. After that, selectedChoiceRef keeps the chosen loop
+  // running: idle -> variation -> idle -> variation...
+  const pendingVideoRef = useRef<VariationVideoState | null>(null)
+  const selectedChoiceRef = useRef<Choice | null>(null)
+  const lastPhoneVideoRef = useRef<PhoneVideoState | null>(null)
 
   const navigate = useNavigate()
 
+  const nextVariationForChoice = (next: Choice): VariationVideoState => {
+    if (next === 'favoritos') return 'idle-bands'
+
+    const nextPhone = pickRandom(PHONE_VARIATIONS, lastPhoneVideoRef.current)
+    lastPhoneVideoRef.current = nextPhone
+    return nextPhone
+  }
+
   const handleSelect = (next: Choice) => {
     setChoice(next)
-    lastTappedRef.current = next
-    pendingVideoRef.current = VARIATION_FOR_CHOICE[next]
+    selectedChoiceRef.current = next
+    pendingVideoRef.current = nextVariationForChoice(next)
   }
 
   const handleEnded = () => {
+    if (currentVideo !== 'idle') {
+      setCurrentVideo('idle')
+      return false
+    }
+
     if (pendingVideoRef.current) {
       const next = pendingVideoRef.current
       pendingVideoRef.current = null
       setCurrentVideo(next)
-      return
+      return false
     }
-    // No pending swap — alternate variation/idle as long as the user has
-    // expressed a preference; otherwise leave currentVideo as 'idle' and
-    // AlphaVideo will seek-to-0 internally to keep the loop going (no flash).
-    if (lastTappedRef.current) {
-      const variation = VARIATION_FOR_CHOICE[lastTappedRef.current]
-      setCurrentVideo((prev) => (prev === 'idle' ? variation : 'idle'))
+
+    if (selectedChoiceRef.current) {
+      setCurrentVideo(nextVariationForChoice(selectedChoiceRef.current))
+      return false
     }
+
+    // No selected choice yet: keep idle looping smoothly until the first tap.
   }
 
   return (
     <PageTransition>
-      <div className="relative h-full bg-white overflow-hidden">
+      <div className="relative h-[calc(100vh-44px)] bg-white overflow-hidden">
         {/* Back layer: alpha-video character. pointer-events-none so it doesn't
             intercept taps on the radio cards / CONCLUIR. */}
         <div className="absolute inset-0 pointer-events-none z-0">
@@ -160,7 +172,7 @@ export default function Ramificacao() {
               onSelect={() => handleSelect('favoritos')}
             />
           </div>
-          <div className="absolute bottom-[20px] inset-x-0 flex justify-center">
+          <div className="absolute bottom-[24px] inset-x-0 flex justify-center">
             <fmotion.button
               type="button"
               onClick={() => navigate('/conclusao')}

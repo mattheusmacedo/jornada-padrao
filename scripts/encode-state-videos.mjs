@@ -9,7 +9,7 @@
 // already copies *.mp4 alongside *.webm; AlphaVideo's <source> chain needs
 // one line uncommented to pick them up.
 //
-// Source:  D:/05_MotionDesignParaProdutoDigital/2_SOURCE/footages/png/State_Machine/*.mov
+// Source:  D:/05_MotionDesignParaProdutoDigital/2_SOURCE/footages/renders/StateMachine_v2/POS/*.mov
 // Output:  D:/05_MotionDesignParaProdutoDigital/2_SOURCE/footages/VIDEO/{name}.webm
 //
 // Usage:
@@ -29,19 +29,24 @@ const FFMPEG_BIN =
   process.env.FFMPEG_BIN ||
   'C:/Users/maced/AppData/Local/Microsoft/WinGet/Packages/Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe/ffmpeg-8.1.1-full_build/bin/ffmpeg.exe'
 
-const SRC_DIR = resolve(__dirname, '../../2_SOURCE/footages/png/State_Machine')
+const SRC_DIR = resolve(__dirname, '../../2_SOURCE/footages/renders/StateMachine_v2/POS')
 const OUT_DIR = resolve(__dirname, '../../2_SOURCE/footages/VIDEO')
 
 // Source MOV → output basename (distinct paths even when the source clip is shared)
 const STATES = [
-  { src: 'Ramification_Idle.mov',  out: 'idle' },
-  { src: 'Ramification_Phone.mov', out: 'idle-phone' },
-  { src: 'Ramification_Band.mov',  out: 'idle-bands' },
-  { src: 'Conclusion_Idle.mov',    out: 'conclusao-idle' },
-  { src: 'Conclusion_Dance.mov',   out: 'conclusao-dance' },
+  { src: 'idle_pos.mov', out: 'idle' },
+  { src: 'Ramification_Phone_pos.mov', out: 'idle-phone' },
+  { src: 'Ramification_Phone 2_pos.mov', out: 'idle-phone-2' },
+  { src: 'Ramification_Band_pos.mov', out: 'idle-bands' },
+  { src: 'Conclusion_Dance_pos.mov', out: 'conclusao-dance' },
+  { src: 'Conclusion_Character_Cowgirl_pos.mov', out: 'conclusao-character-cowgirl' },
+  { src: 'Conclusion_Character_Glam_pos.mov', out: 'conclusao-character-glam' },
+  { src: 'Conclusion_Character_Pop_pos.mov', out: 'conclusao-character-pop' },
+  { src: 'Conclusion_Character_Raver_pos.mov', out: 'conclusao-character-raver' },
 ]
 
-const VIDEO_BITRATE = process.env.VIDEO_BITRATE || '1M'
+const VIDEO_CRF = process.env.VIDEO_CRF || '18'
+const TARGET_FPS = process.env.VIDEO_FPS || '60'
 
 const args = process.argv.slice(2)
 const onlyIdx = args.indexOf('--only')
@@ -86,15 +91,27 @@ function encodeState({ src, out }) {
   }
   const srcSize = statSync(srcPath).size
 
-  // WebM VP9 with alpha
+  // WebM VP9 with alpha. Convert color and alpha to the target FPS separately,
+  // then merge them back. Use fps instead of framerate so FFmpeg duplicates
+  // frames rather than blending/interpolating the alpha matte.
   const webmOut = resolve(OUT_DIR, `${out}.webm`)
+  const filterComplex =
+    `[0:v]format=rgba,split=2[color][alpha];` +
+    `[color]format=rgb24,fps=fps=${TARGET_FPS}[color60];` +
+    `[alpha]alphaextract,fps=fps=${TARGET_FPS}[alpha60];` +
+    `[color60][alpha60]alphamerge,format=yuva420p[v]`
   const webmTime = runFfmpeg(`${out}.webm`, [
     '-y',
     '-i', srcPath,
+    '-filter_complex', filterComplex,
+    '-map', '[v]',
     '-c:v', 'libvpx-vp9',
-    '-pix_fmt', 'yuva420p',
-    '-b:v', VIDEO_BITRATE,
+    '-crf', VIDEO_CRF,
+    '-b:v', '0',
     '-auto-alt-ref', '0',
+    '-deadline', 'good',
+    '-cpu-used', '2',
+    '-row-mt', '1',
     '-an',
     webmOut,
   ])

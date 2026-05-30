@@ -34,9 +34,13 @@ const ILLUSTRATIONS = [
 const VIDEO_NAMES = [
   'idle',
   'idle-phone',
+  'idle-phone-2',
   'idle-bands',
-  'conclusao-idle',
   'conclusao-dance',
+  'conclusao-character-cowgirl',
+  'conclusao-character-glam',
+  'conclusao-character-pop',
+  'conclusao-character-raver',
 ]
 const VIDEO_EXTS = ['.webm', '.mp4']
 
