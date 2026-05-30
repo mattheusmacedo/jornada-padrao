@@ -41,6 +41,10 @@ type VideoSlot = {
 }
 
 type VideoSlots = [VideoSlot, VideoSlot]
+type ImageSlot = {
+  src: string
+  token: number
+}
 
 function shouldUseWebpAlphaFallback() {
   if (typeof navigator === 'undefined') return false
@@ -61,6 +65,33 @@ function getClipDuration(src: string, playbackStart: number, playbackEnd?: numbe
   return Math.max(0.1, endAt - playbackStart)
 }
 
+function getWebpAlphaSrc(src: string) {
+  return `${src}.webp?v=${WEBP_ALPHA_ASSET_VERSION}`
+}
+
+function preloadImage(src: string) {
+  return new Promise<void>((resolve) => {
+    const image = new Image()
+    let resolved = false
+    const finish = () => {
+      if (resolved) return
+      resolved = true
+      resolve()
+    }
+
+    image.decoding = 'async'
+    image.onload = () => {
+      if (image.decode) {
+        image.decode().then(finish, finish)
+        return
+      }
+      finish()
+    }
+    image.onerror = finish
+    image.src = getWebpAlphaSrc(src)
+  })
+}
+
 function playVideo(video: HTMLVideoElement) {
   video.play().catch(() => {
     // Muted inline videos should autoplay; ignore the rare rejection.
@@ -77,24 +108,68 @@ function AlphaImageFallback({
   playbackEnd,
   loopWhenSameSrc = true,
 }: Props) {
-  const [restartToken, setRestartToken] = useState(0)
+  const [activeSlot, setActiveSlot] = useState<ImageSlot>(() => ({ src, token: 0 }))
+  const activeSlotRef = useRef<ImageSlot>(activeSlot)
+  const latestSrcRef = useRef(src)
+  const pendingSlotRef = useRef<ImageSlot | null>(null)
+  const tokenRef = useRef(0)
+  const preloadIdRef = useRef(0)
   const onEndedRef = useRef(onEnded)
-  const durationMs = getClipDuration(src, playbackStart, playbackEnd) * 1000
+  const loopWhenSameSrcRef = useRef(loopWhenSameSrc)
+  const playbackStartRef = useRef(playbackStart)
+  const playbackEndRef = useRef(playbackEnd)
 
   useEffect(() => {
     onEndedRef.current = onEnded
-  }, [onEnded])
+    loopWhenSameSrcRef.current = loopWhenSameSrc
+    playbackStartRef.current = playbackStart
+    playbackEndRef.current = playbackEnd
+  }, [onEnded, loopWhenSameSrc, playbackStart, playbackEnd])
+
+  const queueImageSlot = useCallback((nextSrc: string) => {
+    const nextSlot = {
+      src: nextSrc,
+      token: tokenRef.current + 1,
+    }
+    tokenRef.current = nextSlot.token
+    pendingSlotRef.current = nextSlot
+
+    const preloadId = preloadIdRef.current + 1
+    preloadIdRef.current = preloadId
+
+    void preloadImage(nextSrc).then(() => {
+      if (preloadIdRef.current !== preloadId) return
+      if (pendingSlotRef.current?.token !== nextSlot.token) return
+
+      activeSlotRef.current = nextSlot
+      pendingSlotRef.current = null
+      setActiveSlot(nextSlot)
+    })
+  }, [])
+
+  useLayoutEffect(() => {
+    latestSrcRef.current = src
+    playbackStartRef.current = playbackStart
+    playbackEndRef.current = playbackEnd
+
+    if (src === activeSlotRef.current.src || src === pendingSlotRef.current?.src) return
+    queueImageSlot(src)
+  }, [src, playbackStart, playbackEnd, queueImageSlot])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const shouldLoopSameSrc = onEndedRef.current?.() !== false
-      if (shouldLoopSameSrc && loopWhenSameSrc) {
-        setRestartToken((token) => token + 1)
+      if (
+        shouldLoopSameSrc
+        && loopWhenSameSrcRef.current
+        && latestSrcRef.current === activeSlotRef.current.src
+      ) {
+        queueImageSlot(activeSlotRef.current.src)
       }
-    }, durationMs)
+    }, getClipDuration(activeSlot.src, playbackStart, playbackEnd) * 1000)
 
     return () => window.clearTimeout(timer)
-  }, [src, restartToken, durationMs, loopWhenSameSrc])
+  }, [activeSlot, playbackStart, playbackEnd, queueImageSlot])
 
   return (
     <div
@@ -103,8 +178,8 @@ function AlphaImageFallback({
       style={{ position: 'relative' }}
     >
       <img
-        key={`${restartToken}-${src}`}
-        src={`${src}.webp?v=${WEBP_ALPHA_ASSET_VERSION}`}
+        key={`${activeSlot.token}-${activeSlot.src}`}
+        src={getWebpAlphaSrc(activeSlot.src)}
         alt=""
         aria-hidden="true"
         draggable={false}
